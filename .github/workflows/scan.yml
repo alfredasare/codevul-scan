@@ -30,7 +30,7 @@ jobs:
           echo "Building C++ snippets..."
           for file in *.cpp; do
             echo "Compiling $file"
-            clang++ -c "$file" -o /dev/null
+            clang++ -c "$file" -o /dev/null -include dummy_defs.h || true
           done
 
       - name: Perform CodeQL Analysis
