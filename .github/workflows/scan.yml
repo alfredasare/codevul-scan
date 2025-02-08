@@ -1,4 +1,9 @@
 name: CodeQL Analysis
+# Grant the necessary permissions to upload SARIF results.
+permissions:
+  actions: read
+  contents: read
+  security-events: write
 
 on:
   push:
@@ -24,21 +29,19 @@ jobs:
         with:
           languages: ${{ matrix.language }}
 
-      # Dummy build step that “compiles” your snippets.
+      # Manual build step to compile your snippets (adjust as needed).
       - if: ${{ matrix.build-mode == 'manual' }}
         name: Build C/C++ code
         run: |
           echo "Building C++ snippets..."
           for file in *.cpp; do
             echo "Compiling $file"
-            # Add any necessary flags (for example, to include dummy definitions)
             clang++ -c "$file" -o /dev/null -include dummy_defs.h || true
           done
 
-      # New step: Create the missing tarballs directory so finalization succeeds.
+      # Workaround step: Create the missing tarballs directory.
       - name: Create empty tarballs directory
         run: |
-          # Ensure that the expected directory exists. The path here is based on the error message.
           mkdir -p /home/runner/work/_temp/codeql_databases/cpp/trap/cpp/tarballs
 
       - name: Perform CodeQL Analysis
