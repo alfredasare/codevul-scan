@@ -1,4 +1,4 @@
-name: CodeQL Analysis
+name: Codevul CodeQL Analysis
 # Grant the necessary permissions to upload SARIF results.
 permissions:
   actions: read
