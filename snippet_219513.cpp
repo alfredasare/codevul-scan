@@ -1,1 +1,0 @@
-inline int64_t StringData::size() const { return m_len; }

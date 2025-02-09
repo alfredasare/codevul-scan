@@ -1,1 +1,0 @@
-  Item_cache_decimal(THD *thd): Item_cache(thd, MYSQL_TYPE_NEWDECIMAL) {}

@@ -1,1 +1,0 @@
-  TABLE *get_null_ref_table() const { return null_ref_table; }

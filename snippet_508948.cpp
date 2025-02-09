@@ -1,1 +1,0 @@
-  virtual bool update_table_bitmaps_processor(void *arg) { return 0; }

@@ -1,1 +1,0 @@
-  virtual bool expr_cache_is_needed(THD *) { return FALSE; }

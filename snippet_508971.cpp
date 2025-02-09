@@ -1,1 +1,0 @@
-  bool is_null() { return !has_value(); }

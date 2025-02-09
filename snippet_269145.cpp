@@ -1,1 +1,0 @@
-  inline int32_t DimensionsCount() const { return size_; }

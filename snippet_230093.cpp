@@ -1,1 +1,0 @@
-  int64 FeatureCount(int64 batch) const override { return feature_count_; }

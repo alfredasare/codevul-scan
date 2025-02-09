@@ -1,1 +1,0 @@
-  std::size_t num_entries() const { return ix_.dim_size(0); }

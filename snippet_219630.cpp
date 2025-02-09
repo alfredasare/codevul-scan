@@ -1,1 +1,0 @@
-inline const void* StringData::payload() const { return this + 1; }

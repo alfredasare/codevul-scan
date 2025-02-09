@@ -1,4 +1,0 @@
-null_command()
-{
-    return;
-}

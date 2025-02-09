@@ -1,1 +1,0 @@
-  Cached_item_int(Item *item_par) :Cached_item_item(item_par),value(0) {}

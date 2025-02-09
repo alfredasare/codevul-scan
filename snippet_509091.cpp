@@ -1,1 +1,0 @@
-  virtual bool set_fake_select_as_master_processor(void *arg) { return 0; }

@@ -1,1 +1,0 @@
-  virtual Item *replace_equal_field(THD *thd, uchar *arg) { return this; }

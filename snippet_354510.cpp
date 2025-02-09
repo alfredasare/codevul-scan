@@ -1,1 +1,0 @@
-static inline void kvm_eventfd_init(struct kvm *kvm) {}

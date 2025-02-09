@@ -1,1 +1,0 @@
-  virtual bool is_subquery_processor(void *arg) { return 0; }

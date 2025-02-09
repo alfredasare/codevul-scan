@@ -1,1 +1,0 @@
-  explicit String(StringData *data) : m_str(data) { }

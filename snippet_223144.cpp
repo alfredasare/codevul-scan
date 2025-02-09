@@ -1,1 +1,0 @@
-void SetAttrValue(const AttrValue& value, AttrValue* out) { *out = value; }

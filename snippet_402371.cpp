@@ -1,1 +1,0 @@
-    bool unsupportedTe() const { return teUnsupported_; }

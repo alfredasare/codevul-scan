@@ -1,1 +1,0 @@
-  RuntimeShape() : size_(0) {}

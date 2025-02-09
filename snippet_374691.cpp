@@ -1,1 +1,0 @@
-static inline void power_pmu_bhrb_disable(struct perf_event *event) {}

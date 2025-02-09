@@ -1,1 +1,0 @@
-  Item_result_field(THD *thd): Item(thd), result_field(0) {}

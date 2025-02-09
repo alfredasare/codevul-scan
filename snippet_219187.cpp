@@ -1,1 +1,0 @@
-  String rval(short   key) const { return rvalImpl(key);}

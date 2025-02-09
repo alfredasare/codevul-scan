@@ -1,1 +1,0 @@
-  Item_iterator_row(Item *base) : base_item(base), current(0) {}

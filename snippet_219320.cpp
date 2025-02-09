@@ -1,1 +1,0 @@
-  explicit operator bool() const { return (bool)m_str; }

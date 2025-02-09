@@ -1,6 +1,0 @@
-CryptRsaInit(
-	     void
-	     )
-{
-    return TRUE;
-}

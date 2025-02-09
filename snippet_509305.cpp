@@ -1,1 +1,0 @@
-  table_map used_tables() const { return orig_item->used_tables(); }

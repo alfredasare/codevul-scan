@@ -1,3 +1,0 @@
-  void requestShutdown() override {
-    requestInit();
-  }

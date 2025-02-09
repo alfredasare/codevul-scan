@@ -1,1 +1,0 @@
-  virtual bool find_function_processor (void *arg) { return 0; }

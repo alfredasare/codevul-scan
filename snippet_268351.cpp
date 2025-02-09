@@ -1,1 +1,0 @@
-  const NodeDef& get_node_def(int i) const override { return *node_defs_[i]; }

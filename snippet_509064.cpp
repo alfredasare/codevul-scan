@@ -1,1 +1,0 @@
-  virtual void get_cache_parameters(List<Item> &parameters) { };

@@ -1,1 +1,0 @@
-  Field_enumerator() {}                       /* Remove gcc warning */

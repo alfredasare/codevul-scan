@@ -1,1 +1,0 @@
-  VarDimArray shape() const { return shape_; }

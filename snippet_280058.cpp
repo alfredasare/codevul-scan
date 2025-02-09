@@ -1,1 +1,0 @@
-static inline void init_freelist_randomization(void) { }

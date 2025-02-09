@@ -1,1 +1,0 @@
-    explicit NodeInfo(int i) : gdef_index(i), node(nullptr) {}

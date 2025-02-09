@@ -1,1 +1,0 @@
-  enum Item_result cast_to_int_type() const { return STRING_RESULT; }

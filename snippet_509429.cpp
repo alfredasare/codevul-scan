@@ -1,1 +1,0 @@
-  bool const_item() const { return true; }

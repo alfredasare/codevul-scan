@@ -1,1 +1,0 @@
-  Item_temptable_field(THD *thd, Item_field *item) : Item_field(thd, item) {};

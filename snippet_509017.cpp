@@ -1,1 +1,0 @@
-  Item_uint(THD *thd, ulonglong i): Item_int(thd, i, 10) {}

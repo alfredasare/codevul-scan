@@ -1,1 +1,0 @@
-  bool   toBoolean() const { return m_str ? m_str->toBoolean() : false;}

@@ -1,3 +1,0 @@
-ImagingTiffVersion(void) {
-    return TIFFGetVersion();
-}

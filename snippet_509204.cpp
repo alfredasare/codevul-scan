@@ -1,1 +1,0 @@
-  virtual Item *copy_andor_structure(THD *thd) { return this; }

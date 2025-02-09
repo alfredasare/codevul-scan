@@ -1,1 +1,0 @@
-  explicit StrNR(const StringData *sd) : m_px(const_cast<StringData*>(sd)) {}

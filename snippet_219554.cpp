@@ -1,1 +1,0 @@
-  char   toByte   () const { return m_str ? m_str->toByte   () : 0;}

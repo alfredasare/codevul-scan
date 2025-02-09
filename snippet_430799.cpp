@@ -1,1 +1,0 @@
-        UnicodeString(UBool /*isTerminated*/, const UChar * /*text*/, int32_t textLength) : i(textLength) {(void)i;}

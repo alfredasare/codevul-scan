@@ -1,1 +1,0 @@
-    bool conflictingContentLength() const { return conflictingContentLength_; }

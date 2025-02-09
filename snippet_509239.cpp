@@ -1,1 +1,0 @@
-  virtual bool collect_outer_ref_processor(void *arg) {return 0; }

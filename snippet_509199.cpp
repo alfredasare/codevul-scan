@@ -1,1 +1,0 @@
-  Item_hex_hybrid(THD *thd): Item_hex_constant(thd) {}

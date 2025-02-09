@@ -1,1 +1,0 @@
-  virtual bool check_field_expression_processor(void *arg) { return 0; }

@@ -1,1 +1,0 @@
-  enum Type type() const { return INSERT_VALUE_ITEM; }

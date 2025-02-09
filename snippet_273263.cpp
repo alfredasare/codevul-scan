@@ -1,1 +1,0 @@
-	Modes::ChangeList::List::const_iterator GetEndIterator() const { return lastit; }

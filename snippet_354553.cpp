@@ -1,1 +1,0 @@
-static inline void kvm_irqfd_release(struct kvm *kvm) {}

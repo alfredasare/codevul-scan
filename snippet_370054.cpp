@@ -1,1 +1,0 @@
-ExpressionRandom::ExpressionRandom(ExpressionContext* const expCtx) : Expression(expCtx) {}

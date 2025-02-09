@@ -1,1 +1,0 @@
-  virtual uint exists2in_reserved_items() { return 0; };

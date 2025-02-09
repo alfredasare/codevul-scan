@@ -1,1 +1,0 @@
-  void set_result_field(Field *field_arg) {}

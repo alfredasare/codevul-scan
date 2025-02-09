@@ -1,1 +1,0 @@
-  virtual bool add_field_to_set_processor(void *arg) { return 0; }

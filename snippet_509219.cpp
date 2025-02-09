@@ -1,1 +1,0 @@
-  virtual bool check_valid_arguments_processor(void *arg) { return 0; }

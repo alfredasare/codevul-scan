@@ -1,1 +1,0 @@
-  enum Item_result result_type () const { return orig_item->result_type(); }

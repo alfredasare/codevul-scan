@@ -1,1 +1,0 @@
-  virtual bool eliminate_subselect_processor(void *arg) { return 0; }

@@ -1,1 +1,0 @@
-  StrNR() : m_px(nullptr) {}

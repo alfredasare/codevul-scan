@@ -1,1 +1,0 @@
-inline bool StringData::empty() const { return size() == 0; }

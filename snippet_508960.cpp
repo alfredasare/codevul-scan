@@ -1,1 +1,0 @@
-  enum Type type() const { return EXPR_CACHE_ITEM; }

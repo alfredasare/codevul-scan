@@ -1,1 +1,0 @@
-  virtual bool register_field_in_write_map(void *arg) { return 0; }

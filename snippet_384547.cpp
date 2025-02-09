@@ -1,1 +1,0 @@
-  Connection(tcp::socket& socket) : socket(socket) {}

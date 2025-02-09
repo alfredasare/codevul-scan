@@ -1,1 +1,0 @@
-  virtual ~Rewritable_query_parameter() { }

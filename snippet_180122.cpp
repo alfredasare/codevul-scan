@@ -1,4 +1,0 @@
-MediaElementAudioSourceNode::~MediaElementAudioSourceNode()
-{
-    ASSERT(!isInitialized());
-}

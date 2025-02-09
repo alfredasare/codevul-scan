@@ -1,1 +1,0 @@
-  const Tensor& values() const { return vals_; }

@@ -1,1 +1,0 @@
-  String_copier_for_item(THD *thd): m_thd(thd) { }

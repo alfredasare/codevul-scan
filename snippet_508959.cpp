@@ -1,1 +1,0 @@
-  bool check_func_default_processor(void *arg) { return true; }

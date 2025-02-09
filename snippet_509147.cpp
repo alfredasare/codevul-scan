@@ -1,1 +1,0 @@
-  inline void remove_arguments() { arg_count=0; }

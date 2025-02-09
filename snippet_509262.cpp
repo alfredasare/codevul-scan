@@ -1,1 +1,0 @@
-  Item_result cmp_type() const { return TIME_RESULT; }

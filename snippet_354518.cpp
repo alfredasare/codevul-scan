@@ -1,1 +1,0 @@
-static inline void kvm_free_irq_routing(struct kvm *kvm) {}

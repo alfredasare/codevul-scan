@@ -1,1 +1,0 @@
-ServiceWorkerScriptContext::~ServiceWorkerScriptContext() {}

@@ -1,1 +1,0 @@
-static bool is_ebb_event(struct perf_event *event) { return false; }

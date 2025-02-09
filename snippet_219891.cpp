@@ -1,1 +1,0 @@
-  short  toInt16  () const { return m_str ? m_str->toInt16  () : 0;}

@@ -1,1 +1,0 @@
-  bool const_item() const { return const_item_cache; }

@@ -1,1 +1,0 @@
-  virtual bool post_fix_fields_part_expr_processor(void *arg) { return 0; }

@@ -1,1 +1,0 @@
-  bool const_item() const { return used_tables() == 0; }

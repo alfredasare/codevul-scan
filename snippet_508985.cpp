@@ -1,1 +1,0 @@
-  String *val_str() { return val_str(&str_value); }

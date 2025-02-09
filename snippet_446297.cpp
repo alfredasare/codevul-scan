@@ -1,4 +1,0 @@
-LineBuffer::~LineBuffer ()
-{
-    delete compressor;
-}

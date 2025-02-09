@@ -1,1 +1,0 @@
-  explicit FormatValue(const HPHP::String& str) : m_val(str) {}

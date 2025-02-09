@@ -1,1 +1,0 @@
-  enum_field_types field_type() const   { return orig_item->field_type(); }

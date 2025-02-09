@@ -1,1 +1,0 @@
-  StringData* get() const { return m_str.get(); }

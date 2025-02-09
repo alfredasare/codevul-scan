@@ -1,1 +1,0 @@
-  table_map not_null_tables() const { return orig_item->not_null_tables(); }
