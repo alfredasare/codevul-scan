@@ -1,2 +1,0 @@
-CaptivePortalDetector::~CaptivePortalDetector() {
-}
