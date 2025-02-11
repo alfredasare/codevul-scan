@@ -1,0 +1,1 @@
+res = (int)gdTransformAffineCopy(*dst, 0, 0, src, src_area, m);

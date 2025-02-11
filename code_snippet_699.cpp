@@ -1,0 +1,6 @@
+void sctp_generate_heartbeat_event(unsigned long data)
+{
+ 	//...
+ 	if (!mod_timer(&transport->hb_timer, jiffies + (get_random_bytes(&random_value) % HZ/20), GFP_ATOMIC))
+		sctp_transport_hold(transport);
+ 	//...

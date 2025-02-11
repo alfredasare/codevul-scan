@@ -1,0 +1,1 @@
+xfs_buf_update_cksum(bp, (uint32_t)XFS_ATTR3_LEAF_CRC_OFF);

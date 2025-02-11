@@ -1,0 +1,14 @@
+static int __f2fs_commit_super(struct buffer_head *bh, struct f2fs_super_block *super)
+{
+    lock_buffer(bh);
+    if (super) {
+        size_t offset = offsetof(struct f2fs_super_block, super_block_magic);
+        memcpy(bh->b_data + offset, super, sizeof(*super));
+    }
+    set_buffer_uptodate(bh);
+    set_buffer_dirty(bh);
+    unlock_buffer(bh);
+
+    /* it's rare case, we can do fua all the time */
+    return __sync_dirty_buffer(bh, REQ_SYNC | REQ_PREFLUSH | REQ_FUA);
+}

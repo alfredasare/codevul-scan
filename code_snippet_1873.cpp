@@ -1,0 +1,3 @@
+WebPreferences::~WebPreferences() {
+    p = nullptr;
+}

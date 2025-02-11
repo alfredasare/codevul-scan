@@ -1,0 +1,6 @@
+const WebEmStoredSession CWebServer::GetSession(const std::string &sessionId) {
+    //...
+    std::vector<std::vector<std::string>> result;
+    result = m_sql.safe_query("SELECT SessionID, Username, AuthToken, ExpirationDate FROM UserSessions WHERE SessionID =?", sessionId);
+    //...
+}

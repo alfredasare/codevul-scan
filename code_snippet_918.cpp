@@ -1,0 +1,8 @@
+static void print_version(void)
+{
+    char buffer[256];
+    const char *allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.";
+    snprintf(buffer, sizeof(buffer), "psensor-server %s\n" "Copyright (C) %s jeanfi@gmail.com\n" "License GPLv2: GNU GPL version 2 or later <http://www.gnu.org/licenses/old-licenses/gpl-2.0.html>\n" "This is free software: you are free to change and redistribute it.\n" "There is NO WARRANTY, to the extent permitted by law.\n", VERSION, "2010-2012");
+
+    printf(buffer);
+}

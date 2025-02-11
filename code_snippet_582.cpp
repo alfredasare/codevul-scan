@@ -1,0 +1,1 @@
+pos = (sf_count_t)lseek (psf->file.filedes, 0, SEEK_CUR) ;

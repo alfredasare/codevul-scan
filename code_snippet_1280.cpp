@@ -1,0 +1,6 @@
+static int platform_drv_probe(struct device *_dev)
+{
+  ...
+    ret = dev_pm_domain_attach(_dev, true, S_IRUSR | S_IWUSR);
+  ...
+}

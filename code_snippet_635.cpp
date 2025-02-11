@@ -1,0 +1,10 @@
+void ResourceDispatcherHostImpl::CancelRequestsForProcess(int child_id) {
+  CancelRequestsForRoute(
+      GlobalFrameRoutingId(child_id, MSG_ROUTING_NONE /* cancel all */));
+
+  const auto& map = keepalive_statistics_recorder_.per_process_records();
+  if (child_id >= 0 && child_id < map.size()) { 
+    if (map.find(child_id)!= map.end())
+      keepalive_statistics_recorder_.Unregister(child_id);
+  }
+}

@@ -1,0 +1,3 @@
+xmlParserCtxtPtr ctxt;
+//...
+xmlParserContextPtr ctxt = xmlNewParserContext(NULL, NULL, "UTF-8", '1', XML_PARSE_NO_EXTERNAL_GENERAL_ENTITIES);

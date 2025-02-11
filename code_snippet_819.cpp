@@ -1,0 +1,1 @@
+grub_memcpy_safe(data->inode, &fdiro->inode, sizeof(struct grub_ext2_inode), sizeof(struct grub_ext2_inode));
