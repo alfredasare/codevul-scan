@@ -1,18 +1,12 @@
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
-  if (size > 512) {
-    return 1;
-  }
+void RenderFrameHostCreatedObserver::RenderFrameCreated(
+RenderFrameHost* render_frame_host) {
+ frames\_created\_\++;
+ if (frames\_created\_ == expected\_frame\_count_) {
+rendered\_frame\_host\_ = render\_frame\_host;
+ run\_loop\_.Quit();
+ }
+}
 
-  std::string input;
-  if (size <= 512) {
-    input.assign((char*)data, size);
-  } else {
-    // Handle oversized input
-    return 1;
-  }
-
-  net::ProxyBypassRules rules;
-  rules.ParseFromString(input);
-  rules.ParseFromStringUsingSuffixMatching(input);
-  return 0;
+bool RenderFrameHostCreatedObserver::FramesHaveBeenRendered() {
+ return rendered\_frame\_host\_ != nullptr;
 }

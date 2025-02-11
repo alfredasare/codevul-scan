@@ -1,37 +1,25 @@
-key_ref_t find_key_to_update(key_ref_t keyring_ref,
-			     const struct keyring_index_key *index_key)
+static int __init register_memory(void)
 {
-    struct key *keyring, *key;
-    const void *object;
+#define CHECK_AND_SET(sym, resource)					\
+	if ((ia64_tpa(sym) + sizeof(resource.start)) > INT_MAX) {	\
+		pr_err("Invalid input for " #sym "\n");		\
+		return -EINVAL;					\
+	}								\
+	resource.start = ia64_tpa(sym);
 
-    keyring = key_ref_to_ptr(keyring_ref);
+	CHECK_AND_SET(_text, code_resource);
+	CHECK_AND_SET(_etext, code_resource);
+	CHECK_AND_SET(_etext, data_resource);
+	CHECK_AND_SET(__bss_start, bss_resource);
+	CHECK_AND_SET(_end, bss_resource);
 
-    kenter("{%d},{%s,%s}",
-           keyring->serial, index_key->type->name, index_key->description);
+	code_resource.end   = ia64_tpa(_etext) - 1;
+	data_resource.end   = ia64_tpa(_edata) - 1;
+	bss_resource.end    = ia64_tpa(_end) - 1;
 
-    // Validate the index_key parameter to prevent path traversal
-    if (strncmp(index_key->type->name, "./", 2) == 0 ||
-        strncmp(index_key->type->name, "../", 3) == 0) {
-        kleave(" = NULL");
-        return NULL;
-    }
+	efi_initialize_iomem_resources(&code_resource, &data_resource,
+			&bss_resource);
 
-    object = assoc_array_find(&keyring->keys, &keyring_assoc_array_ops,
-                              index_key);
-
-    if (object)
-        goto found;
-
-    kleave(" = NULL");
-    return NULL;
-
-found:
-    key = keyring_ptr_to_key(object);
-    if (key->flags & ((1 << KEY_FLAG_INVALIDATED) | (1 << KEY_FLAG_REVOKED))) {
-        kleave(" = NULL [x]");
-        return NULL;
-    }
-    __key_get(key);
-    kleave(" = {%d}", key->serial);
-    return make_key_ref(key, is_key_possessed(keyring_ref));
+	return 0;
+#undef CHECK_AND_SET
 }

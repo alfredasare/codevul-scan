@@ -1,30 +1,19 @@
-bool ChromeMetricsServiceClient::IsWebstoreExtension(base::StringPiece id) {
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  bool matched = false;
-  ProfileManager* profile_manager = g_browser_process->profile_manager();
-  DCHECK(profile_manager);
-  auto profiles = profile_manager->GetLoadedProfiles();
-  for (Profile* profile : profiles) {
-    DCHECK(profile);
-    extensions::ExtensionRegistry* registry =
-        extensions::ExtensionRegistry::Get(profile);
-    if (!registry)
-      continue;
-    const std::string sanitized_id = SanitizeInput(id.ToString());
-    const extensions::Extension* extension = registry->GetExtensionById(sanitized_id, extensions::ExtensionRegistry::ENABLED);
-    if (!extension)
-      continue;
-    if (!extension->from_webstore())
-      return false;
-    matched = true;
-  }
-  return matched;
-#else
-  return false;
-#endif
+static bool TokenExistsInSelect(const CompactHTMLToken& token) {
+const String& tag\_name = token.Data();
+String safe\_tag\_name = SanitizeForComparison(tag\_name);
+return ThreadSafeMatch(safe\_tag\_name, inputTag) ||
+ThreadSafeMatch(safe\_tag\_name, keygenTag) ||
+ThreadSafeMatch(safe\_tag\_name, textareaTag);
 }
 
-std::string SanitizeInput(const std::string& input) {
-  // Implement your desired sanitization logic here, e.g., removing special characters, escaping quotes, etc.
-  return input;
+String SanitizeForComparison(const String& input) {
+String output;
+for (const char c : input) {
+if (c == '\\' || c == '/' || c == ':' || c == '*' || c == '?' || c == '"' ||
+c == '<' || c == '>' || c == '|') {
+continue;
+}
+output += c;
+}
+return output;
 }

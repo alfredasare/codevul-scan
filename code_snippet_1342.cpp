@@ -1,16 +1,24 @@
-bshift (unsigned long *b)
+bool childAttachedAllowedWhenAttachingChildren(ContainerNode* node, int max_allowed_allocations = 100)
 {
-  unsigned long c;
-  int i;
-  srand48(time(NULL));
-  unsigned long seed = lrand48();
-  for (i = 0; i < 4; i++)
-    b[i] = (seed >> (i * 32)) & 0xFFFFFFFF;
-  c = b[3] & 1;
-  for (i = 3; i > 0; i--)
-    {
-      b[i] = (b[i] >> 1) | (b[i - 1] << 31);
-    }
-  b[i] >>= 1;
-  return c;
+    static int total_allocations = 0;
+    static ContainerNode* last_node = nullptr;
+
+    if (total_allocations >= max_allowed_allocations)
+        return false;
+
+    if (node == last_node)
+        return false;
+
+    if (node->isShadowRoot())
+        return true;
+
+    if (node->isInsertionPoint())
+        return true;
+
+    if (node->isElementNode() && toElement(node)->shadow())
+        return true;
+
+    last_node = node;
+    ++total_allocations;
+    return false;
 }

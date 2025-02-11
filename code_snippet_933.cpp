@@ -1,39 +1,13 @@
-static int http_upgrade_v09_to_v10(struct http_txn *txn)
+static ssize_t fuse_direct_read_iter(struct kiocb *iocb, struct iov_iter *to)
 {
-    int delta;
-    char *cur_end;
-    struct http_msg *msg = &txn->req;
+	struct fuse_io_priv io = { .async = 0, .file = iocb->ki_filp };
+	ssize_t retval;
+	mm_segment_t oldfs;
 
-    if (msg->sl.rq.v_l!= 0)
-        return 1;
+	oldfs = get_fs();
+	set_fs(KERNEL_DS);
+	retval = __fuse_direct_read(&io, to, &iocb->ki_pos);
+	set_fs(oldfs);
 
-    /* RFC 1945 allows only GET for HTTP/0.9 requests */
-    if (txn->meth!= HTTP_METH_GET)
-        return 0;
-
-    cur_end = msg->chn->buf->p + msg->sl.rq.l;
-
-    if (msg->sl.rq.u_l == 0) {
-        /* HTTP/0.9 requests *must* have a request URI, per RFC 1945 */
-        http_error_handle(txn, "Invalid request");
-        return 0;
-    }
-    /* add HTTP version */
-    delta = buffer_replace2(msg->chn->buf, cur_end, cur_end, " HTTP/1.0\r\n", 11);
-    http_msg_move_end(msg, delta);
-    cur_end += delta;
-    cur_end = (char *)http_parse_reqline(msg,
-                                         HTTP_MSG_RQMETH,
-                                         msg->chn->buf->p, cur_end + 1,
-                                         NULL, NULL);
-    if (!cur_end) {
-        http_error_handle(txn, "Invalid request");
-        return 0;
-    }
-
-    /* we have a full HTTP/1.0 request now and we know that
-     * we have either a CR or an LF at <ptr>.
-     */
-    hdr_idx_set_start(&txn->hdr_idx, msg->sl.rq.l, *cur_end == '\r');
-    return 1;
+	return retval;
 }

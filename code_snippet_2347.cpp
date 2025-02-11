@@ -1,20 +1,8 @@
-i915_gem_execbuffer_relocate_object_slow(struct drm_i915_gem_object *obj,
-					 struct eb_objects *eb,
-					 struct drm_i915_gem_relocation_entry *relocs)
+chunk_grow(chunk_t *chunk, size_t sz)
 {
-	const struct drm_i915_gem_exec_object2 *entry = obj->exec_entry;
-	int i, ret;
-	int relocation_count = entry->relocation_count; // Validate the count
+    off_t offset;
+    size_t memlen_orig = chunk->memlen;
+    tor_assert(sz > chunk->memlen);
 
-	if (relocation_count <= 0) {
-		return 0; // Return immediately if relocation count is invalid
-	}
-
-	for (i = 0; i < relocation_count; i++) {
-		ret = i915_gem_execbuffer_relocate_entry(obj, eb, &relocs[i]);
-		if (ret)
-			return ret;
-	}
-
-	return 0;
-}
+    // Allocate a new chunk with the maximum of requested size or double the current size
+    size_t new_size = (sz > (chunk->memlen *

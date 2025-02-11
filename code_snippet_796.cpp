@@ -1,29 +1,32 @@
-static int ipip6_tunnel_init(struct net_device *dev)
+static int sig_cb(const char *elem, size_t len, void *arg)
 {
-    struct ip_tunnel *tunnel = netdev_priv(dev);
+    sig_cb_st *sarg = arg;
+    size_t i;
+    char etmp[20], *p;
+    int sig_alg = NID_undef, hash_alg = NID_undef;
+    if (elem == NULL || len > (sizeof(etmp) - 1))
+        return 0;
+    memcpy(etmp, elem, len);
+    etmp[len] = 0;
+    p = strchr(etmp, '+');
+    if (!p)
+        return 0;
+    *p = 0;
+    p++;
+    if (!*p)
+        return 0;
 
-    tunnel->dev = dev;
-    if (strlen(dev->name) > 20) {
-        return -EINVAL;
+    get_sigorhash(&sig_alg, &hash_alg, etmp);
+    get_sigorhash(&sig_alg, &hash_alg, p);
+
+    if (sig_alg == NID_undef || hash_alg == NID_undef)
+        return 0;
+
+    for (i = 0; i < sarg->sigalgcnt; i += 2) {
+        if (sarg->sigalgs[i] == sig_alg && sarg->sigalgs[i + 1] == hash_alg)
+            return 0;
     }
-    strcpy(tunnel->parms.name, dev->name);
-
-    char saddr_str[INET6_ADDRSTRLEN];
-    inet_ntop(AF_INET6, &tunnel->parms.iph.saddr, saddr_str, sizeof(saddr_str));
-    dev->dev_addr = kstrdup(saddr_str, GFP_KERNEL);
-    if (!dev->dev_addr)
-        return -ENOMEM;
-
-    char bcast_str[INET6_ADDRSTRLEN];
-    inet_ntop(AF_INET6, &tunnel->parms.iph.daddr, bcast_str, sizeof(bcast_str));
-    dev->broadcast = kstrdup(bcast_str, GFP_KERNEL);
-    if (!dev->broadcast)
-        return -ENOMEM;
-
-    ipip6_tunnel_bind_dev(dev);
-    dev->tstats = alloc_percpu(struct pcpu_tstats);
-    if (!dev->tstats)
-        return -ENOMEM;
-
-    return 0;
+    sarg->sigalgs[sarg->sigalgcnt++] = hash_alg;
+    sarg->sigalgs[sarg->sigalgcnt++] = sig_alg;
+    return 1;
 }

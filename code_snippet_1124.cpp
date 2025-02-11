@@ -1,10 +1,21 @@
-static inline int padr_bcast(PCNetState *s, const uint8_t *buf, size_t size)
+mtree_bid(struct archive_read *a, int best_bid)
 {
-    static const uint8_t BCAST[6] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
-    struct qemu_ether_header *hdr = (void *)buf;
-    int result = (size >= sizeof(hdr->ether_dhost)) &&!CSR_DRCVBC(s) &&!memcmp(hdr->ether_dhost, BCAST, 6);
-#ifdef PCNET_DEBUG_MATCH
-    printf("padr_bcast result=%d\n", result);
-#endif
-    return result;
+	const char *signature = "#mtree";
+	const char *p;
+
+	(void)best_bid; /* UNUSED */
+
+	/* Now let's look at the actual header and see if it matches. */
+	p = __archive_read_ahead(a, strlen(signature), NULL);
+	if (p == NULL)
+		return (-1);
+
+	int len = strlen(signature);
+	if (p != NULL && len > 0 && len <= (int)strlen(p) && memcmp(p, signature, len) == 0)
+		return (8 * len);
+
+	/*
+	 * There is not a mtree signature. Let's try to detect mtree format.
+	 */
+	return (detect_form(a, NULL));
 }

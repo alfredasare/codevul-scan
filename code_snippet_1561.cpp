@@ -1,22 +1,18 @@
-ModuleExport size_t RegisterDCMImage(void)
+static void netlbl_cipsov4_doi_free(struct rcu_head *entry)
 {
-  MagickInfo
-    *entry;
+	struct cipso_v4_doi *ptr;
 
-  static const char *DCMNote =
-    "DICOM is used by the medical community for images like X-rays.  The\n"
-    "specification, \"Digital Imaging and Communications in Medicine\n"
-    "(DICOM)\", is available at http://medical.nema.org/.  In particular,\n"
-    "see part 5 which describes the image encoding (RLE, JPEG, JPEG-LS),\n"
-    "and supplement 61 which adds JPEG-2000 encoding.";
+	rcu_read_lock();
+	ptr = container_of(entry, struct cipso_v4_doi, rcu);
+	switch (ptr->type) {
+	case CIPSO_V4_MAP_STD:
+		kfree(ptr->map.std->lvl.cipso);
+		kfree(ptr->map.std->lvl.local);
+		kfree(ptr->map.std->cat.cipso);
+		kfree(ptr->map.std->cat.local);
+		break;
+	}
+	rcu_read_unlock();
 
-  entry = AcquireMagickInfo("DCM", "DCM",
-    "Digital Imaging and Communications in Medicine image");
-  entry->decoder = (DecodeImageHandler *) ReadDCMImage;
-  entry->magick = (IsImageFormatHandler *) IsDCM;
-  entry->flags ^= CoderAdjoinFlag;
-  entry->flags |= CoderDecoderSeekableStreamFlag;
-  entry->description = ConstantString(DCMNote);
-  (void) RegisterMagickInfo(entry);
-  return(MagickImageCoderSignature);
+	kfree(ptr);
 }

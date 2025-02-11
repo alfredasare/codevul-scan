@@ -1,27 +1,19 @@
+#include <openssl/sha.h>
+
 std::string ContentBrowserClient::GetStoragePartitionIdForSite(
     BrowserContext* browser_context,
     const GURL& site) {
-  if (!site.is_valid()) {
-    return "Invalid site URL";
-  }
+  const std::string origin = site.possibly_invalid_spec();
+  unsigned char digest[SHA256_DIGEST_LENGTH];
+  SHA256((const unsigned char*)origin.c_str(), origin.length(), digest);
 
-  std::string domain = site.domain();
-  if (!IsValidDomain(domain)) {
-    return "Invalid site domain";
-  }
+  BIO* bio = BIO_new(BIO_f_base64());
+  BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
+  BUF_MEM* buffer = NULL;
+  BIO_write(bio, digest, SHA256_DIGEST_LENGTH);
+  BIO_get_mem_ptr(bio, &buffer);
+  std::string partition_id(buffer->data, buffer->length);
+  BIO_free_all(bio);
 
-  std::string path = site.path();
-  path = SanitizePath(path);
-
-  return std::string();
-}
-
-bool IsValidDomain(const std::string& domain) {
-  // Implement your own validation logic here
-  //...
-}
-
-std::string SanitizePath(const std::string& path) {
-  // Implement your own sanitization logic here
-  //...
+  return partition_id;
 }

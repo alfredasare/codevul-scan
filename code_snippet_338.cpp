@@ -1,20 +1,15 @@
-asmlinkage void do_tr(struct pt_regs *regs)
+static int ptrace_setsiginfo(struct task_struct *child, const kernel_siginfo_t *info)
 {
-    unsigned int opcode, tcode = 0;
-    unsigned long epctest;
+	unsigned long flags;
+	int error = -ESRCH;
 
-    if (!access_ok(VERIFY_READ, (void __user *) exception_epc(regs), sizeof(unsigned int)))
-        goto out_invalid_input;
-
-    if (__get_user(epctest, (unsigned int __user *) exception_epc(regs)))
-        goto out_invalid_input;
-
-    if (!(opcode & OPCODE))
-        tcode = ((epctest >> 6) & ((1 << 10) - 1));
-
-    do_trap_or_bp(regs, tcode, "Trap");
-    return;
-
-out_invalid_input:
-    force_sig(SIGSEGV, current);
+	if (lock_task_sighand(child, &flags)) {
+		error = -EINVAL;
+		if (likely(child->last_siginfo != NULL && info != NULL)) {
+			copy_siginfo(child->last_siginfo, info);
+			error = 0;
+		}
+		unlock_task_sighand(child, &flags);
+	}
+	return error;
 }

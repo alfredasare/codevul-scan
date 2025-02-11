@@ -1,24 +1,28 @@
-void PageHandler::Reload(Maybe<bool> bypassCache,
-                         Maybe<std::string> script_to_evaluate_on_load,
-                         std::unique_ptr<ReloadCallback> callback) {
-  WebContentsImpl* web_contents = GetWebContents();
-  if (!web_contents) {
-    callback->sendFailure(Response::InternalError());
-    return;
-  }
+static ZIPARCHIVE_METHOD(getCommentIndex)
+{
+	struct zip *intern;
+	zval *self = getThis();
+	zend_long index, flags = 0;
+	const char * comment;
+	size_t comment_len = 0;
+	struct zip_stat sb;
 
-  // Validate the bypassCache input
-  if (bypassCache.has_value() && bypassCache.value()) {
-    // Check if the user is authorized to bypass cache
-    if (!IsAuthorizedToBypassCache()) {
-      callback->sendFailure(Response::AccessDenied());
-      return;
-    }
-  }
+	if (!self) {
+		RETURN_FALSE;
+	}
 
-  callback->fallThrough();
-  web_contents->GetController().Reload(bypassCache.fromMaybe(false)
-                                           ? ReloadType::BYPASSING_CACHE
-                                             : ReloadType::NORMAL,
-                                       false);
+	ZIP_FROM_OBJECT(intern, self);
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "l|l",
+				&index, &flags) == FAILURE) {
+		return;
+	}
+
+	PHP_ZIP_STAT_INDEX(intern, index, 0, sb);
+	comment = zip_get_file_comment(intern, index, &comment_len, (int)flags);
+	if (comment && comment_len > 0) {
+		RETURN_STRINGL((char *)comment, (zend_long)comment_len);
+	} else {
+		RETURN_EMPTY_STRING();
+	}
 }

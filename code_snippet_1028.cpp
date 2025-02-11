@@ -1,17 +1,14 @@
-mrb_gc_arena_shrink(mrb_state *mrb, int idx)
-{
-  mrb_gc *gc = &mrb->gc;
-  unsigned int capa = gc->arena_capa;
+Frame* frame = core(WEBKIT_WEB_VIEW(widget))->focusController()->focusedOrMainFrame();
+IntPoint location = getLocationForKeyboardGeneratedContextMenu(frame);
 
-  if (idx < capa / 4) {
-    unsigned int shift = 2;
-    capa >>= shift;
-    if (capa < MRB_GC_ARENA_SIZE) {
-      capa = MRB_GC_ARENA_SIZE;
-    }
-    if (capa!= gc->arena_capa) {
-      gc->arena = (struct RBasic**)mrb_realloc(mrb, gc->arena, sizeof(struct RBasic*)*capa);
-      gc->arena_capa = capa;
-    }
-  }
-}
+FrameView* view = frame->view();
+if (!view)
+return FALSE;
+
+location = view->contentsToWindow(location);
+location.expandedTo(IntPoint(gContextMenuMargin, gContextMenuMargin));
+location.shrunkTo(IntPoint(view->width() - gContextMenuMargin, view->height() - gContextMenuMargin));
+
+IntPoint globalPoint(globalPointForClientPoint(gtk\_widget\_get\_window(widget), location));
+PlatformMouseEvent event(location, globalPoint, RightButton, MouseEventPressed, 0, false, false, false, false, gtk\_get\_current\_event\_time());
+return webkit\_web\_view\_forward\_context\_menu\_event(WEBKIT\_WEB\_VIEW(widget), event);

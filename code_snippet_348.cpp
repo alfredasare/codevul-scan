@@ -1,23 +1,12 @@
-R_API void U(copy_type_info_to_stack_frame_list_up_to_idx)(RList * type_list, RList * sf_list, ut64 idx) {
-    RListIter *iter;
-    RBinJavaVerificationObj *ver_obj, *new_ver_obj;
-    ut32 pos = 0;
-    if (type_list == NULL || sf_list == NULL) {
-        return;
-    }
-    r_list_foreach_safe(type_list, iter, ver_obj) {
-        new_ver_obj = (RBinJavaVerificationObj *) malloc (sizeof (RBinJavaVerificationObj));
-        if (new_ver_obj && ver_obj) {
-            memcpy(new_ver_obj, ver_obj, sizeof (RBinJavaVerificationObj));
-            if (!r_list_append(sf_list, (void *) new_ver_obj)) {
-                R_FREE(new_ver_obj);
-            }
-        } else {
-            R_FREE(new_ver_obj);
+static int php_zip_status_sys(struct zip *za TSRMLS_DC) /* {{{ */
+{
+        int zep, syp;
+
+        if (zip_error_get(za, &zep, &syp) != ZIP_ER_OK) {
+                php_error_docref(NULL TSRMLS_CC, E_WARNING, "Error getting zip status");
+                return -1;
         }
-        pos++;
-        if (pos >= idx) {
-            break;
-        }
-    }
+
+        return syp;
 }
+/* }}} */

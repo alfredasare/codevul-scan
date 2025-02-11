@@ -1,7 +1,7 @@
-static vm_fault_t hugetlb_vm_op_fault(struct vm_fault *vmf)
+`#define MAX_STR_LEN 1024`
+
+rad\_put\_string(struct rad\_handle \*h, int type, const char \*str)
 {
-    if (vmf->vma->vm_flags & VM_HUGETLB) {
-        printk(KERN_WARNING "hugetlb: fault at %lx\n", (unsigned long)vmf->address);
-    }
-    return 0;
+size\_t str\_len = strnlen\_s(str, MAX\_STR\_LEN);
+return rad\_put\_attr(h, type, str, (str\_len < MAX\_STR\_LEN) ? str\_len : MAX\_STR\_LEN - 1);
 }

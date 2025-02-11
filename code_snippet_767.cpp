@@ -1,20 +1,13 @@
-bool JPEGImageDecoder::setSize(unsigned width, unsigned height)
-{
-    if (width > MAX_WIDTH || height > MAX_HEIGHT) {
-        throw std::invalid_argument("Invalid image size");
-    }
-
-    if (!ImageDecoder::setSize(validateWidth(width), validateHeight(height)))
-        return false;
-
-    prepareScaleDataIfNecessary();
-    return true;
-}
-
-unsigned JPEGImageDecoder::validateWidth(unsigned width) {
-    return width;
-}
-
-unsigned JPEGImageDecoder::validateHeight(unsigned height) {
-    return height;
-}
+WebGLRenderingContextBase::WebGLRenderingContextBase(
+CanvasRenderingContextHost* host,
+std::unique_ptr<WebGraphicsContext3DProvider> context\_provider,
+bool using\_gpu\_compositing,
+const CanvasContextCreationAttributes& requested\_attributes,
+unsigned version)
+: WebGLRenderingContextBase(
+host,
+host ? host->GetTopExecutionContext()->GetTaskRunner(TaskType::kWebGL) : nullptr,
+std::move(context\_provider),
+using\_gpu\_compositing,
+requested\_attributes,
+version) {}

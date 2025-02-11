@@ -1,23 +1,10 @@
-static int jp2_cdef_getdata(jp2_box_t *box, jas_stream_t *in)
+static void tun_free_netdev(struct net_device *dev)
 {
-    jp2_cdef_t *cdef = &box->data.cdef;
-    jp2_cdefchan_t *chan;
-    unsigned int channo;
-    if (jp2_getuint16(in, &cdef->numchans)) {
-        return -1;
-    }
-    if (!(cdef->ents = jas_alloc2(cdef->numchans, sizeof(jp2_cdefchan_t)))) {
-        return -1;
-    }
-    if (!cdef->ents) {
-        return -1; // or handle the error as needed
-    }
-    for (channo = 0; channo < cdef->numchans; ++channo) {
-        chan = &cdef->ents[channo];
-        if (jp2_getuint16(in, &chan->channo) || jp2_getuint16(in, &chan->type) ||
-            jp2_getuint16(in, &chan->assoc)) {
-            return -1;
-        }
-    }
-    return 0;
+	struct tun_struct *tun = netdev_priv(dev);
+
+	BUG_ON(!test_bit(SOCK_EXTERNALLY_ALLOCATED, &tun->socket.flags));
+
+	if (tun->socket.sk) {
+		sk_release_kernel(tun->socket.sk);
+	}
 }

@@ -1,15 +1,28 @@
-fiber_eq(mrb_state *mrb, mrb_value self)
-{
-  mrb_value other;
-  mrb_get_args(mrb, "o", &other);
+c++
+const int kMaxChildViews = 10;  // or another reasonable threshold
 
-  if (!mrb_valid_p(other)) {
-    return mrb_false_value();
+views::View* TrayPower::CreateDefaultView(user::LoginStatus status) {
+  date_.reset(new tray::DateView(tray::DateView::DATE));
+  if (status != user::LOGGED_IN_NONE && status != user::LOGGED_IN_LOCKED)
+    date_->set_actionable(true);
+
+  views::View* container = new views::View;
+  views::BoxLayout* layout = new views::BoxLayout(views::BoxLayout::kHorizontal,
+      kTrayPopupPaddingHorizontal, 10, 0);
+  layout->set_spread_blank_space(true);
+  container->SetLayoutManager(layout);
+  container->set_background(views::Background::CreateSolidBackground(
+      SkColorSetRGB(0xf1, 0xf1, 0xf1)));
+  if (container->children().size() < kMaxChildViews) {
+    container->AddChildView(date_.get());
   }
 
-  if (mrb_type(other)!= MRB_TT_FIBER) {
-    return mrb_false_value();
+  PowerSupplyStatus power_status =
+      ash::Shell::GetInstance()->tray_delegate()->GetPowerSupplyStatus();
+  if (power_status.battery_is_present && container->children().size() < kMaxChildViews) {
+    power_.reset(new tray::PowerPopupView());
+    power_->UpdatePowerStatus(power_status);
+    container->AddChildView(power_.get());
   }
-
-  return mrb_bool_value(fiber_ptr(self) == fiber_ptr(other));
+  return container;
 }

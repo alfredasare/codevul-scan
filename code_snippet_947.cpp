@@ -1,18 +1,23 @@
-static void cpu_init_hyp_mode(void *dummy)
-{
-    unsigned long long boot_pgd_ptr;
-    unsigned long long pgd_ptr;
-    unsigned long hyp_stack_ptr;
-    unsigned long stack_page = (unsigned long)__get_cpu_var(kvm_arm_hyp_stack_page); // Initialize stack_page
-    unsigned long vector_ptr;
+const int kMaxPathLength = 1024; // Adjust this value based on your specific use case
+if (root_dir.value().length() > kMaxPathLength) {
+  // Handle error scenarios gracefully, such as logging an error message or throwing an exception
+  LOG(ERROR) << "Provided path is too long: " << root_dir.value();
+  return;
+}
 
-    /* Switch from the HYP stub to our own HYP init vector */
-    __hyp_set_vectors(kvm_get_idmap_vector());
+ExtensionPrefs::ExtensionPrefs(
+    PrefService* prefs,
+    const FilePath& root_dir,
+    ExtensionPrefValueMap* extension_pref_value_map)
+    : prefs_(prefs),
+      install_directory_(root_dir),
+      extension_pref_value_map_(extension_pref_value_map),
+      content_settings_store_(new ExtensionContentSettingsStore()) {
+  CleanupBadExtensionKeys(root_dir, prefs_);
 
-    boot_pgd_ptr = (unsigned long long)kvm_mmu_get_boot_httbr();
-    pgd_ptr = (unsigned long long)kvm_mmu_get_httbr();
-    hyp_stack_ptr = stack_page + PAGE_SIZE;
-    vector_ptr = (unsigned long)__kvm_hyp_vector;
+  MakePathsRelative();
 
-    __cpu_init_hyp_mode(boot_pgd_ptr, pgd_ptr, hyp_stack_ptr, vector_ptr);
+  InitPrefStore();
+
+  content_settings_store_->AddObserver(this);
 }

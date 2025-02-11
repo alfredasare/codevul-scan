@@ -1,26 +1,14 @@
-sp<MetaData> NuPlayer::GenericSource::doGetFormatMeta(bool audio) const {
-    sp<MediaSource> source = audio? mAudioTrack.mSource : mVideoTrack.mSource;
+c++
+status_t SoftHEVC::resetPlugin() {
+    mIsInFlush = false;
+    mReceivedEOS = false;
+    static constexpr size_t kArraySize = 100; // replace with the actual size of the arrays
+    std::fill_n(mTimeStamps, kArraySize, 0);
+    std::fill_n(mTimeStampsValid, kArraySize, 0);
 
-    if (source == NULL) {
-        return NULL;
-    }
+ /* Initialize both start and end times */
+    gettimeofday(&mTimeStart, NULL);
+    gettimeofday(&mTimeEnd, NULL);
 
-    // Validate and normalize the source path
-    std::string normalizedPath = normalizePath(source->getPath());
-    if (!isValidPath(normalizedPath)) {
-        return NULL;
-    }
-
-    return source->getFormat();
-}
-
-std::string normalizePath(const std::string& path) {
-    // Normalize the path by removing unnecessary characters and ensuring it starts with the correct directory
-    return path;
-}
-
-bool isValidPath(const std::string& path) {
-    // Check if the path is within the expected boundaries and does not contain any malicious characters
-    // For example, you can check if the path starts with a specific directory or contains only allowed characters
-    return true; // Replace with your implementation
+ return OK;
 }

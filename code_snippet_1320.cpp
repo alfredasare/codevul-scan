@@ -1,15 +1,20 @@
-void ResourceDispatcherHostImpl::OnTransferRequestToNewPage(int new_routing_id,
-                                                         int request_id) {
-  base::FilePath new_routing_path = filter_->child_id()->ToFilePath();
-  new_routing_path.Append(new_routing_id);
+c++
+void GraphicsContext::clearRect(const FloatRect& rect) 
+{
+    if (rect.x < 0) rect.x = 0;
+    if (rect.y < 0) rect.y = 0;
+    if (rect.width <= 0) return;
+    if (rect.height <= 0) return;
 
-  PendingRequestList::iterator i = pending_requests_.find(
-      GlobalRequestID(new_routing_path.Value(), request_id));
-  if (i == pending_requests_.end()) {
-    DVLOG(1) << "Updating a request that wasn't found";
-    return;
-  }
-  net::URLRequest* request = i->second;
-  ResourceRequestInfoImpl* info = ResourceRequestInfoImpl::ForRequest(request);
-  info->set_route_id(new_routing_id);
+    const auto max_x = std::min(this->width(), static_cast<decltype(this->width())>(rect.x + rect.width));
+    const auto max_y = std::min(this->height(), static_cast<decltype(this->height())>(rect.y + rect.height));
+
+    for (decltype(this->width()) y = rect.y; y < max_y; ++y)
+    {
+        for (decltype(this->width()) x = rect.x; x < max_x; ++x)
+        {
+            // Implement the actual clearing operation here
+            // ...
+        }
+    }
 }

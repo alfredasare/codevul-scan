@@ -1,17 +1,18 @@
-void gdDumpRect(const char *msg, gdRectPtr r)
+u32 hid_field_extract(const struct hid_device *hid, u8 *report,
+                      unsigned offset, unsigned n)
 {
-    static const char *allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 _-.";
-    size_t msg_len = strlen(msg);
-    char buffer[1024] = {0};
-
-    for (size_t i = 0; i < msg_len; i++) {
-        if (strchr(allowed_chars, msg[i]) == NULL) {
-            // Input contains invalid character, reject the input
-            printf("Invalid input: '%c'\n");
-            return;
-        }
+    if (n > 32) {
+        hid_warn(hid, "hid_field_extract() called with n (%d) > 32! (%s)\n",
+                 n, current->comm);
+        n = 32;
     }
 
-    snprintf(buffer, sizeof(buffer), "%s (%i, %i) (%i, %i)\n", msg, r->x, r->y, r->width, r->height);
-    printf(buffer);
+    // Limit n to the available buffer space
+    if (offset + n > sizeof(report)) {
+        hid_warn(hid, "hid_field_extract(): Truncating to fit buffer size! (%zu)\n",
+                sizeof(report) - offset);
+        n = sizeof(report) - offset;
+    }
+
+    return __extract(report, offset, n);
 }

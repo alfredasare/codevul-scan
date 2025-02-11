@@ -1,15 +1,17 @@
-bool LayoutBlockFlow::containsFloat(LayoutBox* layoutBox) const
+static int do\_set\_master(struct net\_device \*dev, int ifindex)
 {
-    if (!layoutBox) {
-        return false;
-    }
+ const struct net\_device\_ops \*ops;
+ int err = 0;
 
-    if (!m_floatingObjects ||!m_floatingObjects->set().isValid()) {
-        return false;
-    }
+ if (ifindex) {
+ struct net\_device \*upper\_dev = __dev\_get\_by\_index(dev\_net(dev), ifindex);
 
-    FloatingObjectHashTranslator translator;
-    size_t layoutBoxSize = sizeof(LayoutBox);
-    std::copy(reinterpret_cast<const char*>(layoutBox), reinterpret_cast<const char*>(layoutBox) + layoutBoxSize, reinterpret_cast<char*>(translator));
-    return m_floatingObjects->set().contains(translator);
+ if (!upper\_dev || !upper\_dev->netdev\_ops || !upper\_dev->netdev\_ops->ndo\_add\_slave)
+ return -EINVAL;
+
+ ops = upper\_dev->netdev\_ops;
+ err = ops->ndo\_add\_slave(upper\_dev, dev);
+ }
+
+ return err;
 }

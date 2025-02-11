@@ -1,22 +1,17 @@
-static void netlbl_cipsov4_doi_free(struct rcu_head *entry)
+ModuleExport size_t RegisterSIXELImage(void)
 {
-    struct cipso_v4_doi *ptr;
+  MagickInfo
+    *entry;
+  const char* extensions[] = {"SIXEL", "SIX"};
 
-    ptr = container_of(entry, struct cipso_v4_doi, rcu);
+  for (int i = 0; i < 2; ++i) {
+    entry=AcquireMagickInfo(extensions[i],"SIXEL Graphics Format", "DEC SIXEL Graphics Format");
+    entry->decoder=(DecodeImageHandler *) ReadSIXELImage;
+    entry->encoder=(EncodeImageHandler *) WriteSIXELImage;
+    entry->magick=(IsImageFormatHandler *) IsSIXEL;
+    entry->flags^=CoderAdjoinFlag;
+    (void) RegisterMagickInfo(entry);
+  }
 
-    if (!ptr) {
-        return;
-    }
-
-    switch (ptr->type) {
-        case CIPSO_V4_MAP_STD:
-            kfree(ptr->map.std->lvl.cipso);
-            kfree(ptr->map.std->lvl.local);
-            kfree(ptr->map.std->cat.cipso);
-            kfree(ptr->map.std->cat.local);
-            break;
-        default:
-            break;
-    }
-    kfree(ptr);
+  return(MagickImageCoderSignature);
 }

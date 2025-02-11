@@ -1,22 +1,12 @@
-static int bochs_read(BlockDriverState *bs, int64_t sector_num,
-                       uint8_t *buf, int nb_sectors)
+static void xhci_stop(XHCIState *xhci)
 {
-    int64_t block_offset = 0;
-    int ret = 0;
-    uint32_t sectors_left = nb_sectors; 
-
-    while (sectors_left > 0) {
-        block_offset = (uint32_t)seek_to_sector(bs, sector_num); 
-        if (block_offset >= 0) {
-            ret = bdrv_pread(bs->file, (uint32_t)block_offset, buf, 512);
-            if (ret!= 512) {
-                return -1;
-            }
-        } else
-            memset(buf, 0, 512);
-        sectors_left--;
-        sector_num++;
-        buf += 512;
+    // Validate the input parameter before proceeding
+    if (!xhci) {
+        pr_err("Invalid input! xhci pointer is NULL.\n");
+        return;
     }
-    return 0;
+
+    trace_usb_xhci_stop();
+    xhci->usbsts |= USBSTS_HCH;
+    xhci->crcr_low &= ~CRCR_CRR;
 }

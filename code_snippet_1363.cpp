@@ -1,18 +1,18 @@
-static void vdagent_file_xfer_task_free(gpointer data)
-{
-    AgentFileXferTask *task = data;
+Struct condition *compiler\_create\_condition(struct filter\_op \*fop) {
+struct condition \*cnd;
 
-    g_return_if_fail(task!= NULL);
+SAFE\_CALLOC(cnd, 1, sizeof(struct condition));
 
-    if (task->file_fd > 0) {
-        syslog(LOG_ERR, "file-xfer: Removing task %u and file %s due to error",
-               task->id, g_filename_to_uri(task->file_name, NULL, NULL));
-        close(task->file_fd);
-        unlink(g_filename_to_uri(task->file_name, NULL, NULL));
-    } else if (task->debug)
-        syslog(LOG_DEBUG, "file-xfer: Removing task %u %s",
-               task->id, g_filename_to_uri(task->file_name, NULL, NULL));
+/* copy the instruction with proper bounds checking */
+if (sizeof(struct filter\_op) < sizeof(struct condition)) {
+ memcpy(&cnd->fop, fop, sizeof(struct filter\_op));
+} else {
+/* Handle error or set a maximum limit for the copy operation */
+/* Log an error, for example: */
+LOG\_ERROR("Error: filter\_op size exceeds condition size.");
+free(cnd);
+return NULL;
+}
 
-    g_free(task->file_name);
-    g_free(task);
+return cnd;
 }

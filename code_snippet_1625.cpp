@@ -1,23 +1,8 @@
-#include <libxml/parser.h>
-#include <libxml/tree.h>
-
-int main() {
-    // Initialize the parser
-    xmlInitParser();
-
-    // Create a new parser context
-    xmlDocPtr doc = xmlReadMemory(buffer, size, URL, encoding, options);
-
-    // Check if the document is valid
-    if (doc == NULL) {
-        return -1;
+FLACParser::~FLACParser()
+{
+    ALOGV("FLACParser::~FLACParser");
+    if (mDecoder != nullptr) {
+        FLAC__stream_decoder_delete(mDecoder);
+        mDecoder = nullptr;
     }
-
-    // Process the XML data
-    //...
-
-    // Clean up
-    xmlFreeDoc(doc);
-
-    return 0;
 }

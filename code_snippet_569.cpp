@@ -1,11 +1,10 @@
-static void readonlyTestInterfaceEmptyAttributeAttributeGetter(const v8::FunctionCallbackInfo<v8::Value>& info)
+void flush_thread(void)
 {
-    v8::Local<v8::Object> holder = info.Holder();
-    TestInterfaceNode* impl = V8TestInterfaceNode::toImpl(holder);
-    std::optional<void*> ptr = impl->readonlyTestInterfaceEmptyAttribute();
-    if (ptr.has_value()) {
-        v8SetReturnValueFast(info, *ptr);
-    } else {
-        v8SetReturnValueUndefined(info); // or throw an exception if needed
-    }
+ discard_lazy_cpu_state();
+
+#ifdef CONFIG_HAVE_HW_BREAKPOINT
+ flush_ptrace_hw_breakpoint(current);
+#else /* CONFIG_HAVE_HW_BREAKPOINT */
+ clear_debug_registers(&current->thread);
+#endif /* CONFIG_HAVE_HW_BREAKPOINT */
 }

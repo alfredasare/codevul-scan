@@ -1,13 +1,29 @@
-lzh_make_fake_table(struct huffman *hf, uint16_t c)
-{
-    if (c >= hf->len_size)
-        return (0);
-    uint16_t idx = hf->tbl[0];
-    if (idx >= sizeof(hf->bitlen) / sizeof(hf->bitlen[0]))
-        return (0); 
-    hf->tbl[0] = c;
-    hf->max_bits = 0;
-    hf->shift_bits = 0;
-    hf->bitlen[idx] = 0;
-    return (1);
+static jboolean android_net_wifi_cancelRange(
+        JNIEnv *env, jclass cls, jint iface, jint id, jobject params) {
+
+    JNIHelper helper(env);
+    wifi_interface_handle handle = getIfaceHandle(helper, cls, iface);
+    ALOGD("cancelling rtt request [%d] = %p", id, handle);
+
+    mac_addr addrs[MaxRttConfigs];
+    memset(&addrs, 0, sizeof(addrs));
+
+    jsize len = helper.getArrayLength((jobjectArray)params);
+    if (len > MaxRttConfigs) {
+        ALOGD("Input array length exceeds the maximum allowed limit");
+        return JNI_FALSE;
+    }
+
+    for (jsize i = 0; i < len; i++) {
+
+        JNIObject<jobject> param = helper.getObjectArrayElement(params, i);
+        if (param == NULL) {
+            ALOGD("could not get element %d", i);
+            continue;
+        }
+
+        parseMacAddress(env, param, addrs[i]);
+    }
+
+    return hal_fn.wifi_rtt_range_cancel(id, handle, len, addrs) == WIFI_SUCCESS;
 }

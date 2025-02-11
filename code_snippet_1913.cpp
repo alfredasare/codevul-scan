@@ -1,32 +1,20 @@
-const ContentSuggestion* GetSuggestionToNotifyAbout(Category category) {
-  const auto& suggestions = service_->GetSuggestionsForCategory(category);
+// Fixed code:
+void FoFiType1C::eexecCvtGlyph(Type1CEexecBuf *eb, const char *glyphName,
+                   int offset, int nBytes,
+                   Type1CIndex *subrIdx,
+                   Type1CPrivateDict *pDict) {
+  GooString *buf;
+  GooString *charBuf;
 
-  // Validate and sanitize the 'category' parameter
-  if (!IsValidCategory(category)) {
-    return nullptr; // or throw an exception, depending on your error handling strategy
-  }
+  charBuf = new GooString();
+  cvtGlyph(offset, nBytes, charBuf, subrIdx, pDict, gTrue);
 
-  // Restrict access to the file system using a whitelist approach
-  const std::set<Category> allowedCategories = {KnownCategories::ARTICLES};
-  if (!allowedCategories.count(category)) {
-    return nullptr; // or throw an exception, depending on your error handling strategy
-  }
+  buf = GooString::format("/%s %d RD ", glyphName, charBuf->getLength());
+  eexecWrite(eb, buf->getCString());
+  delete buf;
+  eexecWriteCharstring(eb, (Guchar *)charBuf->getCString(),
+                       charBuf->getLength());
+  eexecWrite(eb, " ND\n");
 
-  // Rest of the original code remains unchanged
-  const auto& suggestions = service_->GetSuggestionsForCategory(category);
-  if (variations::GetVariationParamByFeatureAsBool(
-           kContentSuggestionsNotificationsFeature,
-           kContentSuggestionsNotificationsAlwaysNotifyParam, false)) {
-    if (category == KnownCategories::ARTICLES &&!suggestions.empty()) {
-      return &suggestions[0];
-    }
-    return nullptr;
-  }
-
-  for (const ContentSuggestion& suggestion : suggestions) {
-    if (suggestion.notification_extra()) {
-      return &suggestion;
-    }
-  }
-  return nullptr;
+  delete charBuf;
 }

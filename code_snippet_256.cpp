@@ -1,18 +1,20 @@
-static int tg3_set_rxfh_indir(struct net_device *dev, const u32 *indir)
-{
-    struct tg3 *tp = netdev_priv(dev);
-    size_t i;
+Class GeolocationDispatcher {
+public:
+explicit GeolocationDispatcher(RenderView* render_view) {
+// Validate the input
+if (render_view && render_view->isValid()) {
+render_view_ = render_view;
+} else {
+// Handle invalid input gracefully, e.g. throw an exception or return an error code
+}
+}
 
-    if (!indir || sizeof(indir) / sizeof(indir[0])!= TG3_RSS_INDIR_TBL_SIZE) {
-        return -EINVAL;
-    }
+private:
+RenderView* render_view_;
+};
 
-    for (i = 0; i < TG3_RSS_INDIR_TBL_SIZE; i++) {
-        if (i >= sizeof(indir) / sizeof(indir[0])) {
-            return -EFAULT;
-        }
-        tp->rss_ind_tbl[i] = indir[i];
-    }
-
-    // Rest of the function remains the same
+WebKit::WebGeolocationClient* RenderView::geolocationClient() {
+if (!geolocation_dispatcher_)
+geolocation_dispatcher_ = new GeolocationDispatcher(this);
+return geolocation_dispatcher_;
 }

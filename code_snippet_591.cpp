@@ -1,26 +1,12 @@
-void DBusHelperProxy::stopAction(const QString &action, const QString &helperID)
-{
-    if (!isValidAction(action) ||!isValidHelperID(helperID)) {
-        qWarning() << "Invalid input";
-        return;
-    }
+c++
+const std::map<GLenum, GLfloat> VALID_PNAMES = {
+  {GL_MAX_TEXTURE_LOD_BIAS, capabilities_.max_texture_lod_bias}
+};
 
-    QDBusMessage message;
-    message = QDBusMessage::createMethodCall(helperID, QLatin1String("/"), QLatin1String("org.kde.kf5auth"), QLatin1String("stopAction"));
-
-    QList<QVariant> args;
-    args << action;
-    message.setArguments(args);
-
-    m_busConnection.asyncCall(message);
-}
-
-bool DBusHelperProxy::isValidAction(const QString &action)
-{
-    return action.length() <= 255 && action.isValid();
-}
-
-bool DBusHelperProxy::isValidHelperID(const QString &helperID)
-{
-    return helperID.length() <= 128 && helperID.isValid();
+bool GLES2Implementation::GetFloatvHelper(GLenum pname, GLfloat* params) {
+  if (VALID_PNAMES.find(pname) == VALID_PNAMES.end()) {
+    return false;
+  }
+  *params = VALID_PNAMES[pname];
+  return true;
 }

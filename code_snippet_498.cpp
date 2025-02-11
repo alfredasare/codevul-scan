@@ -1,24 +1,34 @@
-int drm_mode_attachmode_crtc(struct drm_device *dev, struct drm_crtc *crtc,
-			     struct drm_display_mode *mode)
+PHP_FUNCTION(time_sleep_until)
 {
-    struct drm_connector *connector;
-    int ret = 0;
-    bool need_dup = false;
-    struct drm_display_mode *dup_mode;
-    list_for_each_entry(connector, &dev->mode_config.connector_list, head) {
-        if (!connector->encoder)
-            break;
-        if (connector->encoder->crtc == crtc) {
-            if (need_dup) {
-                dup_mode = drm_mode_duplicate(dev, mode);
-            } else {
-                dup_mode = mode;
-            }
-            ret = drm_mode_attachmode(dev, connector, dup_mode);
-            if (ret)
-                return ret;
-            need_dup = true;
-        }
-    }
-    return 0;
+	double d_ts, c_ts;
+	struct timeval tm_start, tm;
+	struct timespec php_req, php_rem;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "d", &d_ts) == FAILURE) {
+		return;
+	}
+
+	if (gettimeofday(&tm_start, NULL) != 0) {
+		RETURN_FALSE;
+	}
+
+	c_ts = (double)(d_ts - (tm.tv_sec + tm.tv_usec / 1000000.00) + (tm_start.tv_sec + tm_start.tv_usec / 1000000.00));
+	if (c_ts < 0) {
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Sleep until to time is less than current time");
+		RETURN_FALSE;
+	}
+
+	php_req.tv_sec = (time_t) c_ts;
+	php_req.tv_nsec = (long) ((c_ts - php_req.tv_sec) * 1000000000.00);
+
+	while (nanosleep(&php_req, &php_rem)) {
+		if (errno == EINTR) {
+			php_req.tv_sec = php_rem.tv_sec;
+			php_req.tv_nsec = php_rem.tv_nsec;
+		} else {
+			RETURN_FALSE;
+		}
+	}
+
+	RETURN_TRUE;
 }

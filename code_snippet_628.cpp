@@ -1,11 +1,17 @@
-ImageBitmap* ImageBitmap::create(ImageData* data, Optional<IntRect> cropRect, const ImageBitmapOptions& options) {
-  if (!data || data->getSize().width <= 0 || data->getSize().height <= 0) {
-    return nullptr;
-  }
+static int _ffs_name_dev(struct ffs_dev *dev, const char *name)
+{
+	size_t name_len = strnlen(name, FFS_NAME_MAX);
+	struct ffs_dev *existing;
 
-  if (cropRect.has_value() && (cropRect->x < 0 || cropRect->y < 0 || cropRect->width > data->getSize().width || cropRect->height > data->getSize().height)) {
-    return nullptr;
-  }
+	if (name_len >= FFS_NAME_MAX) {
+		return -EINVAL;
+	}
 
-  return new ImageBitmap(data, cropRect, options);
+	existing = _ffs_do_find_dev(name);
+	if (existing)
+		return -EBUSY;
+
+	strncpy(dev->name, name, name_len + 1);
+
+	return 0;
 }

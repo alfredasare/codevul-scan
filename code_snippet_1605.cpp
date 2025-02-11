@@ -1,30 +1,6 @@
-status_t MediaMetadataRetriever::setDataSource(
-    const sp<IMediaHTTPService> &httpService,
-    const char *srcUrl,
-    const KeyedVector<String8, String8> *headers)
+int xmlrpc_getlast_error(void)
 {
-    ALOGV("setDataSource");
-    Mutex::Autolock _l(mLock);
-    if (mRetriever == 0) {
-        ALOGE("retriever is not initialized");
-        return INVALID_OPERATION;
-    }
-    if (srcUrl == NULL) {
-        ALOGE("data source is a null pointer");
-        return UNKNOWN_ERROR;
-    }
-
-    Uri uri = Uri::parse(srcUrl);
-    if (!uri.isAbsolute() ||!uri.getScheme()) {
-        ALOGE("Invalid URL: %s", srcUrl);
-        return UNKNOWN_ERROR;
-    }
-    String8 path = uri.getPath();
-    if (path.find_first_of("/..")!= String8::npos) {
-        ALOGE("Invalid path: %s", path.string());
-        return UNKNOWN_ERROR;
-    }
-
-    ALOGV("data source (%s)", srcUrl);
-    return mRetriever->setDataSource(httpService, srcUrl, headers);
+	int error\_code = xmlrpc\_error\_code;
+	xmlrpc\_error\_code = 0; // Reset the global variable to a safe value
+	return error\_code;
 }

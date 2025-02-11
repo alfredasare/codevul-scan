@@ -1,22 +1,19 @@
-void var_destroy(php_unserialize_data_t *var_hashx)
-{
-    if (!var_hashx ||!var_hashx->first) {
-        return; // early exit if var_hashx is invalid
-    }
+pr_err("macvtap: register_netdevice_notifier failed\n");
+class_unregister(macvtap_class);
+cdev_del(&macvtap_cdev);
+unregister_chrdev_region(macvtap_major, MACVTAP_NUM_DEVS);
+return err;
+}
 
-    void *next;
-    zend_long i;
-    var_entries *var_hash = var_hashx->first;
-    var_dtor_entries *var_dtor_hash = var_hashx->first_dtor;
+err = macvlan\_link\_register(&macvtap\_link\_ops);
+if (err) {
+pr\_err("macvtap: macvlan\_link\_register failed\n");
+unregister\_netdevice\_notifier(&macvtap\_notifier\_block);
+class\_unregister(macvtap\_class);
+cdev\_del(&macvtap\_cdev);
+unregister\_chrdev\_region(macvtap\_major, MACVTAP\_NUM\_DEVS);
+return err;
+}
 
-    //... rest of the code...
-
-    while (var_dtor_hash) {
-        for (i = 0; i < var_dtor_hash->used_slots; i++) {
-            zval_ptr_dtor(&var_dtor_hash->data[i]);
-        }
-        next = var_dtor_hash->next;
-        efree_size(var_dtor_hash, sizeof(var_dtor_entries));
-        var_dtor_hash = next;
-    }
+return 0;
 }

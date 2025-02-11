@@ -1,21 +1,23 @@
-void isis_clear_checksum_lifetime(void *header)
+ossl\_cipher\_get\_auth\_tag(int argc, VALUE *argv, VALUE self)
 {
-    struct isis_lsp_header *header_lsp = (struct isis_lsp_header *) header;
+    VALUE vtag\_len, ret;
+    EVP\_CIPHER\_CTX \*ctx;
+    size\_t tag\_len = 16;
 
-    if (header_lsp == NULL || header_lsp->checksum == NULL || header_lsp->remaining_lifetime == NULL) {
-        return;
-    }
+    rb\_scan\_args(argc, argv, "01", &vtag\_len);
+    if (NIL\_P(vtag\_len))
+	vtag\_len = rb\_attr\_get(self, id\_auth\_tag\_len);
+    if (!NIL\_P(vtag\_len))
+	tag\_len = NUM2SIZET(vtag\_len);
 
-    if (header_lsp->checksum[0] >= sizeof(header_lsp->checksum) || header_lsp->checksum[1] >= sizeof(header_lsp->checksum)) {
-        return;
-    }
+    GetCipher(self, ctx);
 
-    if (header_lsp->remaining_lifetime[0] >= sizeof(header_lsp->remaining_lifetime) || header_lsp->remaining_lifetime[1] >= sizeof(header_lsp->remaining_lifetime)) {
-        return;
-    }
+    if (!(EVP\_CIPHER\_CTX\_flags(ctx) & EVP\_CIPH\_FLAG\_AEAD\_CIPHER))
+	ossl\_raise(eCipherError, "authentication tag not supported by this cipher");
 
-    header_lsp->checksum[0] = 0;
-    header_lsp->checksum[1] = 0;
-    header_lsp->remaining_lifetime[0] = 0;
-    header_lsp->remaining_lifetime[1] = 0;
+    ret = rb\_str\_new(NULL, tag\_len);
+    if (!EVP\_CIPHER\_CTX\_ctrl(ctx, EVP\_CTRL\_AEAD\_GET\_TAG, tag\_len, RSTRING\_PTR(ret)))
+	ossl\_raise(eCipherError, "retrieving the authentication tag failed");
+
+    return ret;
 }

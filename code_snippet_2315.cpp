@@ -1,19 +1,28 @@
-GF_Err gf_isom_avc_set_inband_config(GF_ISOFile *the_file, u32 trackNumber, u32 DescriptionIndex)
+int validate_data_encoding(gpgme_data_t d)
 {
-    // Validate DescriptionIndex
-    if (DescriptionIndex < 0 || DescriptionIndex > MAX_DESCRIPTION_INDEX) {
-        return GF_ERR_INVALID_INPUT;
-    }
-
-    // Sanitize DescriptionIndex
-    DescriptionIndex = sanitize_u32(DescriptionIndex);
-
-    return gf_isom_avc_config_update_ex(the_file, trackNumber, DescriptionIndex, NULL, 3);
+  gpgme_data_encoding_t encoding = gpgme_data_get_encoding(d);
+  return encoding >= GPGME_DATA_ENCODING_NONE && encoding <= GPGME_DATA_ENCODING_LAST;
 }
 
-u32 sanitize_u32(u32 value) {
-    if (value >= 0 && value <= 3) {
-        return value;
-    }
-    return 0; // Default to a safe value if not found in the whitelist
+map_data_enc (gpgme_data_t d)
+{
+  if (!validate_data_encoding(d))
+  {
+    return NULL;
+  }
+
+  switch (gpgme_data_get_encoding (d))
+  {
+  case GPGME_DATA_ENCODING_NONE:
+    break;
+  case GPGME_DATA_ENCODING_BINARY:
+    return "--binary";
+  case GPGME_DATA_ENCODING_BASE64:
+    return "--base64";
+  case GPGME_DATA_ENCODING_ARMOR:
+    return "--armor";
+  default:
+    break;
+  }
+  return NULL;
 }

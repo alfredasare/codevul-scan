@@ -1,28 +1,29 @@
-gst_asf_demux_check_header (GstASFDemux * demux)
+static struct sk_buff *netlink_alloc_large_skb(unsigned int size,
+					       int broadcast)
 {
-  AsfObject obj;
-  guint8 *cdata = (guint8 *) gst_adapter_map (demux->adapter, ASF_OBJECT_HEADER_SIZE);
+	struct sk_buff *skb;
+	void *data;
 
-  if (!validate_allowed_characters(cdata, ASF_OBJECT_HEADER_SIZE))
-    return GST_ASF_DEMUX_CHECK_HEADER_NEED_DATA;
+	if (size <= NLMSG_GOODSIZE || broadcast)
+		return alloc_skb(size, GFP_KERNEL);
 
-  guint8 *cdata = (guint8 *) gst_adapter_map (demux->adapter, ASF_OBJECT_HEADER_SIZE);
-  if (cdata == NULL)            /* need more data */
-    return GST_ASF_DEMUX_CHECK_HEADER_NEED_DATA;
+	size = SKB_DATA_ALIGN(size) +
+	       SKB_DATA_ALIGN(sizeof(struct skb_shared_info));
 
-  if (asf_demux_peek_object (demux, cdata, ASF_OBJECT_HEADER_SIZE, &obj, FALSE && obj.id == ASF_OBJ_HEADER))
-    return GST_ASF_DEMUX_CHECK_HEADER_YES;
+	if (size > MAX_SKB_FRAGS * PAGE_SIZE) {
+		pr_err("Error: Skbuffer size is too large\n");
+		return NULL;
+	}
 
-  return GST_ASF_DEMUX_CHECK_HEADER_NO;
-}
+	data = vmalloc(size);
+	if (data == NULL)
+		return NULL;
 
-gboolean validate_allowed_characters(guint8 *data, guint size)
-{
-  static const gchar *allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_";
-  for (guint i = 0; i < size; i++) {
-    if (!g_strchr(allowed_chars, data[i])) {
-      return FALSE;
-    }
-  }
-  return TRUE;
+	skb = __build_skb(data, size);
+	if (skb == NULL)
+		vfree(data);
+	else
+		skb->destructor = netlink_skb_destructor;
+
+	return skb;
 }

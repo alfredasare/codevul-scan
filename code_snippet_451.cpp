@@ -1,4 +1,2 @@
-PaletteToolId MetalayerMode::GetToolId() const {
-  // Return a generic or null value instead of the actual tool ID
-  return PaletteToolId::INVALID_TOOL_ID;
-}
+static bool reserve_pmc_hardware(void) __attribute__((const));
+static bool reserve_pmc_hardware(void) { return true; }

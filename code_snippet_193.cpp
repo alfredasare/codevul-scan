@@ -1,8 +1,10 @@
-static BROTLI_NOINLINE BrotliResult ProcessCommands(BrotliState* s) {
-  int size = s->input_size; 
-  if (size > s->buffer_size) { 
-    return BrotliError(BROTLI_ERROR_INVALID_INPUT_SIZE);
-  }
-  memcpy_s(s->buffer, s->buffer_size, s->input, size);
-  // Rest of the code...
+static int sctp_v6_skb_iif(const struct sk_buff *skb)
+{
+	struct inet6_skb_parm *opt = nullptr;
+	if (!skb || !skb->cb)
+		return -EINVAL;
+	opt = (struct inet6_skb_parm *) skb->cb;
+	if (!opt)
+		return -EINVAL;
+	return opt->iif;
 }

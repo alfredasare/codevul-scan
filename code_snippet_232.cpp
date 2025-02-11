@@ -1,13 +1,23 @@
-MockWebContentsViewDelegate()
-  : context_menu_request_received_(false) {
-  if (!IsValidContextMenuRequest(context_menu_request_received_)) {
-    // Handle invalid input
-  }
-}
+static trans\_t\* AllocTrans(char \*original, char \*translated[MAX\_LANGUAGES]) {
+ trans\_t \*t;
+ int i;
 
-bool IsValidContextMenuRequest(bool request) {
-  // Implement logic to validate the input
-  // For example, you can check if the request is within a certain range
-  // or matches a specific format
-  return request == true; // Replace with actual validation logic
+ t = malloc(sizeof(trans\_t));
+ memset(t, 0, sizeof(trans\_t));
+
+ if (original) {
+ strncpy(t->original, original, MAX\_TRANS\_STRING - 1);
+ t->original[MAX\_TRANS\_STRING - 1] = '\0';
+ }
+
+ if (translated) {
+ for (i = 0; i < MAX\_LANGUAGES; i++) {
+ if (translated[i]) {
+ strncpy(t->translated[i], translated[i], MAX\_TRANS\_STRING - 1);
+ t->translated[i][MAX\_TRANS\_STRING - 1] = '\0';
+ }
+ }
+ }
+
+ return t;
 }

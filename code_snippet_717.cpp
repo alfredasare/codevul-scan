@@ -1,20 +1,7 @@
-hash(XML_Parser parser, KEY s) {
-  struct siphash state;
-  struct sipkey *key = NULL;
-  int ret;
-
-  sip24_valid = 0;
-  key = malloc(sizeof(struct sipkey));
-  if (key == NULL) {
-    return 0;
-  }
-  ret = copy_salt_to_sipkey(parser, key);
-  if (ret!= 0) {
-    free(key);
-    return 0;
-  }
-  sip24_init(&state, key);
-  sip24_update(&state, s, keylen(s) * sizeof(XML_Char));
-  return (unsigned long)sip24_final(&state);
-  free(key);
+bool IsExtendingSelection(const MouseEventWithHitTestResults& event) {
+ bool is_mouse_down_on_link_or_image =
+ event.IsOverLink() || event.GetHitTestResult().GetImage();
+ return (event.Event().GetModifiers() & WebInputEvent::Modifiers::kShiftKey) !=
+ 0 &&
+ !is_mouse_down_on_link_or_image && is_mouse_down_on_link_or_image < MAX_INTVALUE;
 }

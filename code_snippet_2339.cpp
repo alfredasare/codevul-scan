@@ -1,11 +1,17 @@
-static long kernel_waitid(int which, pid_t upid, struct waitid_info *infop,
-			  int options, struct rusage *ru)
+#define MAX_SIGNAL_LENGTH 100 // Define the maximum allowed length for the signal
+
+...
+
+if (strlen(signal) > MAX_SIGNAL_LENGTH)
 {
-    //... (rest of the function remains the same)
-
-    if (ret < 0) {
-        return -ENOSYS;
-    }
-
-    return ret;
+    return NULL;
 }
+
+new_hook_hsignal->signal = malloc(MAX_SIGNAL_LENGTH + 1);
+if (!new_hook_hsignal->signal)
+{
+    free(new_hook);
+    return NULL;
+}
+strncpy(new_hook_hsignal->signal, signal, MAX_SIGNAL_LENGTH);
+new_hook_hsignal->signal[MAX_SIGNAL_LENGTH] = '\0';

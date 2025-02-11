@@ -1,10 +1,13 @@
-void VP8XChunk::xmp(bool hasXMP)
-{
-    XMP_Uns32 flags = GetLE32(&this->data[0]);
-    if (sizeof(XMP_Uns32) > sizeof(this->data)) {
-        // Handle invalid input data size
-        return;
+void r_pkcs7_free_certificaterevocationlists(RPKCS7CertificateRevocationLists *crls) {
+    ut32 i;
+    if (!crls) return;
+    for (i = 0; i < crls->length; ++i) {
+        if (crls->elements[i]) {
+            r_x509_free_crl(crls->elements[i]);
+            crls->elements[i] = NULL;
+        }
     }
-    flags ^= (-hasXMP ^ flags) & (1 << XMP_FLAG_BIT);
-    std::memcpy(&this->data[0], &flags, sizeof(XMP_Uns32));
+    R_FREE(crls->elements);
+    crls->elements = NULL;
+    R_FREE(crls);
 }

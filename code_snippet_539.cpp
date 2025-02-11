@@ -1,26 +1,21 @@
-static void cirrus_mem_writeb_mode4and5_8bpp(CirrusVGAState *s,
-					    unsigned mode,
-					    unsigned offset,
-					    uint32_t mem_value)
-{
-    int x;
-    unsigned val = mem_value;
-    uint8_t *dst;
-
-    // Validate the offset value
-    if (offset >= s->vga.vram_size) {
-        return;
-    }
-
-    dst = s->vga.vram_ptr + (offset & s->cirrus_addr_mask);
-    for (x = 0; x < 8; x++) {
-        if (val & 0x80) {
-            *dst = s->cirrus_shadow_gr1;
-        } else if (mode == 5) {
-            *dst = s->cirrus_shadow_gr0;
-        }
-        val <<= 1;
-        dst++;
-    }
-    memory_region_set_dirty(&s->vga.vram, offset, 8);
+CaptureGroupNameSSLSocketPool::CaptureGroupNameSSLSocketPool(
+HostResolver* host_resolver,
+CertVerifier* cert_verifier)
+: SSLClientSocketPool(
+GetMaxSockets(), // max_sockets
+GetMaxConnectionsPerServer(), // max_connections_per_server
+cert_verifier,
+nullptr, // dns_client_settings
+nullptr, // resolver_context
+nullptr, // ssl_config_service
+nullptr, // ssl_session_cache_config
+std::string(), // tls_unique_ids_enabled
+nullptr, // tls_unique_ids_validator
+nullptr, // tls_unique_ids_revoker
+nullptr, // tls_unique_ids_cache
+nullptr, // tls_session_resume_callback
+nullptr, // tls_session_resume_callback_data
+nullptr) { // ssl_error_handler
 }
+
+Note: The `GetMaxSockets` and `GetMaxConnectionsPerServer` functions should be implemented to return appropriate values based on your specific use case.

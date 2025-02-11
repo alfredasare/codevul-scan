@@ -1,9 +1,16 @@
-void SplitStringAlongWhitespace(const std::wstring& str, std::vector<std::wstring>* result) {
-    if (result == nullptr) {
-        throw std::invalid_argument("result pointer is null");
-    }
+ZEND_API int zend\_eval\_string\_ex(char \*str, zval \*retval\_ptr, char \*string\_name, int handle\_exceptions) /* {{{ */
+{
+int i, j;
+size\_t len;
+int is\_allowed = 1;
 
-    if (!SplitStringAlongWhitespaceT(str, result)) {
-        throw std::runtime_error("SplitStringAlongWhitespaceT failed");
-    }
+// Check if the string only contains allowed characters
+for (i = 0; str[i] != '\0'; i++) {
+if (!isalnum((unsigned char)str[i]) && str[i] != '\_' && str[i] != '(' && str[i] != ')') {
+is\_allowed = 0;
+break;
 }
+}
+
+// Check if the string contains only allowed functions
+if (is_allowed) {

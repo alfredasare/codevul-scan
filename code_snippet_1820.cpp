@@ -1,34 +1,23 @@
-const char *page_get_link(struct dentry *dentry, struct inode *inode, struct delayed_call *callback)
-{
-    char *kaddr;
-    struct page *page;
-    struct address_space *mapping = inode->i_mapping;
+void RestartOnHostShutdown() {
+  DCHECK(context_->network_task_runner()->BelongsToCurrentThread());
 
-    if (!dentry ||!dentry->d_inode) {
-        return ERR_PTR(-ECHILD);
-    }
+  if (shutting_down_)
+    return;
 
-    if (!(dentry->d_inode->i_mode & S_IRUGO)) {
-        return ERR_PTR(-ECHILD);
-    }
+  restarting_ = false;
+  host_ = NULL;
+  ResetHost();
 
-    if (!dentry) {
-        page = find_get_page(mapping, 0);
-        if (!page)
-            return ERR_PTR(-ECHILD);
-        if (!PageUptodate(page)) {
-            put_page(page);
-            return ERR_PTR(-ECHILD);
-        }
-    } else {
-        page = read_mapping_page(mapping, 0, NULL);
-        if (IS_ERR(page))
-            return (char*)page;
-    }
+  const size_t max_host_size = 100; // Adjust this value based on the actual maximum size of the 'host_' buffer
+  std::unique_ptr<char[]> new_host(new char[max_host_size]);
+  std::string host_data("example host data"); // Replace with actual data source
+  size_t host_data_length = host_data.length();
 
-    set_delayed_call(callback, page_put_link, page);
-    BUG_ON(mapping_gfp_mask(mapping) & __GFP_HIGHMEM);
-    kaddr = page_address(page);
-    nd_terminate_link(kaddr, inode->i_size, PAGE_SIZE - 1);
-    return kaddr;
+  if (host_data_length > max_host_size) {
+    LOG(ERROR) << "Host data length exceeds maximum size";
+    return;
+  }
+
+  memcpy(new_host.get(), host_data.c_str(), host_data_length);
+  host_ = std::move(new_host);
 }

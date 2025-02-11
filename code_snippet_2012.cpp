@@ -1,14 +1,14 @@
-static int apparmor_path_truncate(const struct path *path)
+MagickExport size_t GetMagickVersion(char buffer[], size_t bufferSize, size_t *version)
 {
-    size_t path_len = strlen(path->buf);
-    if (path_len > PATH_MAX) {
-        return -EINVAL;
-    }
+  size_t length = strlen(MagickVersion);
 
-    char* truncated_path = strndup(path->buf, PATH_MAX);
-    if (!truncated_path) {
-        return -ENOMEM;
-    }
+  if (version != NULL)
+    *version = MagickLibVersion;
 
-    return common_perm_path(OP_TRUNC, truncated_path, MAY_WRITE | AA_MAY_META_WRITE);
+  if (length + 1 > bufferSize) // +1 for null terminator
+    return 0;
+
+  strncpy(buffer, MagickVersion, bufferSize);
+  buffer[bufferSize - 1] = '\0'; // Ensure null termination
+  return length;
 }

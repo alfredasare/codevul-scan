@@ -1,21 +1,10 @@
-#include <owasp-esapi.h>
+Loader::Init(some_predefined_buffer_size);
 
-xt_register_targets(struct xt_target *target, unsigned int n)
-{
-    unsigned int i;
-    int err = 0;
+void Loader::Init(size_t max_buffer_size) {
+  if (max_buffer_size > buffer_size) {
+    throw std::out_of_range("Input data size exceeds allowed buffer size");
+  }
 
-    for (i = 0; i < n; i++) {
-        char* encoded_target = esapi_encode(target[i].name, ESAPI_ENCODING_URI);
-        err = xt_register_target(encoded_target);
-        if (err)
-            goto err;
-        free(encoded_target);
-    }
-    return err;
-
-err:
-    if (i > 0)
-        xt_unregister_targets(target, i);
-    return err;
+  // Initialization code
+  // ...
 }

@@ -1,16 +1,19 @@
-stringprep_utf8_nfkc_normalize (const char *str, ssize_t len)
+CopyInterps(CompatInfo *info, bool needSymbol, enum xkb_match_operation pred,
+            struct collect *collect)
 {
-    if (len < 0) {
-        return NULL;
-    }
+    SymInterpInfo *si;
+    XkbSymInterpret interp;
 
-    if (strlen(str) > G_MAXSSIZE - 1) {
-        return NULL;
+    darray_foreach(si, info->interps) {
+        if (si->interp.match == pred &&
+            (si->interp.sym != XKB_KEY_NoSymbol) == needSymbol) {
+            interp = si->interp;
+            interp.symbols = xkb_sym_interp_alloc_copy(interp.symbols);
+            if (!interp.symbols) {
+                // Handle memory allocation failure
+                return;
+            }
+            darray_append(collect->sym_interprets, interp);
+        }
     }
-
-    if (!g_utf8_validate(str, strlen(str), NULL)) {
-        return NULL;
-    }
-
-    return g_utf8_normalize (str, strlen(str), G_NORMALIZE_NFKC);
 }

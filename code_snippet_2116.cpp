@@ -1,15 +1,36 @@
-static void bitplanar2chunky(CDXLVideoContext *c, int linesize, uint8_t *out)
+int dtls_construct_hello_verify_request(SSL *s)
 {
-    GetBitContext gb;
-    int x, y, plane;
+    unsigned int len;
+    unsigned char *buf;
 
-    if (init_get_bits8(&gb, c->video, c->video_size) < 0)
-        return;
-    for (plane = 0; plane < c->bpp; plane++) {
-        for (y = 0; y < c->avctx->height; y++) {
-            for (x = 0; x < c->avctx->width; x++)
-                out[linesize * y + x] |= get_bits1(&gb) << plane;
-            skip_bits(&gb, c->padded_bits);
-        }
+    buf = (unsigned char *)s->init_buf->data;
+
+    if (s->ctx->app_gen_cookie_cb == NULL ||
+        s->ctx->app_gen_cookie_cb(s, s->d1->cookie,
+                                  &(s->d1->cookie_len)) == 0 ||
+        s->d1->cookie_len > 255) {
+        SSLerr(SSL_F_DTLS_CONSTRUCT_HELLO_VERIFY_REQUEST,
+               SSL_R_COOKIE_GEN_CALLBACK_FAILURE);
+        ossl_statem_set_error(s);
+        return 0;
     }
+
+    // Add bounds checking for init_buf data
+    if (DTLS1_HM_HEADER_LENGTH + sizeof(s->d1->cookie) > s->init_buf->length) {
+        SSLerr(SSL_F_DTLS_CONSTRUCT_HELLO_VERIFY_REQUEST, SSL_R_BUFFER_TOO_SMALL);
+        ossl_statem_set_error(s);
+        return 0;
+    }
+
+    len = dtls_raw_hello_verify_request(&buf[DTLS1_HM_HEADER_LENGTH],
+                                        s->d1->cookie, s->d1->cookie_len);
+
+    dtls1_set_message_header(s, DTLS1_MT_HELLO_VERIFY_REQUEST, len, 0, len);
+    len += DTLS1_HM_HEADER_LENGTH;
+
+    /* number of bytes to write */
+    s->init_num = len;
+    s->init_off = 0;
+
+    return 1;
 }

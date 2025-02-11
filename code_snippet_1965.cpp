@@ -1,26 +1,11 @@
-void nsc_context_free(NSC_CONTEXT* context)
+std::shared_timed_mutex m_graphicsSurfaceMutex; // Initialize the mutex
+
+GraphicsSurfaceToken GraphicsContext3DPrivate::graphicsSurfaceToken() const
 {
-    size_t i;
-    size_t num_plane_buffers;
-
-    if (!context)
-        return;
-
-    if (context->priv)
+    std::unique_lock<std::shared_timed_mutex> lock(m_graphicsSurfaceMutex, std::defer_lock);
+    if(!lock.try_lock_for(std::chrono::milliseconds(100))) // Try to lock the mutex within a timeout of 100ms
     {
-        num_plane_buffers = context->priv->num_plane_buffers;
-        for (i = 0; i < num_plane_buffers; i++)
-            free(context->priv->PlaneBuffers[i]);
-
-        BufferPool_Free(context->priv->PlanePool);
-        nsc_profiler_print(context->priv);
-        PROFILER_FREE(context->priv->prof_nsc_rle_decompress_data);
-        PROFILER_FREE(context->priv->prof_nsc_decode);
-        PROFILER_FREE(context->priv->prof_nsc_rle_compress_data);
-        PROFILER_FREE(context->priv->prof_nsc_encode);
-        free(context->priv);
+        throw std::runtime_error("Failed to acquire graphics surface lock");
     }
-
-    free(context->BitmapData);
-    free(context);
+    return m_graphicsSurface->exportToken();
 }

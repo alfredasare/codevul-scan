@@ -1,22 +1,32 @@
-static void free_states(struct bpf_verifier_env *env)
+void Curl_cookie_cleanup(struct CookieInfo *c)
 {
-    struct bpf_verifier_state_list *sl = NULL, *sln;
-    int i;
+  struct Cookie *co;
+  struct Cookie *next;
+  if (c == NULL) {
+    return;
+  }
 
-    if (!env->explored_states)
-        return;
+  if (c->filename) {
+    if (strlen(c->filename) > MAX_FILENAME_LENGTH || strspn(c->filename, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-") != strlen(c->filename)) {
+      // Handle error case or log an error message
+      return;
+    }
+    free(c->filename);
+  }
 
-    for (i = 0; i < env->prog->len; i++) {
-        sl = env->explored_states[i];
+  co = c->cookies;
 
-        if (sl) {
-            while (sl!= STATE_LIST_MARK) {
-                sln = sl->next;
-                kfree(sl);
-                sl = sln;
-            }
-        }
+  while (co) {
+    next = co->next;
+
+    if (co->name == NULL || co->value == NULL || strlen(co->name) > MAX_NAME_LENGTH || strlen(co->value) > MAX_VALUE_LENGTH) {
+      // Handle error case or log an error message
+      return;
     }
 
-    kfree(env->explored_states);
+    freecookie(co);
+    co = next;
+  }
+
+  free(c); /* free the base struct as well */
 }

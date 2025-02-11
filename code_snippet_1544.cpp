@@ -1,11 +1,21 @@
-pdf_dict_get_key(fz_context *ctx, pdf_obj *obj, int i)
-{
-    if (!OBJ_IS_DICT(obj))
-        return NULL;
-    if (i < 0 || i >= DICT(obj)->len)
-        return NULL;
-    pdf_obj *item = DICT(obj)->items[i];
-    if (!item) 
-        return NULL;
-    return item->k;
+static void save_pid(const pid_t pid, const char *pid_file) {
+    FILE *fp;
+    if (pid_file == NULL)
+        return;
+
+    fp = fopen(pid_file, "w");
+    if (fp == NULL) {
+        fprintf(stderr, "Could not open the pid file %s for writing\n", pid_file);
+        return;
+    }
+
+    if (fprintf(fp, "%jd\n", (intmax_t)pid) < 0) {
+        fprintf(stderr, "Failed to write the pid to the file %s\n", pid_file);
+        fclose(fp);
+        return;
+    }
+
+    if (fclose(fp) == -1) {
+        fprintf(stderr, "Could not close the pid file %s.\n", pid_file);
+    }
 }

@@ -1,31 +1,18 @@
-static void Free_PairPos(HB_GPOS_SubTable* st)
-{
-    HB_UShort format1, format2;
-    HB_PairPos* pp = &st->pair;
+static bool VerifyNumber(const uint8* buffer,
+                         int buffer_size,
+                         int* offset,
+                         int max_digits) {
+  RCHECK(*offset < buffer_size);
 
-    format1 = pp->ValueFormat1;
-    format2 = pp->ValueFormat2;
+  while (isspace(buffer[*offset])) {
+    ++(*offset);
+    RCHECK(*offset < buffer_size);
+  }
 
-    // Validate and sanitize file paths
-    char* sanitized_path = sanitize_path(pp->ppf.ppf1);
-    if (sanitized_path == NULL ||!is_valid_file_path(sanitized_path)) {
-        // Handle invalid or malicious input
-        free(sanitized_path);
-        return;
-    }
+  int numSeen = 0;
+  while (--max_digits >= 0 && *offset + numSeen < buffer_size && isdigit(buffer[*offset + numSeen])) {
+    ++numSeen;
+  }
 
-    free(sanitized_path);
-
-    switch (pp->PosFormat) {
-    case 1:
-        Free_PairPos1(&pp->ppf.ppf1, format1, format2);
-        break;
-    case 2:
-        Free_PairPos2(&pp->ppf.ppf2, format1, format2);
-        break;
-    default:
-        break;
-    }
-
-    _HB_OPEN_Free_Coverage(&pp->Coverage);
+  return (numSeen > 0);
 }

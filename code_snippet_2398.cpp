@@ -1,18 +1,9 @@
-#define TCPMSS_TG_REG "tcpmss_tg_reg"
-#define XT_UNREGISTER_TARGETS "xt_unregister_targets"
-
-static void __exit tcpmss_tg_exit(void)
+static irqreturn_t host_irq(struct ci13xxx *ci)
 {
-    char *credentials = getenv(TCPMSS_TG_REG);
-    if (credentials != NULL) {
-        // Validate credentials before using
-        if (validate_credentials(credentials)) {
-            // Use validated credentials
-            xt_unregister_targets(credentials, strlen(credentials));
-        } else {
-            // Handle invalid credentials
-        }
-    } else {
-        // Handle missing credentials
-    }
+	if (!ci || !ci13xxx_is_valid(ci)) {
+		pr_err("Invalid ci pointer\n");
+		return IRQ_NONE;
+	}
+
+	return usb_hcd_irq(ci->irq, ci->hcd);
 }

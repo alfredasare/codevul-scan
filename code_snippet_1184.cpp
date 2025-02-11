@@ -1,26 +1,29 @@
-static int abort_sasl(aClient *cptr)
+TEE_Result syscall_cryp_obj_restrict_usage(unsigned long obj, unsigned long usage)
 {
-    if (cptr->local->sasl_out == 0 || cptr->local->sasl_complete)
-        return 0;
+	TEE_Result res;
+	struct tee_ta_session *sess;
+	struct tee_obj *o;
 
-    cptr->local->sasl_out = cptr->local->sasl_complete = 0;
-    sendto_one(cptr, err_str(ERR_SASLABORTED), me.name, BadPtr(cptr->name)? "*" : cptr->name);
+	if (usage > MAX_ALLOWED_USAGE) {
+		return TEE_ERROR_BAD_PARAMETERS;
+	}
 
-    if (*cptr->local->sasl_agent && isValidClientName(cptr->local->sasl_agent)) {
-        aClient *agent_p = find_client(cptr->local->sasl_agent, NULL);
-        if (agent_p!= NULL) {
-            sendto_server(NULL, 0, 0, ":%s SASL %s %s D A",
-                me.name, AGENT_SID(agent_p), encode_puid(cptr));
-            return 0;
-        }
-    }
+	res = tee_ta_get_current_session(&sess);
+	if (res != TEE_SUCCESS)
+		goto exit;
 
-    sendto_server(NULL, 0, 0, ":%s SASL * %s D A", me.name, encode_puid(cptr));
-    return 0;
-}
+	res = tee_obj_get(to_user_ta_ctx(sess->ctx),
+			  tee_svc_uref_to_vaddr(obj), &o);
+	if (res != TEE_SUCCESS)
+		goto exit;
 
-bool isValidClientName(const char *client_name) {
-    // Implement your own validation logic here
-    // For example, you can check if the client name exists in a whitelist or blacklist
-    // Return true if the client name is valid, false otherwise
+	if ((o->info.objectUsage & usage) != usage) {
+		res = TEE_ERROR_GENERIC;
+		goto exit;
+	}
+
+	o->info.objectUsage &= usage;
+
+exit:
+	return res;
 }

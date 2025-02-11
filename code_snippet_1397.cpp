@@ -1,17 +1,36 @@
-asmlinkage long compat_sys_recvfrom(int fd, void __user *buf, size_t len,
-				    unsigned int flags, struct sockaddr __user *addr,
-				    int __user *addrlen)
+zdeletefile(i_ctx_t *i_ctx_p)
 {
-    size_t max_len = PAGE_SIZE; // assume a reasonable maximum buffer size
-    if (len > max_len) {
-        return -EMSGSIZE; // return an error if the length exceeds the maximum allowed
+    os_ptr op = osp;
+    gs_parsed_file_name_t pname;
+    int code = parse_real_file_name(op, &pname, imemory, "deletefile");
+
+    if (code < 0)
+        return code;
+    if (pname.iodev == iodev_default(imemory)) {
+        if (is_safe_filename(pname.fname) < 0 ||
+            strchr(pname.fname, '/') || strchr(pname.fname, '\\')) {
+            gs_free_file_name(&pname, "deletefile");
+            return_error(e_invalidfileaccess);
+        }
+        if ((code = check_file_permissions(i_ctx_p, pname.fname, pname.len,
+                "PermitFileControl")) < 0 &&
+                 !file_is_tempfile(i_ctx_p, op->value.bytes, r_size(op))) {
+            gs_free_file_name(&pname, "deletefile");
+            return code;
+        }
     }
-    char* temp_buf = kmalloc(len, GFP_KERNEL); // allocate a temporary buffer
-    if (!temp_buf)
-        return -ENOMEM;
-    int ret = sys_recvfrom(fd, temp_buf, len, flags | MSG_CMSG_COMPAT, addr, addrlen);
-    if (ret >= 0)
-        copy_to_user(buf, temp_buf, ret); // copy the received data to the user-space buffer
-    kfree(temp_buf);
-    return ret;
+    code = (*pname.iodev->procs.delete_file)(pname.iodev, pname.fname);
+    gs_free_file_name(&pname, "deletefile");
+    if (code < 0)
+        return code;
+    pop(1);
+    return 0;
+}
+
+bool is_safe_filename(const char *filename)
+{
+    // Implement safe filename check here
+    // For example, you can check if the filename contains any unsafe characters
+    // or patterns that might indicate a directory traversal attack.
+    // Return true if the filename is safe, otherwise false.
 }

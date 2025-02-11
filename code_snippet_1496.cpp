@@ -1,12 +1,16 @@
-const char *get_camera_metadata_tag_name(uint32_t tag) {
-    uint32_t tag_section = tag >> 16;
-    if (tag_section >= VENDOR_SECTION && vendor_tag_ops!= NULL) {
-        return vendor_tag_ops->get_tag_name(vendor_tag_ops, tag);
+static bool _vmxnet3_assert_interrupt_line(VMXNET3State *s, uint32_t int_idx)
+{
+    PCIDevice *d = PCI_DEVICE(s);
+
+    if (s->msix_used && msix_enabled(d)) {
+        msix_notify(d, int_idx);
+        return false;
     }
-    if (tag_section >= ANDROID_SECTION_COUNT || 
-        tag >= camera_metadata_section_bounds[tag_section][1] ) {
-        return NULL;
+    if (s->msi_used && msi_enabled(d)) {
+        msi_notify(d, int_idx);
+        return false;
     }
-    uint32_t tag_index = (tag >> 16) & 0xFFFF;
-    return tag_info[tag_section][tag_index].tag_name;
+
+    pci_irq_assert(d);
+    return true;
 }

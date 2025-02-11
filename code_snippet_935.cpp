@@ -1,31 +1,48 @@
-static int cxusb_dee1601_frontend_attach(struct dvb_usb_adapter *adap)
+grub_ext2_open (struct grub_file *file, const char *name)
 {
-    //...
+  struct grub_ext2_data *data;
+  struct grub_fshelp_node *fdiro = 0;
 
-    adap->fe_adap[0].fe = dvb_attach(mt352_attach, &cxusb_dee1601_config,
-                                     &sanitize_path(&adap->dev->i2c_adap));
-    if ((adap->fe_adap[0].fe)!= NULL)
-        return 0;
+  grub_dl_ref (my_mod);
 
-    adap->fe_adap[0].fe = dvb_attach(zl10353_attach,
-                                     &cxusb_zl10353_dee1601_config,
-                                     &sanitize_path(&adap->dev->i2c_adap));
-    if ((adap->fe_adap[0].fe)!= NULL)
-        return 0;
+  data = grub_ext2_mount (file->device->disk);
+  if (! data)
+    goto fail;
 
-    return -EIO;
+  grub_fshelp_find_file (grub_ext2_sanitize_filename(name), &data->diropen, &fdiro, grub_ext2_iterate_dir, 0,
+			 grub_ext2_read_symlink, GRUB_FSHELP_REG);
+  if (grub_errno)
+    goto fail;
+
+  if (! fdiro->inode_read)
+    {
+      grub_ext2_read_inode (data, fdiro->ino, &fdiro->inode);
+      if (grub_errno)
+	goto fail;
+    }
+
+  grub_memcpy (data->inode, &fdiro->inode, sizeof (struct grub_ext2_inode));
+  grub_free (fdiro);
+
+  file->size = grub_le_to_cpu32 (data->inode->size);
+  file->data = data;
+  file->offset = 0;
+
+  return 0;
+
+ fail:
+  if (fdiro != &data->diropen)
+    grub_free (fdiro);
+  grub_free (data);
+
+  grub_dl_unref (my_mod);
+
+  return grub_errno;
 }
 
-static char *sanitize_path(const char *path)
-{
-    char *sanitized_path = alloca(strlen(path) + 1);
-    char *p = sanitized_path;
-    while (*path) {
-        if (isalnum(*path) || *path == '/') {
-            *p++ = *path;
-        }
-        path++;
-    }
-    *p = '\0';
-    return sanitized_path;
+grub_ext2_sanitize_filename(const char *name) {
+  // Implement sanitization function based on the specific requirements and constraints
+  // of the filesystem and environment.
+  // This is just a placeholder.
+  return grub_strdup(name);
 }

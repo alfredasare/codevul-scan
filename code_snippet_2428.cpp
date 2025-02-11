@@ -1,21 +1,26 @@
-int ssl3_send_hello_request(SSL *s)
-{
-    if (s->state == SSL3_ST_SW_HELLO_REQ_A)
-    {
-        ssl_set_handshake_header(s, SSL3_MT_HELLO_REQUEST, 0);
-        s->state = SSL3_ST_SW_HELLO_REQ_B;
-    }
+NO_INLINE void jsError\_flash(const char \*fmt, ...) {
+va\_list argp;
+va\_start(argp, fmt);
 
-    uint16_t buffer_size = s->buffer_size;
-    if (buffer_size < SSL3_MAX_HELLO_REQUEST_SIZE)
-    {
-        memcpy(s->buffer, ..., buffer_size);
-    }
-    else
-    {
-        // Handle buffer overflow error
-        //...
-    }
+// Calculate the required buffer size
+size\_t len = vsnprintf(NULL, 0, fmt, argp);
+va\_end(argp);
 
-    return ssl_do_write(s);
+// Allocate the buffer on the heap to accommodate the longest possible string
+char \*buff = malloc(len + 1);
+if (!buff) {
+// Handle allocation failure appropriately, e.g., return or propagate error
+}
+
+va\_start(argp, fmt);
+vsnprintf(buff, len + 1, fmt, argp);
+va\_end(argp);
+
+jsiConsoleRemoveInputLine();
+jsiConsolePrint("ERROR: ");
+jsiConsolePrintString(buff);
+jsiConsolePrint("\n");
+
+// Free the allocated buffer after usage
+free(buff);
 }

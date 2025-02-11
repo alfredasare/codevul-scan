@@ -1,17 +1,43 @@
-void ParamTraits<SkBitmap>::Write(base::Pickle* m, const SkBitmap& p) {
-  size_t fixed_size = sizeof(SkBitmap_Data);
-  SkBitmap_Data bmp_data;
-  bmp_data.InitSkBitmapDataForTransfer(p);
-  m->WriteData(reinterpret_cast<const char*>(&bmp_data),
-               static_cast<int>(fixed_size));
-
-  size_t pixel_size = p.computeByteSize();
-  std::string sanitized_pixels;
-  for (char c : p.getPixels()) {
-    if (std::isalnum(c) || c == ' ') {
-      sanitized_pixels += c;
+static int utf8_to_utf32(const char *utf8, int len, uint32_t *utf32)
+{
+    size_t str_len = strlen(utf8);
+    if (len > str_len || len < 1) {
+        return -EINVAL;
     }
-  }
-  m->WriteData(reinterpret_cast<const char*>(sanitized_pixels.c_str()),
-               static_cast<int>(sanitized_pixels.size()));
+
+    uint32_t ch = *utf8;
+    int i;
+    uint8_t mask;
+
+    if ((ch & 0x80) == 0) {
+        len = 1;
+        mask = 0x7f;
+    } else if ((ch & 0xe0) == 0xc0 && len >= 2) {
+        len = 2;
+        mask = 0x1f;
+    } else if ((ch & 0xf0) == 0xe0 && len >= 3) {
+        len = 3;
+        mask = 0xf;
+    } else if ((ch & 0xf8) == 0xf0 && len >= 4) {
+        len = 4;
+        mask = 0x7;
+    } else {
+        return -EINVAL;
+    }
+
+    ch = 0;
+    for (i = 0; i < len; i++) {
+        int shift = (len - i - 1) * 6;
+        if (i == 0)
+            ch |= ((uint32_t)(*utf8++) & mask) << shift;
+        else
+            ch |= ((uint32_t)(*utf8++) & 0x3f) << shift;
+    }
+
+    if (ch < 0x10000) {
+        *utf32 = ch;
+        return len;
+    } else {
+        return -EINVAL;
+    }
 }

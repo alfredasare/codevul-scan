@@ -1,26 +1,35 @@
-static void bad_flp_intr(void)
+int wc_ecc_export_private_only(ecc_key* key, byte* out, word32* outLen)
 {
-    int err_count;
+    word32 numlen;
 
-    if (probing) {
-        DRS->probed_format++;
-        if (!next_valid_format())
-            return;
+    if (key == NULL || out == NULL || outLen == NULL) {
+        return BAD_FUNC_ARG;
     }
 
-    err_count = ++(*errors);
+    if (wc_ecc_is_valid_idx(key->idx) == 0) {
+        return ECC_BAD_ARG_E;
+    }
 
-    memset(&DRWE->badness, 0, sizeof(DRWE->badness));
-    free(DRWE->badness);
+    if (mp_is_zero(&key->k)) { // Check if the key is a private one
+        return INVALID_KEY_E;
+    }
 
-    INFBOUND(NULL, err_count);
+    numlen = key->dp->size;
 
-    if (err_count > DP->max_errors.abort)
-        cont->done(0);
+    if (*outLen < numlen) {
+        *outLen = numlen;
+        return BUFFER_E;
+    }
 
-    if (err_count > DP->max_errors.reset)
-        FDCS->reset = 1;
+    *outLen = numlen;
+    XMEMSET(out, 0, *outLen);
 
-    else if (err_count > DP->max_errors.recal)
-        DRS->track = NEED_2_RECAL;
+#ifdef WOLFSSL_ATECC508A
+   /* TODO: Implement equiv call to ATECC508A */
+   return BAD_COND_E;
+
+#else
+
+    return mp_to_unsigned_bin(&key->k, out + (numlen - mp_unsigned_bin_size(&key->k)));
+#endif /* WOLFSSL_ATECC508A */
 }

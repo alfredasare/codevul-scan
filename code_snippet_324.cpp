@@ -1,18 +1,23 @@
-JSTestMediaQueryListListenerConstructor::JSTestMediaQueryListListenerConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
-  : DOMConstructorObject(structure, globalObject)
+bt_status_t btif_dut_mode_configure(uint8_t enable)
 {
-  // Validate input data size
-  size_t inputSize = getInputSize(); // Replace with actual method to get input size
-  if (inputSize > MAX_ALLOWED_SIZE) {
-    throw RangeError("Input size exceeds maximum allowed size");
-  }
+    BTIF_TRACE_DEBUG("%s", __FUNCTION__);
 
-  // Allocate buffer dynamically
-  char* buffer = new char[inputSize + 1];
-  memcpy(buffer, getInputData(), inputSize);
-  buffer[inputSize] = '\0'; // Ensure null-termination
+    // Validate input
+    if (enable > 1) {
+        BTIF_TRACE_ERROR("btif_dut_mode_configure : Invalid input");
+        return BT_STATUS_INVALID_PARM;
+    }
 
-  // Use the buffer
-  //...
-  delete[] buffer; // Don't forget to free the dynamically allocated memory
+    if (!stack_manager_get_interface()->get_stack_is_running()) {
+        BTIF_TRACE_ERROR("btif_dut_mode_configure : Bluetooth not enabled");
+        return BT_STATUS_NOT_READY;
+    }
+
+    btif_dut_mode = enable;
+    if (enable == 1) {
+        BTA_EnableTestMode();
+    } else {
+        BTA_DisableTestMode();
+    }
+    return BT_STATUS_SUCCESS;
 }

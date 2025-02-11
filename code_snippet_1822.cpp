@@ -1,34 +1,17 @@
-#include <stdlib.h>
+static int __f2fs\_commit\_super(struct buffer\_head \*bh,
+ struct f2fs\_super\_block \*super)
+{
+ lock\_buffer(bh);
+ if (super) {
+ if (copy\_from\_user\_overlap(bh->b\_data + F2FS\_SUPER\_OFFSET, super, sizeof(\*super))) {
+ unlock\_buffer(bh);
+ return -EFAULT;
+ }
+ }
+ set\_buffer\_uptodate(bh);
+ set\_buffer\_dirty(bh);
+ unlock\_buffer(bh);
 
-gs_memory_t *memory;
-
-gs_memory_t *memory =...; // initialize memory
-
-gs_memory_t *custom_alloc_struct(gs_memory_t *memory, struct_type *struct_type, const char *name, const char *prefix, unsigned int hash_value) {
-    gs_memory_t *result;
-    result = gs_alloc_struct(memory, struct_type, &st_struct_type, name);
-    if (result == NULL) {
-        return NULL;
-    }
-    result->hash_value = hash_value;
-    return result;
-}
-
-pdf14_rcmask_t *pdf14_rcmask_new(gs_memory_t *memory) {
-    pdf14_rcmask_t *result;
-    unsigned int hash_value;
-
-    srand(time(NULL)); // Seed the random number generator
-    hash_value = rand();
-
-    result = custom_alloc_struct(memory, pdf14_rcmask_t, &st_pdf14_rcmask, "pdf14_maskbuf_new", hash_value);
-
-    if (result == NULL) {
-        return NULL;
-    }
-
-    rc_init_free(result, memory, 1, rc_pdf14_maskbuf_free);
-    result->mask_buf = NULL;
-    result->memory = memory;
-    return result;
+ /* it's rare case, we can do fua all the time */
+ return __sync\_dirty\_buffer(bh, REQ\_SYNC | REQ\_PREFLUSH | REQ\_FUA);
 }

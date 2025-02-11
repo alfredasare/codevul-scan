@@ -1,9 +1,12 @@
-float BaseRenderingContext2D::GetFontBaseline(const FontMetrics& font_metrics) const {
-  try {
-    return TextMetrics::GetFontBaseline(GetState().GetTextBaseline(), font_metrics);
-  } catch (const std::exception& e) {
-    // Log the error and return a generic error message
-    std::cerr << "Error occurred while getting font baseline: " << e.what() << std::endl;
-    return std::numeric_limits<float>::quiet_NaN(); // Return NaN for invalid results
+#include <stddef.h>
+
+callout_tag_find(CalloutTagTable* t, const UChar* name, const UChar* name_end)
+{
+  CalloutTagVal e = -1;
+  size_t name_length = name_end - name;
+
+  if (IS_NOT_NULL(t) && name_length > 0 && name_length < MAX_ALLOWED_LENGTH) {
+    onig_st_lookup_strend(t, name, name_end, (HashDataType* )((void* )(&e)));
   }
+  return e;
 }

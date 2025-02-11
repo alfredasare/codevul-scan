@@ -1,49 +1,24 @@
-static void srpt_release_channel_work(struct work_struct *w)
-{
-    struct srpt_rdma_ch *ch;
-    struct srpt_device *sdev;
-    struct se_session *se_sess;
-    int timeout = 0;
+StringPiece16::const_iterator findNonAlphaNumericAndNotInSet(const StringPiece16& str, const StringPiece16& allowedChars) {
+const auto endIter = str.end();
+for (auto iter = str.begin(); iter != endIter; ++iter) {
+char16_t c = *iter;
+if ((c >= u'a' && c <= u'z') ||
+(c >= u'A' && c <= u'Z') ||
+(c >= u'0' && c <= u'9')) {
+continue;
+}
 
-    ch = container_of(w, struct srpt_rdma_ch, release_work);
-    pr_debug("ch = %p; ch->sess = %p; release_done = %p\n", ch, ch->sess, ch->release_done);
+bool match = false;
+for (char16_t i : allowedChars) {
+if (c == i) {
+match = true;
+break;
+}
+}
 
-    sdev = ch->sport->sdev;
-    BUG_ON(!sdev);
-
-    se_sess = ch->sess;
-    BUG_ON(!se_sess);
-
-    target_wait_for_sess_cmds(se_sess);
-
-    transport_deregister_session_configfs(se_sess);
-    transport_deregister_session(se_sess);
-    ch->sess = NULL;
-
-    ib_destroy_cm_id(ch->cm_id);
-
-    srpt_destroy_ch_ib(ch);
-
-    srpt_free_ioctx_ring((struct srpt_ioctx **)ch->ioctx_ring, ch->sport->sdev, ch->rq_size, ch->rsp_size, DMA_TO_DEVICE);
-
-    spin_lock_irq(&sdev->spinlock);
-    list_del(&ch->list);
-    spin_unlock_irq(&sdev->spinlock);
-
-    while (ch->release_done == false) {
-        pr_debug("Waiting for release done...\n");
-        if (timeout++ > 10) {
-            break;
-        }
-        msleep(100);
-    }
-
-    if (!ch->release_done) {
-        pr_debug("Timeout exceeded, completing release done...\n");
-        complete(ch->release_done);
-    }
-
-    wake_up(&sdev->ch_releaseQ);
-
-    kfree(ch);
+if (!match && iter != endIter) { // Add a check to ensure `iter` is not equal to `endIter` before returning.
+return iter;
+}
+}
+return endIter;
 }

@@ -1,13 +1,17 @@
-#include <openssl/rand.h>
-
-bool NaClProcessHost::SendStart() {
-  if (!enable_ipc_proxy_) {
-    uint8_t sessionId[32];
-    if (!RAND_bytes(sessionId, sizeof(sessionId))) {
-      // handle error
+static void native_flush_tlb_one_user(unsigned long addr)
+{
+#ifdef CONFIG_ARM64
+    if (addr >= TRAMPOLINE_BASE && addr < TRAMPOLINE_BASE + TRAMPOLINE_SIZE) {
+        __native_flush_tlb_one_user(addr);
+    } else {
+        pr_err("Attempt to access out-of-bounds address: 0x%lx\n", addr);
     }
-    std::string sessionStr((char*)sessionId, sizeof(sessionId));
-    IPC::ChannelHandle(sessionStr);
-  }
-  return StartNaClExecution();
+#else
+    // Add input validation for other platforms
+    if (isValidAddress(addr)) {
+        __native_flush_tlb_one_user(addr);
+    } else {
+        pr_err("Attempt to access out-of-bounds address: 0x%lx\n", addr);
+    }
+#endif
 }

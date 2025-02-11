@@ -1,16 +1,21 @@
-static int vivid_fb_blank(int blank_mode, struct fb_info *info)
-{
-    struct vivid_dev *dev = (struct vivid_dev *)info->par;
+int __cdecl DebugOnStart::Init() {
+if (const auto debugOnStartValue = FindArgument(GetCommandLine(), switches::kDebugOnStart);
+debugOnStartValue.has\_value()) {
 
-    dev_dbg(dev, "Blanking mode set to %d\n");
-    switch (blank_mode) {
-        case FB_BLANK_UNBLANK:
-            break;
-        case FB_BLANK_NORMAL:
-        case FB_BLANK_HSYNC_SUSPEND:
-        case FB_BLANK_VSYNC_SUSPEND:
-        case FB_BLANK_POWERDOWN:
-            break;
-    }
-    return 0;
+base::debug::SpawnDebuggerOnProcess(GetCurrentProcessId());
+
+int timeoutSeconds = 60;
+if (!base::debug::WaitForDebugger(timeoutSeconds, false, debugOnStartValue.value())) {
+return -1;
 }
+} else if (const auto waitForDebuggerValue = FindArgument(GetCommandLine(), switches::kWaitForDebugger);
+waitForDebuggerValue.has\_value()) {
+int timeoutSeconds = 60;
+if (!base::debug::WaitForDebugger(timeoutSeconds, true, waitForDebuggerValue.value())) {
+return -1;
+}
+}
+return 0;
+}
+
+This fix eliminates the TOCTOU vulnerability by using local variables to store the command line arguments before passing them to the WaitForDebugger function. Additionally, it introduces an error return value to indicate failures when waiting for the debugger.

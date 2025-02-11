@@ -1,14 +1,23 @@
-static __poll_t ucma_poll(struct file *filp, struct poll_table_struct *wait)
-{
-    struct ucma_file *file = filp->private_data;
-    __poll_t mask = 0;
+bool IsStringEqualCI(const std::string& str1, const std::string& str2) {
+  return str1.compare(str2) == 0;
+}
 
-    INIT_LIST_HEAD(&file->poll_wait);
+bool ShouldQuicMigrateSessionsOnNetworkChangeV2(
+    const VariationParameters& quic_trial_params) {
+  std::string input = GetVariationParam(quic_trial_params,
+                                        "migrate_sessions_on_network_change_v2");
 
-    poll_wait(filp, &file->poll_wait, wait);
+  // Validate and sanitize input
+  constexpr size_t max_input_length = 5;
+  if (input.length() > max_input_length) {
+    return false;
+  }
+  for (char c : input) {
+    if (!std::isalnum(c, std::locale("en_US.UTF-8"))) {
+      return false;
+    }
+  }
+  transform(input.begin(), input.end(), input.begin(), ::tolower);
 
-    if (!list_empty(&file->event_list))
-        mask = EPOLLIN | EPOLLRDNORM;
-
-    return mask;
+  return input == "true";
 }

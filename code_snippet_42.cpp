@@ -1,20 +1,34 @@
 void freerdp_peer_context_new(freerdp_peer* client)
 {
-    rdpRdp* rdp;
-    size_t context_size = client->ContextSize; // validate the input
+	rdpRdp* rdp;
 
-    // Validate the input size
-    if (context_size > MAX_CONTEXT_SIZE) {
-        // Handle invalid size
-    }
+	rdp = rdp_new(NULL);
+	client->input = rdp->input;
+	client->update = rdp->update;
+	client->settings = rdp->settings;
 
-    // Use memalign to allocate memory with proper alignment
-    client->context = memalign(16, context_size); // adjust the alignment value as needed
-    if (client->context == NULL) {
-        // handle allocation failure
-    }
+	client->context = (rdpContext*) malloc(client->ContextSize);
+	ZeroMemory(client->context, client->ContextSize);
 
-    ZeroMemory(client->context, context_size);
+	client->context->rdp = rdp;
+	client->context->peer = client;
+	client->context->input = client->input;
+	client->context->update = client->update;
+	client->context->settings = client->settings;
 
-    //... rest of the code...
+	client->update->context = client->context;
+	client->input->context = client->context;
+
+	update_register_server_callbacks(client->update);
+
+	transport_attach(rdp->transport, client->sockfd);
+
+	rdp->transport->ReceiveCallback = peer_recv_callback;
+	rdp->transport->ReceiveExtra = client;
+	transport_set_blocking_mode(rdp->transport, FALSE);
+
+	// Mitigation: Use a trusted function pointer instead of the input argument
+	if (client->ContextNew != NULL && is_function_pointer_trusted(&client->ContextNew)) {
+		IFCALL(client->ContextNew, client, client->context);
+	}
 }

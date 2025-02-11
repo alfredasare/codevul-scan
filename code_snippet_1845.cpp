@@ -1,22 +1,14 @@
-compute_keygrip (gcry_md_hd_t md, gcry_sexp_t keyparam)
-{
-  gcry_sexp_t l1;
-  const char *data;
-  size_t datalen;
+#include <limits>
 
-  l1 = sexp_find_token (keyparam, "n", 1);
-  if (!l1)
-    return GPG_ERR_NO_OBJ;
+constexpr auto kMaxWaitTimeMs = std::numeric_limits<decltype(WaitableEvent::Wait(0))>::max();
 
-  data = sexp_nth_data (l1, 1, &datalen);
-  if (!data || datalen > MAX_ALLOWED_DATA_LENGTH) 
-    {
-      sexp_release (l1);
-      return GPG_ERR_NO_OBJ;
-    }
+void SetBlockingFlagAndBlockUntilStopped(WaitableEvent* task_start_event,
+                                         WaitableEvent* task_stop_event) {
+  TraceLog::GetInstance()->SetCurrentThreadBlocksMessageLoop();
+  auto wait_time = kMaxWaitTimeMs; // Set the maximum wait time
 
-  _gcry_md_write (md, data, datalen);
-  sexp_release (l1);
-
-  return 0;
+  while (wait_time > 0 && !task_stop_event->Wait(wait_time)) {
+    wait_time = 100; // Set a reasonable wait time between retries
+    // Perform any necessary cleanup or handling here if the event is not signaled
+  }
 }

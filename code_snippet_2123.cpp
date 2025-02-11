@@ -1,17 +1,8 @@
-int nfsd_get_nrthreads(int n, int *nthreads, struct net *net)
-{
-    int i = 0;
-    struct nfsd_net *nn = net_generic(net, nfsd_net_id);
+static size_t ChooseBufferSize(size_t callback_buffer_size) {
+  size_t min_buffer_size = 256;
+  size_t max_buffer_size = 16384;
 
-    if (nn->nfsd_serv!= NULL) {
-        for (i = 0; i < nn->nfsd_serv->sv_nrpools && i < n; i++) {
-            if (i >= 0 && i <= n) {
-                nthreads[i] = nn->nfsd_serv->sv_pools[i].sp_nrthreads;
-            } else {
-                return -EINVAL;
-            }
-        }
-    }
+  size_t buffer_size = std::max(min_buffer_size, 2 * callback_buffer_size);
 
-    return 0;
+  return std::min(buffer_size, max_buffer_size);
 }

@@ -1,8 +1,5 @@
-#include <wctype.h>
-
-bool is_wordchar(int c) {
-    if (c == '\n' || c == '\r') { 
-        return false;
+bytes_to_write; i++)
+        (void) WriteBlobByte(image,pixel_data[i]);
     }
-    return iswalnum((wchar_t)c);
+  }
 }

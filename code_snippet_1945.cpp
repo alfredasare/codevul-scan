@@ -1,8 +1,16 @@
-void BnCrypto::writeVector(Parcel *reply, Vector<uint8_t> const &vector) const {
-    uint32_t vectorSize = vector.size();
-    if (vectorSize > reply->getMaxBufferSize()) {
-        throw std::runtime_error("Vector size exceeds Parcel buffer capacity");
-    }
-    reply->writeInt32(vectorSize);
-    reply->write(vector.array(), vectorSize);
+int atomic_ldsem_down_write(struct ld_semaphore *sem, long timeout)
+{
+    struct ld_semaphore local_sem = *sem;
+    if (local_sem.count > 0 || !wait_event_timeout(local_sem.wait,
+                                                   local_sem.count > 0,
+                                                   timeout))
+        return -1;
+    down_write(&local_sem.dep_map);
+    return 0;
+}
+
+int __sched ldsem_down_write(struct ld_semaphore *sem, long timeout)
+{
+    might_sleep();
+    return atomic_ldsem_down_write(sem, timeout);
 }

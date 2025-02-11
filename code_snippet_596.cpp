@@ -1,15 +1,26 @@
-int qeth_get_elements_no(struct qeth_card *card, struct sk_buff *skb, int elems)
+static int xts_fallback_setkey(struct crypto_tfm *tfm, const u8 *key,
+                               unsigned int len)
 {
-    int dlen = skb->len - skb->data_len;
-    unsigned long data_addr = (unsigned long)skb->data;
-    int elements_needed = (data_addr + dlen - 1) / sizeof(skb->data[0]) - data_addr / sizeof(skb->data[0]);
+	struct s390_xts_ctx *xts_ctx = crypto_tfm_ctx(tfm);
+	unsigned int ret;
 
-    elements_needed += qeth_get_elements_for_frags(skb);
+	/* Save current flags before updating the context */
+	unsigned int current_tfm_flags = tfm->crt_flags;
+	unsigned int current_crt_flags = xts_ctx->fallback->base.crt_flags;
 
-    if ((elements_needed + elems) > QETH_MAX_BUFFER_ELEMENTS(card)) {
-        QETH_DBF_MESSAGE(2, "Invalid size of IP packet (Number=%d / Length=%d). Discarded.\n",
-                         (elements_needed+elems), skb->len);
-        return 0;
-    }
-    return elements_needed;
+	xts_ctx->fallback->base.crt_flags &= ~CRYPTO_TFM_REQ_MASK;
+	xts_ctx->fallback->base.crt_flags |= (current_tfm_flags &
+			CRYPTO_TFM_REQ_MASK);
+
+	ret = crypto_blkcipher_setkey(xts_ctx->fallback, key, len);
+	if (ret) {
+		/* Restore the original flags values to avoid TOCTOU */
+		tfm->crt_flags = current_tfm_flags;
+		xts_ctx->fallback->base.crt_flags = current_crt_flags;
+	} else {
+		tfm->crt_flags &= ~CRYPTO_TFM_RES_MASK;
+		tfm->crt_flags |= (xts_ctx->fallback->base.crt_flags &
+				CRYPTO_TFM_RES_MASK);
+	}
+	return ret;
 }

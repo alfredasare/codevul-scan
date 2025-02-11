@@ -1,18 +1,20 @@
-static int adjustForLocalZoom(LayoutUnit value, RenderObject* renderer)
+static void f_hidg_req_complete(struct usb_ep *ep, struct usb_request *req)
 {
-    float zoomFactor = 1.0f; // Default to 1.0 if renderer is NULL
+	struct f_hidg *hidg = (struct f_hidg *)ep->driver_data;
+	unsigned long flags;
 
-    if (renderer!= NULL) {
-        float sanitizedZoomFactor = localZoomForRenderer(renderer);
-        if (sanitizedZoomFactor >= 0.0f && sanitizedZoomFactor <= 100.0f) {
-            zoomFactor = sanitizedZoomFactor;
-        } else {
-            // Handle invalid input or sanitize it
-            zoomFactor = 1.0f; // Default to 1.0 if input is invalid
-        }
-    }
+	if (!req) {
+		ERROR(hidg->func.config->cdev, "Invalid request!\n");
+		return;
+	}
 
-    if (zoomFactor == 1.0f)
-        return value;
-    return lroundf(value / zoomFactor);
+	if (req->status != 0) {
+		ERROR(hidg->func.config->cdev,
+			"End Point Request ERROR: %d\n", req->status);
+	}
+
+	spin_lock_irqsave(&hidg->write_spinlock, flags);
+	hidg->write_pending = 0;
+	spin_unlock_irqrestore(&hidg->write_spinlock, flags);
+	wake_up(&hidg->write_queue);
 }

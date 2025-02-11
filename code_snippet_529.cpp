@@ -1,21 +1,29 @@
-PassRefPtr<Range> BackwardsCharacterIterator::range() const
+static void crypto_remove_spawn(struct crypto_spawn *spawn, struct list_head *list)
 {
-    RefPtr<Range> r = m_textIterator.range();
-    if (!m_textIterator.atEnd()) {
-        if (m_textIterator.length() <= 1)
-            ASSERT(m_runOffset == 0);
-        else {
-            Node* n = r->startContainer();
-            ASSERT(n == r->endContainer());
-            int offset = r->endOffset() - m_runOffset;
-            if (offset < 0 || offset >= r->length()) {
-                // Handle the error or throw an exception
-                //...
-            } else {
-                r->setStart(n, std::max(0, offset - 1), ASSERT_NO_EXCEPTION);
-                r->setEnd(n, std::min(offset + 1, r->length()), ASSERT_NO_EXCEPTION);
-            }
-        }
-    }
-    return r.release();
+	struct crypto_instance *inst = spawn->inst;
+	struct crypto_template *tmpl = inst->tmpl;
+	bool is_dead;
+
+	if (crypto_is_dead(&inst->alg))
+		return;
+
+	is_dead = true;
+	inst->alg.cra_flags |= CRYPTO_ALG_DEAD;
+	if (hlist_unhashed(&inst->list))
+		return;
+
+	if (!tmpl || !crypto_tmpl_get(tmpl))
+		return;
+
+	crypto_notify(CRYPTO_MSG_ALG_UNREGISTER, &inst->alg);
+	list_move(&inst->alg.cra_list, list);
+	hlist_del(&inst->list);
+	inst->alg.cra_destroy = crypto_destroy_instance;
+
+	BUG_ON(!list_empty(&inst->alg.cra_users));
+
+	synchronize_rcu();
+
+	if (is_dead && !crypto_is_dead(&inst->alg))
+		inst->alg.cra_flags &= ~CRYPTO_ALG_DEAD;
 }

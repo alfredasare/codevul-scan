@@ -1,15 +1,20 @@
-int yr_arena_write_string(
-    YR_ARENA* arena,
-    const char* string,
-    char** written_string)
-{
-  if (!written_string || *written_string) {
-    return -1;
-  }
+static void free_gauss(void) {
+    int ret;
 
-  return yr_arena_write_data(
-      arena,
-      (void*) string,
-      strlen(string) + 1,
-      &written_string);
+    ret = _WM_Lock(&gauss_lock);
+    if (ret != 0) {
+        /* Handle error */
+        if (gauss_table != NULL) {
+            free(gauss_table);
+            gauss_table = NULL;
+        }
+
+        _WM_Unlock(&gauss_lock);
+        return;
+    }
+
+    free(gauss_table);
+    gauss_table = NULL;
+
+    _WM_Unlock(&gauss_lock);
 }

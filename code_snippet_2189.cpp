@@ -1,22 +1,28 @@
-static int ext4_xattr_fiemap(struct inode *inode,
-			     struct fiemap_extent_info *fieinfo)
+int validate_data_encoding(gpgme_data_t d)
 {
-    //...
+  gpgme_data_encoding_t encoding = gpgme_data_get_encoding(d);
+  return encoding >= GPGME_DATA_ENCODING_NONE && encoding <= GPGME_DATA_ENCODING_LAST;
+}
 
-    error = ext4_get_inode_loc(inode, &iloc);
-    if (error)
-        return error;
+map_data_enc (gpgme_data_t d)
+{
+  if (!validate_data_encoding(d))
+  {
+    return NULL;
+  }
 
-    if (!iloc.bh) {
-        brelse(NULL);
-        return -EFAULT;
-    }
-
-    physical = (__u64)iloc.bh->b_blocknr << blockbits;
-    offset = EXT4_GOOD_OLD_INODE_SIZE +
-             EXT4_I(inode)->i_extra_isize;
-    physical += offset;
-    length = EXT4_SB(inode->i_sb)->s_inode_size - offset;
-    flags |= FIEMAP_EXTENT_DATA_INLINE;
-    brelse(iloc.bh);
+  switch (gpgme_data_get_encoding (d))
+  {
+  case GPGME_DATA_ENCODING_NONE:
+    break;
+  case GPGME_DATA_ENCODING_BINARY:
+    return "--binary";
+  case GPGME_DATA_ENCODING_BASE64:
+    return "--base64";
+  case GPGME_DATA_ENCODING_ARMOR:
+    return "--armor";
+  default:
+    break;
+  }
+  return NULL;
 }

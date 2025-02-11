@@ -1,23 +1,37 @@
-void H264SwDecRelease(H264SwDecInst decInst)
+static struct pmu *perf_init_event(struct perf_event *event)
 {
-    decContainer_t *pDecCont;
+	struct pmu *pmu = NULL;
+	int idx;
+	int ret;
 
-    DEC_API_TRC("H264SwDecRelease#");
+	idx = srcu_read_lock(&pmus_srcu);
 
-    if (decInst == NULL) {
-        DEC_API_TRC("H264SwDecRelease# ERROR: decInst == NULL");
-        return;
-    }
+	rcu_read_lock();
+	pmu = idr_find(&pmu_idr, event->attr.type);
+	rcu_read_unlock();
+	if (pmu) {
+		ret = perf_try_init_event(pmu, event);
+		if (ret) {
+			pmu = ERR_PTR(ret);
+			goto unlock;
+		}
+	} else {
+		list_for_each_entry_rcu(pmu, &pmus, entry) {
+			ret = perf_try_init_event(pmu, event);
+			if (!ret)
+				break;
 
-    pDecCont = (decContainer_t*)decInst;
+			if (ret != -ENOENT) {
+				pmu = ERR_PTR(ret);
+				goto unlock;
+			}
+		}
+		if (ret == -ENOENT)
+			pmu = ERR_PTR(-ENOENT);
+	}
+unlock:
+	srcu_read_unlock(&pmus_srcu, idx);
+	rcu_read_unlock();
 
-    #ifdef H264DEC_TRACE
-    char str[256]; // Define a fixed-size buffer
-    snprintf(str, sizeof(str), "H264SwDecRelease# decInst %p", decInst);
-    DEC_API_TRC(str);
-    #endif
-
-    h264bsdShutdown(&pDecCont->storage);
-
-    H264SwDecFree(pDecCont);
+	return pmu;
 }

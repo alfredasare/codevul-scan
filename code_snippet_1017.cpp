@@ -1,10 +1,21 @@
-static __always_inline void __vmcs_writel(unsigned long field, unsigned long value)
+struct NntpData *mutt_newsgroup_subscribe(struct NntpServer *nserv, char *group)
 {
-    uint32_t error;
+  struct NntpData *nntp_data = NULL;
 
-    asm volatile (__ex(ASM_VMX_VMWRITE_RAX_RDX) "; setna %0"
-                   : "=r"(error) : "a"(value), "d"(field) : "cc");
+  if (!nserv || !nserv->groups_hash || !group || !*group)
+    return NULL;
 
-    if (unlikely(error))
-        vmwrite_error(field, value);
+  nntp_data = nntp_data_find(nserv, group);
+  nntp_data->subscribed = true;
+  if (nntp_data->newsrc_len > 0 && !nntp_data->newsrc_ent)
+  {
+    nntp_data->newsrc_ent = mutt_mem_calloc(1, sizeof(struct NewsrcEntry));
+    nntp_data->newsrc_len = 1;
+  }
+  if (nntp_data->newsrc_ent)
+  {
+    nntp_data->newsrc_ent[0].first = 1;
+    nntp_data->newsrc_ent[0].last = 0;
+  }
+  return nntp_data;
 }

@@ -1,22 +1,32 @@
-kadm5_create_principal(void *server_handle,
-                        kadm5_principal_ent_t entry, long mask,
-                       char *password)
+PrintFlush()
 {
-    // Validate password length
-    if (strlen(password) > MAX_PASSWORD_LENGTH) {
-        return KADM5_ERROR_INVALID_PASSWORD;
+  display = curr->w_pdisplay;
+  if (display && printcmd)
+    {
+      int len = curr->w_stringp - curr->w_string;
+      if (len > 0 && display->d_printfd >= 0)
+        {
+          ssize_t r;
+          while (len > 0 && (r = write(display->d_printfd, curr->w_string, len)) > 0)
+            {
+              curr->w_string += r;
+              len -= r;
+            }
+          
+          if (r <= 0)
+            {
+              WMsg(curr, errno, "printing aborted");
+              close(display->d_printfd);
+              display->d_printfd = -1;
+            }
+        }
     }
-
-    // Allocate a safe buffer
-    char *buf = malloc(MAX_PASSWORD_LENGTH + 1);
-    if (!buf) {
-        return KADM5_ERROR_OUT_OF_MEMORY;
+  else if (display && curr->w_stringp > curr->w_string)
+    {
+      AddCStr(D_PO);
+      AddStrn(curr->w_string, curr->w_stringp - curr->w_string);
+      AddCStr(D_PF);
+      Flush(3);
     }
-
-    // Copy password data safely
-    memcpy(buf, password, strlen(password));
-    buf[MAX_PASSWORD_LENGTH] = '\0';
-
-    // Call the original function with the safe buffer
-    return kadm5_create_principal_3(server_handle, entry, mask, 0, NULL, buf);
+  curr->w_stringp = curr->w_string;
 }

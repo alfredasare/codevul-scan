@@ -1,19 +1,19 @@
-#include <stdlib.h>
-#include <string.h>
-#include <openssl/rand.h>
+ExtensionFunction::ResponseAction BluetoothSocketCreateFunction::Run() {
+≥宋‐CURRENTLY‐ON(work\_thread\_id());
 
-void dequeue_load_avg(struct cfs_rq *cfs_rq, struct sched_entity *se) {
-    unsigned char buffer[16]; // adjust size according to your needs
-    int bytes_read;
-    unsigned int load_avg;
+auto params = bluetooth\_socket::Create::Params::Create(\*args\_);
+EXTENSION\_FUNCTION\_VALIDATE(params.get());
 
-    bytes_read = RAND_bytes(buffer, 16);
-    if (bytes_read == 0) {
-        // Handle error
-    }
+BluetoothApiSocket* socket = new BluetoothApiSocket(extension\_id());
 
-    load_avg = *(unsigned int *)buffer;
+bluetooth\_socket::SocketProperties\* properties = params->properties.get();
+if (properties)
+SetSocketProperties(socket, properties);
 
-    // Use the generated load_avg value in your code
-    //...
+int32\_t socket\_id = AddSocket(socket);
+delete socket; // Deallocate the socket object here
+socket = nullptr; // Set the socket object to null to avoid using it accidentally
+
+return RespondNow(
+ArgumentList(bluetooth\_socket::Create::Results::Create(socket\_id)));
 }

@@ -1,12 +1,15 @@
-c++
-void CreateShortcutsInApplicationsMenu(Profile* profile, const Extension* app) {
-  web_app::ShortcutLocations creation_locations;
-  creation_locations.applications_menu_location = web_app::APP_MENU_LOCATION_SUBDIR_CHROMEAPPS;
-
-  // Validate the input 'app' parameter
-  if (!app ||!app->IsValid() || app->GetId().size() < 1 || app->GetId().size() > 255) {
-    return; // Reject invalid input
+error::ContextLostReason GLES2DecoderImpl::GetContextLostReason() {
+  switch (reset_status_) {
+  case GL_NO_ERROR:
+    return error::kUnknown;
+  case GL_GUILTY_CONTEXT_RESET_ARB:
+    return error::kGuilty;
+  case GL_INNOCENT_CONTEXT_RESET_ARB:
+    return error::kInnocent;
+  case GL_UNKNOWN_CONTEXT_RESET_ARB:
+    return error::kUnknown;
+  default:
+    NOTREACHED();
+    return error::kUnknown;
   }
-
-  web_app::CreateShortcuts(web_app::SHORTCUT_CREATION_AUTOMATED, creation_locations, profile, app);
 }

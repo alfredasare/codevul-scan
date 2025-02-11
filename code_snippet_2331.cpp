@@ -1,22 +1,16 @@
-ssize_t pdu_unmarshal(V9fsPDU *pdu, size_t offset, const char *fmt, ...)
+static void dccp_enqueue_skb(struct sock *sk, struct sk_buff *skb)
 {
-    ssize_t ret;
-    va_list ap;
+	const int max_header_size = 60; // Maximum allowed DCCP header size
+	int header_size = dccp_hdr(skb)->dccph_doff * 4;
 
-    if (strspn(fmt, "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_%")!= strlen(fmt))
-    {
-        return -EINVAL;
-    }
+	if (header_size > max_header_size) {
+		pr_err("DCCP: Potential buffer overflow, dropped skb\n");
+		kfree_skb(skb);
+		return;
+	}
 
-    va_start(ap, fmt);
-    ret = pdu_unmarshal_safe(pdu, offset, fmt, ap);
-    va_end(ap);
-
-    return ret;
-}
-
-ssize_t pdu_unmarshal_safe(V9fsPDU *pdu, size_t offset, const char *fmt, va_list ap)
-{
-    // Implement your own parsing logic without relying on format strings
-    //...
+	__skb_pull(skb, header_size);
+	__skb_queue_tail(&sk->sk_receive_queue, skb);
+	skb_set_owner_r(skb, sk);
+	sk->sk_data_ready(sk);
 }

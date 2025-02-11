@@ -1,16 +1,22 @@
-void vsock_enqueue_accept(struct sock *listener, struct sock *connected)
-{
-    struct vsock_sock *vlistener;
-    struct vsock_sock *vconnected;
+bool DelegatedFrameHost::ShouldCreateResizeLock() {
+  if (!client_)
+    return false; // or handle the error as appropriate
 
-    vlistener = vsock_sk(listener);
-    vconnected = vsock_sk(connected);
+  RenderWidgetHostImpl* host = client_->GetHost();
 
-    if (socket_state(listener) == SS_UNCONNECTED) {
-        send_error_message("connection refused");
-    } else {
-        sock_hold(connected);
-        sock_hold(listener);
-        list_add_tail(&vconnected->accept_queue, &vlistener->accept_queue);
-    }
+  if (resize_lock_)
+    return false;
+
+  if (host->should_auto_resize())
+    return false;
+
+  gfx::Size desired_size = client_->DesiredFrameSize();
+  if (desired_size == current_frame_size_in_dip_ || desired_size.IsEmpty())
+    return false;
+
+  ui::Compositor* compositor = client_->GetCompositor();
+  if (!compositor)
+    return false;
+
+  return true;
 }

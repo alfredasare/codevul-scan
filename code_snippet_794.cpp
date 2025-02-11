@@ -1,7 +1,16 @@
-unsigned lodepng_is_alpha_type(const LodePNGColorMode* info)
+static DEFINE_MUTEX(pit_mutex);
+
+int pit_has_pending_timer(struct kvm_vcpu *vcpu)
 {
-    if (!info) {
-        return 0; 
-    }
-    return (info->colortype == 4 || info->colortype == 6); 
+	struct kvm_pit *pit = vcpu->kvm->arch.vpit;
+	int pending = 0;
+
+	mutex_lock(&pit_mutex);
+
+	if (pit && kvm_vcpu_is_bsp(vcpu) && pit->pit_state.irq_ack)
+		pending = atomic_read(&pit->pit_state.pit_timer.pending);
+
+	mutex_unlock(&pit_mutex);
+
+	return pending;
 }

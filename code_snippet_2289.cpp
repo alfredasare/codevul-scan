@@ -1,12 +1,10 @@
-static UINT16 GetDigestSize( TPM_ALG_ID authHash )
+static void tun_free_netdev(struct net_device *dev)
 {
-    UINT32 i;
-    const UINT32 hashSizesCount = sizeof(hashSizes) / sizeof(HASH_SIZE_INFO);
-    for(i = 0; i < hashSizesCount; i++ )
-    {
-        if( hashSizes[i].algId == authHash )
-            return hashSizes[i].size;
-    }
+	struct tun_struct *tun = netdev_priv(dev);
 
-    return( 0 );
+	BUG_ON(!test_bit(SOCK_EXTERNALLY_ALLOCATED, &tun->socket.flags));
+
+	if (tun->socket.sk) {
+		sk_release_kernel(tun->socket.sk);
+	}
 }

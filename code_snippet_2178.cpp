@@ -1,21 +1,25 @@
-const FontRenderParams& PlatformFontSkia::GetFontRenderParams() {
-  TRACE_EVENT0("fonts", "PlatformFontSkia::GetFontRenderParams");
-  float current_scale_factor = GetFontRenderParamsDeviceScaleFactor();
+bool xmp_get_property_bool(XmpPtr xmp, const char *schema, const char *name,
+                           bool *property, uint32_t *propsBits)
+{
+    CHECK_PTR(xmp, false);
+    RESET_ERROR;
 
-  // Add authentication checks
-  if (!IsAuthorized()) {
-    return gfx::GetDefaultFontRenderParams();
-  }
+    if (!schema || !name) {
+        set_error(XMP_ERROR_INVALID_ARGUMENT);
+        return false;
+    }
 
-  if (current_scale_factor != device_scale_factor_) {
-    FontRenderParamsQuery query;
-    query.families.push_back(font_family_);
-    query.pixel_size = font_size_pixels_;
-    query.style = style_;
-    query.weight = weight_;
-    query.device_scale_factor = current_scale_factor;
-    font_render_params_ = gfx::GetFontRenderParams(query, nullptr);
-    device_scale_factor_ = current_scale_factor;
-  }
-  return font_render_params_;
+    bool ret = false;
+    try {
+        auto txmp = reinterpret_cast<const SXMPMeta *>(xmp);
+        XMP_OptionBits optionBits;
+        ret = txmp->GetProperty_Bool(schema, name, property, &optionBits);
+        if (propsBits) {
+            *propsBits = optionBits;
+        }
+    }
+    catch (const XMP_Error &e) {
+        set_error(e);
+    }
+    return ret;
 }

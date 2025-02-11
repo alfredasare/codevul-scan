@@ -1,20 +1,32 @@
-static struct nft_trans *nft_trans_alloc(struct nft_ctx *ctx, int msg_type, u32 size)
+void Cues::Init() const
 {
-    struct nft_trans *trans;
-    size_t total_size;
-
-    total_size = sizeof(struct nft_trans);
-    if (total_size + size > SIZE_MAX) {
-        return NULL;
-    }
-
-    trans = kzalloc(total_size + size, GFP_KERNEL);
-    if (trans == NULL) {
-        return NULL;
-    }
-
-    trans->msg_type = msg_type;
-    trans->ctx = *ctx;
-
-    return trans;
+if (m\_cue\_points)
+return;
+ assert(m\_count == 0);
+ assert(m\_preload\_count == 0);
+ IMkvReader\* const pReader = m\_pSegment->m\_pReader;
+ const long long stop = m\_start + m\_size;
+ long long pos = m\_start;
+ long cue\_points\_size = 0;
+ while (pos < stop)
+ {
+const long long idpos = pos;
+long len = sizeof(long long); // Defined length for safety
+if (pos + len > stop) // Check for boundary
+break;
+long long id = ReadUInt(pReader, pos, len);
+pos += len; //consume ID
+len = sizeof(long long); // Defined length for safety
+if (pos + len > stop) // Check for boundary
+break;
+long long size = ReadUInt(pReader, pos, len);
+pos += len; //consume Size field
+if (id == 0x3B) //CuePoint ID
+PreloadCuePoint(cue\_points\_size, idpos);
+len = size; // Defined length for safety
+if (pos + len > stop) // Check for boundary
+break;
+pos += size; //consume payload
+assert(pos <= stop);
+}
 }

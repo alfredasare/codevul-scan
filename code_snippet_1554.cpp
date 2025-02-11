@@ -1,8 +1,8 @@
-void AudioRendererAlgorithm::ResetWindow() {
-  if (index_into_window_ >= 0 && index_into_window_ < window_size_) {
-    index_into_window_ = 0;
-    crossfade_frame_number_ = 0;
-  } else {
-    DCHECK(false) << "Index out of bounds";
-  }
+#include <openssl/rand.h>
+
+virtual void cryptographicallyRandomValues(unsigned char* buffer, size_t length) {
+    if (!RAND_bytes(buffer, length)) {
+        // Handle error
+        // For example, throw an exception or return an error code
+    }
 }

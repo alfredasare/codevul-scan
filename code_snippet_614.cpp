@@ -1,27 +1,14 @@
-PHP_FUNCTION(xml_error_string)
+#include <limits.h>
+
+void us_to_timeval(struct timeval *val, int64_t us)
 {
-    long code;
-    char *str;
+    lldiv_t tvdiv = lldiv(us, 1000000);
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &code) == FAILURE) {
-        return;
-    }
-
-    // Validate the input parameter code
-    if (code < 0 || code > XML_ERROR_MAX) {
-        RETVAL_STRING("Invalid XML error code", 1);
-        return;
-    }
-
-    // Validate the input parameter code against a whitelist
-    static const int allowedCodes[] = {XML_ERROR_NO_MEMORY, XML_ERROR_FILE_NOT_FOUND, /*... */};
-    if (!in_array(code, allowedCodes)) {
-        RETVAL_STRING("Unknown XML error code", 1);
-        return;
-    }
-
-    str = (char *)XML_ErrorString((int)code);
-    if (str) {
-        RETVAL_STRING(str, 1);
+    if (tvdiv.quot >= INT_MAX) {
+        val->tv_sec = INT_MAX;
+        val->tv_usec = us - (int64_t)tvdiv.quot * 1000000;
+    } else {
+        val->tv_sec = tvdiv.quot;
+        val->tv_usec = tvdiv.rem;
     }
 }

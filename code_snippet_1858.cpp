@@ -1,18 +1,9 @@
-static int __cpuinit msr_class_cpu_callback(struct notifier_block *nfb,
-				unsigned long action, void *hcpu)
+void ext4_msg(struct super_block *sb, const char *prefix, const char *fmt, ...)
 {
-	unsigned int cpu = (unsigned long)hcpu;
-	int err = -ENODEV; // Initialize err to a valid value
+    struct va_format vaf;
+    va_list args;
+    size_t prefix_len;
 
-	switch (action) {
-	case CPU_UP_PREPARE:
-		err = msr_device_create(cpu);
-		break;
-	case CPU_UP_CANCELED:
-	case CPU_UP_CANCELED_FROZEN:
-	case CPU_DEAD:
-		msr_device_destroy(cpu);
-		break;
-	}
-	return notifier_from_errno(err);
-}
+    if (!sb || !prefix || !fmt) {
+        printk(KERN_ERR "Invalid input\n");
+        return;

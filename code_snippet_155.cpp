@@ -1,18 +1,16 @@
-DelayScrollOffsetClampScope(const std::string& user_input) {
-  if (!ValidateUserInput(user_input)) {
-    return;
-  }
-  
-  DCHECK(count_ > 0 || NeedsClampList().IsEmpty());
-  count_++;
-}
+#define MAX_SEQNUM  (sizeof(struct msg_register_opaque_type) / sizeof(u_int32_t))
 
-bool ValidateUserInput(const std::string& input) {
-  static const std::set<char> allowed_chars = {"a", "b",...};
-  for (char c : input) {
-    if (allowed_chars.find(c) == allowed_chars.end()) {
-      return false; // Input contains disallowed character
-    }
+new_msg_register_opaque_type (u_int32_t seqnum, u_char ltype, u_char otype)
+{
+  struct msg_register_opaque_type rmsg;
+
+  if (seqnum >= MAX_SEQNUM) {
+    return NULL;
   }
-  return true;
+
+  rmsg.lsatype = ltype;
+  rmsg.opaquetype = otype;
+  memset (&rmsg.pad, 0, sizeof (rmsg.pad));
+
+  return msg_new (MSG_REGISTER_OPAQUETYPE, &rmsg, seqnum, sizeof(rmsg));
 }

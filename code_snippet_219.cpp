@@ -1,20 +1,22 @@
-void bioset_free(struct bio_set *bs)
+magic_close(magic);
+return NULL;
+}
+return magic;
+}
+
+Fixed code:
+load(const char *magicfile, int flags)
 {
-    bs->rescue_workqueue = NULL;
-    bs->bio_pool = NULL;
-    bs->bvec_pool = NULL;
-
-    if (bs->rescue_workqueue)
-        destroy_workqueue(bs->rescue_workqueue);
-
-    if (bs->bio_pool)
-        mempool_destroy(bs->bio_pool);
-
-    if (bs->bvec_pool)
-        mempool_destroy(bs->bvec_pool);
-
-    bioset_integrity_free(bs);
-    bio_put_slab(bs);
-
-    kfree(bs);
+struct magic_set *magic = magic_open(flags);
+if (magic == NULL) {
+(void)fprintf(stderr, "%s: %s\n", progname, strerror(errno));
+return NULL;
+}
+if (magic_load(magic, magicfile) == NULL) {
+(void)fprintf(stderr, "%s: %s\n",
+progname, magic_error(magic));
+magic_close(magic);
+return NULL;
+}
+return magic;
 }

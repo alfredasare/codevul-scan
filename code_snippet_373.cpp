@@ -1,5 +1,25 @@
-static inline u8 ip6_frag_ecn(const struct ipv6hdr *ipv6h)
-{
-    uint16_t dsfield = ipv6_get_dsfield(ipv6h);
-    return 1 << (dsfield & 0x3FFF); // Use initialized value
+Virtual status\_t createInputSurface(node\_id node, OMX\_U32 port\_index,
+sp<IGraphicBufferProducer>\* bufferProducer, MetadataBufferType \*type) {
+ Parcel data, reply;
+ status\_t err;
+
+data.writeInterfaceToken(IOMX::getInterfaceDescriptor());
+data.writeInt32((int32\_t)node);
+data.writeInt32(port\_index);
+
+err = remote()->transact(CREATE\_INPUT\_SURFACE, data, &reply);
+if (err != OK || !reply.readInt32()) {
+ALOGW("binder transaction failed: %d", err);
+return err;
+}
+
+int negotiatedType = reply.readInt32();
+if (type != NULL) {
+*type = (MetadataBufferType)negotiatedType;
+}
+
+*bufferProducer = IGraphicBufferProducer::asInterface(
+reply.readStrongBinder());
+
+return OK;
 }

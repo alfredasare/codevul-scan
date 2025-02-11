@@ -1,12 +1,12 @@
-void hat_transform(float *temp, float *base, size_t st, size_t size, size_t sc) {
-  size_t i;
-  for (i = 0; i < sc; i++) {
-    temp[i] = 2 * base[st * i] + base[st * (sc - i)] + base[st * (i + sc)];
-  }
-  for (; i + sc < size; i++) {
-    temp[i] = 2 * base[st * i] + base[st * (i - sc)] + base[st * (i + sc)];
-  }
-  for (; i < size; i++) {
-    temp[i] = 2 * base[st * i] + base[st * (i - sc)] + base[st * (2 * size - 2 - (i + sc))];
-  }
-}
+struct socket *sock;
+
+sock = sockfd_lookup_light(fd, &err, NULL);
+
+if (!sock)
+	goto out;
+
+err = __sys_sendmsg(sock, msg, &msg_sys, flags, NULL);
+
+fput_light(sock->file, 1);
+out:
+	return err;

@@ -1,11 +1,12 @@
-getu16(int swap, uint16_t value)
-{
-    uint16_t result = value;
+c++
+void TabletModeWindowManager::WindowStateDestroyed(aura::Window* window) {
+  if (!window || window->GetRootWindow() != root_window_) {
+    return;
+  }
 
-    if (swap) {
-        // Use bitwise operation to swap the bytes
-        result = (result << 8) | (result >> 8);
-    }
+  DCHECK(window->HasObserver(this));
 
-    return result;
+  auto it = window_state_map_.find(window);
+  if (it != window_state_map_.end())
+    window_state_map_.erase(it);
 }

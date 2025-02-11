@@ -1,28 +1,12 @@
-mrb_f_raise(mrb_state *mrb, mrb_value self)
-{
-  mrb_value a[2], exc;
-  mrb_int argc;
-
-  argc = mrb_get_args(mrb, "|oo", &a[0], &a[1]);
-  switch (argc) {
-  case 0:
-    mrb_raise(mrb, E_RUNTIME_ERROR, "");
-    break;
-  case 1:
-    if (mrb_string_p(a[0])) {
-      a[1] = a[0];
-      argc = 2;
-      a[0] = mrb_obj_value(E_RUNTIME_ERROR);
+void comps_mrtree_clear_fixed(COMPS_MRTree * rt) {
+    COMPS_HSListItem *item, *temp_node;
+    if (rt == NULL || rt->subnodes == NULL) return;
+    item = rt->subnodes->first;
+    for (; item != NULL; ) {
+        temp_node = item;
+        item = item->next;
+        if (rt->subnodes->data_destructor != NULL)
+            rt->subnodes->data_destructor(temp_node->data);
+        free(temp_node);
     }
-    /* fall through */
-  default:
-    exc = mrb_make_exception(mrb, argc, a);
-    if (exc!= mrb_nil_value()) {
-      mrb_exc_raise(mrb, exc);
-    } else {
-      mrb_raise(mrb, E_RUNTIME_ERROR, "Failed to create exception");
-    }
-    break;
-  }
-  return mrb_nil_value();            /* not reached */
 }

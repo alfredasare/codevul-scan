@@ -1,20 +1,8 @@
-static zend_string *get_http_headers(php_stream *stream)
+void __init zone_sizes_init(void)
 {
-    smart_str tmp_response = {0};
-    char headerbuf[32768]; // Increased buffer size to 32768
+	unsigned long max_zone_pfns[MAX_NR_ZONES] = {0};
 
-    while (php_stream_gets(stream, headerbuf, sizeof(headerbuf))) {
-        if ((headerbuf[0] == '\r' && headerbuf[1] == '\n') ||
-            (headerbuf[0] == '\n')) {
-            /* empty line marks end of headers */
-            smart_str_0(&tmp_response);
-            return tmp_response.s;
-        }
-
-        /* add header to collection */
-        smart_str_append(&tmp_response, headerbuf, strlen(headerbuf));
-    }
-
-    smart_str_free(&tmp_response);
-    return NULL;
-}
+#ifdef CONFIG_ZONE_DMA
+	max_zone_pfns[ZONE_DMA] = min(MAX_DMA_PFN, max_low_pfn);
+#endif
+#ifdef CONFIG_ZONE

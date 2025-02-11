@@ -1,13 +1,5 @@
-static void free_acl_list(FFServerIPAddressACL *in_acl)
+int dictObjKeyCompare(void *privdata, const void *key1, const void *key2)
 {
-    FFServerIPAddressACL *pacl, *temp;
-
-    pacl = in_acl;
-    while(pacl) {
-        temp = pacl;
-        pacl = pacl->next;
-        if (temp) {
-            av_free(temp);
-        }
-    }
+const robj *o1 = key1, *o2 = key2;
+return strcmp(o1->ptr, o2->ptr);
 }

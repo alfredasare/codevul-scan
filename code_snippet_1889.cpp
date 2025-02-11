@@ -1,18 +1,32 @@
-static void llc_cmsg_rcv(struct msghdr *msg, struct sk_buff *skb)
-{
-    struct llc_sock *llc = llc_sk(skb->sk);
+virtual ssize_t readAt(off64_t offset, void *buffer, size_t size) {
+    Parcel data, reply;
+    data.writeInterfaceToken(IMediaHTTPConnection::getInterfaceDescriptor());
 
-    if (llc->cmsg_flags & LLC_CMSG_PKTINFO) {
-        struct llc_pktinfo info;
+    data.writeInt64(offset);
+    data.writeInt32(size);
 
-        info.lpi_ifindex = llc_sk(skb->sk)->dev->ifindex;
-        llc_pdu_decode_dsap(skb, &info.lpi_sap);
-        llc_pdu_decode_da(skb, info.lpi_mac);
-
-        if (unlikely(!llc_pdu_decode_dsap(skb, &info.lpi_sap) ||!llc_pdu_decode_da(skb, info.lpi_mac))) {
-            __LLC_DBG("Error decoding LLC packet");
-            return;
-        }
-        put_cmsg(msg, SOL_LLC, LLC_OPT_PKTINFO, sizeof(info), &info);
+    status_t err = remote()->transact(READ_AT, data, &reply);
+    if (err != OK) {
+        ALOGE("remote readAt failed");
+        return UNKNOWN_ERROR;
     }
+
+    int32_t exceptionCode = reply.readExceptionCode();
+
+    if (exceptionCode) {
+        return UNKNOWN_ERROR;
+    }
+
+    int32_t len = reply.readInt32();
+
+    if (len > size) {
+        ALOGE("Buffer overflow detected");
+        return UNKNOWN_ERROR;
+    }
+
+    if (len > 0) {
+        memmove(buffer, mMemory->pointer(), len);
+    }
+
+    return len;
 }

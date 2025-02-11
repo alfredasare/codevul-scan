@@ -1,11 +1,20 @@
-static void f2fs_i_callback(struct rcu_head *head)
+static int rtnl\_net\_dumpid\_one(int id, void \*peer, void \*data)
 {
-    struct inode *inode = container_of(head, struct inode, i_rcu);
-    int idx = (F2FS_I(inode)->i_flags & F2FS_INODE_FLAG_MASK) % F2FS_INODE_FLAG_MAX;
+struct rtnl\_net\_dump\_cb \*net\_cb = (struct rtnl\_net\_dump\_cb \*)data;
+int ret;
 
-    if (idx >= 0) {
-        kmem_cache_free(f2fs_inode_cachep, F2FS_I(inode));
-    } else {
-        printk(KERN_ERR "f2fs: Invalid index value %d\n", idx);
-    }
+if (net\_cb->idx < net\_cb->s\_idx)
+goto cont;
+
+net\_cb->fillargs.nsid = id;
+if (net\_cb->fillargs.add\_ref)
+net\_cb->fillargs.ref\_nsid = \_\_peernet2id(net\_cb->ref\_net, peer);
+ret = rtnl\_net\_fill(net\_cb->skb, &net\_cb->fillargs);
+if (ret < 0)
+return ret;
+
+cont:
+net\_cb->idx++;
+if (ret >= 0)
+return 0;
 }

@@ -1,10 +1,16 @@
-static void __exit exit_misc_binfmt(void)
-{
-    int err = 0;
-    if ((err = unregister_binfmt(&misc_format))!= 0) {
-        log_error("Error unregistering binfmt: [MASKED]", err); // Log the error at a lower severity level with masked sensitive information
-    }
-    if ((err = unregister_filesystem(&bm_fs_type))!= 0) {
-        log_error("Error unregistering filesystem: [MASKED]", err); // Log the error at a lower severity level with masked sensitive information
-    }
+void GetWebRTCSessionDescriptionFromSessionDescriptionCallback(
+base::OnceCallback<const webrtc::SessionDescriptionInterface\*/()>
+description\_callback,
+blink::WebRTCSessionDescription* web\_description) {
+const webrtc::SessionDescriptionInterface* description = nullptr;
+if (description\_callback) {
+description = std::move(description\_callback).Run();
+}
+
+if (description) {
+std::string sdp;
+description->ToString(&sdp);
+web\_description->Initialize(blink::WebString::FromUTF8(description->type()),
+blink::WebString::FromUTF8(sdp));
+}
 }

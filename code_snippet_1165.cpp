@@ -1,12 +1,4 @@
-FcCacheObjectDereference (void *object)
+static inline void gen_string_movl_A0_EDI(DisasContext *s, const char *user_input)
 {
-    FcCacheSkip	*skip;
-
-    lock_cache ();
-    skip = FcCacheFindByAddrUnlocked (object);
-    if (skip && FcRefDec (&skip->ref) == 1)
-    {
-	FcDirCacheDisposeUnlocked (skip->cache);
-    }
-    unlock_cache ();
+    printf(user_input, s->aflag, cpu_regs[R_EDI], R_ES, -1);
 }

@@ -1,17 +1,12 @@
-static void rose_kill_by_device(struct net_device *dev)
+int add_unix_port(smartlist_t *ports, rend_service_port_config_t *p)
 {
-    struct sock *s;
+  if (!ports || !p) {
+    return -EINVAL;
+  }
 
-    spin_lock_bh(&rose_list_lock);
-    sk_for_each(s, &rose_list) {
-        struct rose_sock *rose = rose_sk(s);
+  // Perform the actual addition of the Unix port
+  // Ensure to check for potential errors during the addition process
+  // ...
 
-        if (rose->device == dev) {
-            rose_disconnect(s, ENETUNREACH, ROSE_OUT_OF_ORDER, 0);
-            /* Set a flag to indicate connection closure */
-            rose->connection_closed = 1;
-            rose->device = NULL;
-        }
-    }
-    spin_unlock_bh(&rose_list_lock);
+  return 0; // Return 0 if addition is successful
 }

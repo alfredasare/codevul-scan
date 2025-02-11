@@ -1,17 +1,10 @@
-BrowserNonClientFrameViewAura::GetThemeFrameOverlayBitmap() const {
-  ui::ThemeProvider* tp = GetThemeProvider();
-  int allowedThemes[] = { IDR_THEME_FRAME_OVERLAY, IDR_THEME_FRAME_OVERLAY_INACTIVE };
-  const size_t allowedThemesCount = sizeof(allowedThemes) / sizeof(int);
+int BN_is_bit_set(const BIGNUM *a, size_t n)
+{
+	size_t i, j;
 
-  if (tp->HasCustomImage(-1) && // Sanitize the custom image ID
-      browser_view()->IsBrowserTypeNormal() &&
-     !browser_view()->IsOffTheRecord()) {
-    for (size_t i = 0; i < allowedThemesCount; i++) {
-      if (allowedThemes[i] == ShouldPaintAsActive()?
-          IDR_THEME_FRAME_OVERLAY : IDR_THEME_FRAME_OVERLAY_INACTIVE) {
-        return tp->GetBitmapNamed(allowedThemes[i]);
-      }
-    }
-  }
-  return NULL;
+	bn_check_top(a);
+	if (n >= a->top * BN_BITS2) return 0;
+	i = n / BN_BITS2;
+	j = n % BN_BITS2;
+	return (int)(((a->d[i]) >> j) & ((BN_ULONG)1));
 }

@@ -1,18 +1,22 @@
-int migrate_huge_page_move_mapping(struct address_space *mapping,
-				   struct page *newpage, struct page *page)
+vc4\_gem\_init(struct drm\_device \*dev)
 {
-	int expected_count;
-	void **pslot;
+struct vc4\_dev \*vc4 = to\_vc4\_dev(dev);
 
-	spin_lock_irq(&mapping->tree_lock);
+INIT\_LIST\_HEAD(&vc4->bin\_job\_list);
+INIT\_LIST\_HEAD(&vc4->render\_job\_list);
+INIT\_LIST\_HEAD(&vc4->job\_done\_list);
+INIT\_LIST\_HEAD(&vc4->seqno\_cb\_list);
+spin\_lock\_init(&vc4->job\_lock);
 
-	pslot = radix_tree_tag_set(&mapping->page_tree, page_index(page), PAGE_FREE);
-	expected_count = 2 + page_has_private(page);
-	if (page_count(page)!= expected_count ||
-		radix_tree_deref_slot_protected(pslot, &mapping->tree_lock)!= page) {
-		spin_unlock_irq(&mapping->tree_lock);
-		return -EAGAIN;
-	}
+INIT\_WORK(&vc4->hangcheck.reset\_work, vc4\_reset\_work);
+setup\_timer(&vc4->hangcheck.timer,
+vc4\_hangcheck\_elapsed,
+(unsigned long)dev);
 
-	// Rest of the function remains the same
+vc4->hangcheck.elapsed = 0;
+vc4->hangcheck.active = 0;
+
+INIT\_WORK(&vc4->job\_done\_work, vc4\_job\_done\_work);
+
+mutex\_init(&vc4->power\_lock);
 }

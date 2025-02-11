@@ -1,12 +1,29 @@
-nfs4_opendata_to_nfs4_state(struct nfs4_opendata *data)
+static int skcipher_alloc_sgl(struct sock *sk)
 {
-    char *claim = data->o_arg.claim;
-    if (claim && strpbrk(claim, "/\\")!= NULL) {
-        return -EINVAL;
-    }
+	struct alg_sock *ask = alg_sk(sk);
+	struct skcipher_ctx *ctx = ask->private;
+	struct skcipher_sg_list *sgl;
+	struct scatterlist *sg = NULL;
 
-    if (data->o_arg.claim == NFS4_OPEN_CLAIM_PREVIOUS) {
-        return _nfs4_opendata_reclaim_to_nfs4_state(data);
-    }
-    return _nfs4_opendata_to_nfs4_state(data);
+	sgl = list_entry(ctx->tsgl.prev, struct skcipher_sg_list, list);
+	if (!list_empty(&ctx->tsgl)) {
+		sg = sgl->sg;
+		if (!sg || sgl->cur >= MAX_SGL_ENTS) {
+			sgl = sock_kmalloc(sk, sizeof(*sgl) +
+				       sizeof(sgl->sg[0]) * (MAX_SGL_ENTS + 1),
+				   GFP_KERNEL);
+			if (!sgl)
+				return -ENOMEM;
+
+			sg_init_table(sgl->sg, MAX_SGL_ENTS + 1);
+			sgl->cur = 0;
+
+			if (sg)
+				sg_chain(sg, MAX_SGL_ENTS + 1, sgl->sg);
+
+			list_add_tail(&sgl->list, &ctx->tsgl);
+		}
+	}
+
+	return 0;
 }

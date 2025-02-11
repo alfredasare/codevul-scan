@@ -1,17 +1,18 @@
-static int kvm_deassign_ioeventfd(struct kvm *kvm, struct kvm_ioeventfd *args)
+xfs_attr_fork_remove(
+	struct xfs_inode	*ip,
+	struct xfs_trans	*tp)
 {
-    enum kvm_bus bus_idx;
-    int ret;
+	xfs_idestroy_fork(ip, XFS_ATTR_FORK);
+	ip->i_d.di_forkoff = 0;
+	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
 
-    bus_idx = ioeventfd_bus_from_flags(args->flags);
-    if (bus_idx < 0 || bus_idx >= KVM_BUS_MAX) {
-        return -EINVAL;
-    }
+	if (ip->i_d.di_anextents) {
+		xfs_warn(ip->i_mount, "di_anextents not zero");
+	}
 
-    ret = kvm_deassign_ioeventfd_idx(kvm, bus_idx, args);
+	if (ip->i_afp) {
+		xfs_warn(ip->i_mount, "i_afp is not NULL");
+	}
 
-    if (!args->len && bus_idx == KVM_MMIO_BUS)
-        kvm_deassign_ioeventfd_idx(kvm, KVM_FAST_MMIO_BUS, args);
-
-    return ret;
+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
 }

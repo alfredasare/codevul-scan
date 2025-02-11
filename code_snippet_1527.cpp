@@ -1,37 +1,44 @@
-int inflate()
+brcmf_do_escan(struct brcmf_if *ifp, struct cfg80211_scan_request *request)
 {
-  int e;                /* last block flag */
-  int r;                /* result code */
-  unsigned h;           /* maximum struct huft's malloc'ed */
+	struct brcmf_cfg80211_info *cfg = ifp->drvr->config;
+	s32 err;
+	u32 passive_scan;
+	struct brcmf_scan_results *results;
+	struct escan_info *escan = &cfg->escan_info;
 
+	brcmf_dbg(SCAN, "Enter\n");
+	escan->ifp = ifp;
+	escan->wiphy = cfg->wiphy;
 
-  /* initialize window, bit buffer */
-  wp = 0;
-  bk = 0;
-  bb = 0;
+	if (escan->escan_state == WL_ESCAN_STATE_SCANNING) {
+		brcmf_err("Invalid state, scan already in progress\n");
+		return -EBUSY;
+	}
 
-  /* decompress until the last block */
-  h = 0;
-  do {
-    hufts = 0;
-    if ((r = inflate_block(&e))!= 0)
-      return r;
-    if (hufts > h)
-      h = hufts;
-  } while (!e);
+	escan->escan_state = WL_ESCAN_STATE_SCANNING;
+	passive_scan = cfg->active_scan ? 0 : 1;
+	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PASSIVE_SCAN,
+				    passive_scan);
+	if (err) {
+		brcmf_err("error (%d)\n", err);
+		return err;
+	}
+	brcmf_scan_config_mpc(ifp, 0);
 
-  /* Undo too much lookahead. The next read will be byte aligned so we
-   * can discard unused bits in the last meaningful byte.
-   */
-  while (bk >= 8 && inptr > 0) {
-    bk -= 8;
-    inptr--;
-  }
+	results = (struct brcmf_scan_results *)escan->escan_buf;
+	if (results) {
+		results->version = 0;
+		results->count = 0;
+		results->buflen = WL_ESCAN_RESULTS_FIXED_SIZE;
+	} else {
+		brcmf_err("Invalid results buffer\n");
+		return -EINVAL;
+	}
 
-  /* flush out slide */
-  flush_output(wp);
-
-  /* return success */
-  Trace ((stderr, "<%u> ", h));
-  return 0;
+	err = escan->run(cfg, ifp, request);
+	if (err) {
+		brcmf_scan_config_mpc(ifp, 1);
+		escan->escan_state = WL_ESCAN_STATE_IDLE;
+	}
+	return err;
 }

@@ -1,17 +1,13 @@
-bool xmp_files_put_xmp(XmpFilePtr xf, XmpPtr xmp)
-{
-    if (xf == nullptr || xmp == nullptr) {
-        return false; 
-    }
-    RESET_ERROR;
-    auto txf = reinterpret_cast<SXMPFiles *>(xf);
-
-    try {
-        txf->PutXMP(*reinterpret_cast<const SXMPMeta *>(xmp));
-    }
-    catch (const XMP_Error &e) {
-        set_error(e);
-        return false;
-    }
-    return true;
+c++
+RendererPermissionsPolicyDelegate::RendererPermissionsPolicyDelegate(
+    Dispatcher* dispatcher) : dispatcher_(dispatcher) {
+  if (!dispatcher_) {
+    // Throw an exception or return an error code here.
+    throw std::invalid_argument("Null dispatcher is not allowed");
+  }
+  PermissionsData::SetPolicyDelegate(this);
+  // Add documentation for constructor preconditions.
+  /**
+   * @param dispatcher The dispatcher must not be null.
+   */
 }

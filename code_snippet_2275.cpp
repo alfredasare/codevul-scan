@@ -1,15 +1,10 @@
-flash_eerd_read(E1000State *s, int x)
-{
-    size_t index, r = s->mac_reg[EERD] & ~E1000_EEPROM_RW_REG_START;
+gfx::Rect Label::GetAvailableRect() const {
+  gfx::Rect bounds(gfx::Point(), size());
+  gfx::Insets insets(GetInsets());
 
-    if ((s->mac_reg[EERD] & E1000_EEPROM_RW_REG_START) == 0)
-        return (s->mac_reg[EERD]);
+  // Clamp width and height to zero if negative.
+  bounds.set_width(std::max(0, bounds.width() - (insets.left() + insets.right())));
+  bounds.set_height(std::max(0, bounds.height() - (insets.top() + insets.bottom())));
 
-    if ((index = r >> E1000_EEPROM_RW_ADDR_SHIFT) > EEPROM_CHECKSUM_REG) {
-        index = clamp(index, 0, EEPROM_CHECKSUM_REG - 1);
-        return (E1000_EEPROM_RW_REG_DONE | r);
-    }
-
-    return ((s->eeprom_data[index] << E1000_EEPROM_RW_REG_DATA) |
-           E1000_EEPROM_RW_REG_DONE | r);
+  return bounds;
 }

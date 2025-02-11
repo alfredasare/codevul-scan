@@ -1,17 +1,15 @@
-void mm_audit_run_command(const char *command)
-{
-    Buffer m;
-    size_t command_len = strlen(command);
-
-    debug3("%s entering command %s", __func__, command);
-
-    if (command_len > MM_MAX_BUFFER_SIZE) {
-        debug3("Command too long: %zu bytes", command_len);
-        return;
+c++
+size_t NormalPage::ObjectPayloadSizeForTesting() {
+  size_t object_payload_size = 0;
+  Address header_address = Payload();
+  Address current_address = header_address;
+  while (current_address < PayloadEnd() && current_address + header->size() <= PayloadEnd()) {
+    HeapObjectHeader* header =
+        reinterpret_cast<HeapObjectHeader*>(current_address);
+    if (!header->IsFree()) {
+      object_payload_size += header->PayloadSize();
     }
-
-    buffer_init(&m);
-    buffer_put_cstring_safe(&m, command, command_len);
-    mm_request_send(pmonitor->m_recvfd, MONITOR_REQ_AUDIT_COMMAND, &m);
-    buffer_free(&m);
+    current_address += header->size();
+  }
+  return object_payload_size;
 }

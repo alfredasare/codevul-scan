@@ -1,8 +1,10 @@
-void WebPluginAcceleratedSurfaceProxy::SetTransportDIBAllocAndFree(const std::string& directory_path) {
-  if (directory_path.find("..")!= std::string::npos || directory_path.find("/")!= std::string::npos || directory_path.find("\\")!= std::string::npos) {
-    // Handle invalid directory path
-    return;
-  }
+static void nfnl_err_del(struct nfnl_err *nfnl_err)
+{
+	if (!nfnl_err) {
+		pr_err("Null pointer encountered in nfnl_err_del\n");
+		return;
+	}
 
-  surface_->SetTransportDIBAllocAndFree(NewCallback(plugin_proxy_, &WebPluginProxy::AllocSurfaceDIB, directory_path), NewCallback(plugin_proxy_, &WebPluginProxy::FreeSurfaceDIB, directory_path));
+	list_del(&nfnl_err->head);
+	kfree(nfnl_err);
 }

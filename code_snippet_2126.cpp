@@ -1,12 +1,21 @@
-static struct futex_q *futex_top_waiter(struct futex_hash_bucket *hb, union futex_key *key)
+static inline void ModulateHSV(const double percent_hue,
+                               const double percent_saturation,
+                               const double percent_value,
+                               double *red,
+                               double *green,
+                               double *blue)
 {
-    struct futex_q *this;
-    size_t key_size = sizeof(union futex_key);
+  double
+    hue,
+    saturation,
+    value;
 
-    plist_for_each_entry(this, &hb->chain, list) {
-        if (match_futex(&this->key, key, key_size)) {
-            return this;
-        }
-    }
-    return NULL;
+  ConvertRGBToHSV(*red, *green, *blue, &hue, &saturation, &value);
+
+  hue = fmod(hue + 0.5 * (0.01 * percent_hue - 1.0), 1.0);
+
+  saturation *= 0.01 * percent_saturation;
+  value *= 0.01 * percent_value;
+
+  ConvertHSVToRGB(hue, saturation, value, red, green, blue);
 }

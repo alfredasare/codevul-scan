@@ -1,21 +1,18 @@
-void gdImageColorTransparent (gdImagePtr im, int color)
+static av_cold int init(AVFilterContext *ctx)
 {
-    if (color < 0 || color >= im->colorsTotal) {
-        return;
+    FPSContext *s = ctx->priv;
+
+    if (!(s->fifo = av_fifo_alloc(2 * sizeof(AVFrame*) + sizeof(void*) - 1)))
+        return AVERROR(ENOMEM);
+
+    if (!s->fifo) {
+        av_log(ctx, AV_LOG_ERROR, "Failed to allocate memory for the FIFO.\n");
+        return AVERROR(ENOMEM);
     }
 
-    if (strstr(im->colors[color], "..")!= NULL) {
-        return;
-    }
+    s->pts = AV_NOPTS_VALUE;
+    s->first_pts = AV_NOPTS_VALUE;
 
-    if (!im->trueColor) {
-        if(color >= im->colorsTotal) {
-            return;
-        }
-        if (im->transparent!= -1) {
-            im->alpha[im->transparent] = gdAlphaOpaque;
-        }
-        im->alpha[color] = gdAlphaTransparent;
-    }
-    im->transparent = color;
+    av_log(ctx, AV_LOG_VERBOSE, "fps=%d/%d\n", s->framerate.num, s->framerate.den);
+    return 0;
 }

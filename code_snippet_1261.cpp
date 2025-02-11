@@ -1,30 +1,36 @@
-struct rpc_task *rpc_run_bc_task(struct rpc_rqst *req, 
-                                 const struct rpc_call_ops *tk_ops)
+static int store_max_write_buffer_kb(struct device *dev,
+				 struct device_attribute *attr,
+				 const char *buf, size_t count)
 {
-    struct rpc_task *task;
-    struct xdr_buf *xbufp = &req->rq_snd_buf;
-    struct rpc_task_setup task_setup_data = {
-       .callback_ops = tk_ops,
-    };
+	struct comedi_device_file_info *info = dev_get_drvdata(dev);
+	unsigned long new_max_size_kb;
+	uint64_t new_max_size;
+	const uint64_t max_size_limit = UINT64_MAX / bytes_per_kibi;
+	struct comedi_subdevice *const write_subdevice =
+		comedi_get_write_subdevice(info);
 
-    dprintk("RPC: rpc_run_bc_task req= %p\n");
-    //...
+	if (strict_strtoul(buf, 10, &new_max_size_kb))
+		return -EINVAL;
+	if (new_max_size_kb > UINT32_MAX)
+		return -EINVAL;
+	if (new_max_size_kb > max_size_limit) {
+		dev_err(&info->device->dev,
+			"Requested buffer size exceeds maximum capacity\n");
+		return -EINVAL;
+	}
+	new_max_size = (uint64_t)new_max_size_kb * bytes_per_kibi;
+	if (new_max_size > UINT32_MAX)
+		return -EINVAL;
 
-    xbufp->len = calculate_xdr_buf_len(xbufp);
+	mutex_lock(&info->device->mutex);
+	if (write_subdevice == NULL ||
+	    (write_subdevice->subdev_flags & SDF_CMD_WRITE) == 0 ||
+	    write_subdevice->async == NULL) {
+		mutex_unlock(&info->device->mutex);
+		return -EINVAL;
+	}
+	write_subdevice->async->max_bufsize = new_max_size;
+	mutex_unlock(&info->device->mutex);
 
-    task->tk_action = call_bc_transmit;
-    atomic_inc(&task->tk_count);
-    BUG_ON(atomic_read(&task->tk_count)!= 2);
-    rpc_execute(task);
-
-    //...
-}
-
-int calculate_xdr_buf_len(struct xdr_buf *xbufp)
-{
-    int len = 0;
-    len += xbufp->head[0].iov_len;
-    len += xbufp->page_len;
-    len += xbufp->tail[0].iov_len;
-    return len;
+	return count;
 }

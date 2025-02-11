@@ -1,25 +1,12 @@
-c++
-bool xmp_get_property_bool(XmpPtr xmp, const char *schema, const char *name,
-                           bool *property, uint32_t *propsBits)
-{
-    CHECK_PTR(xmp, false);
-    RESET_ERROR;
-
-    bool ret = false;
-    XMP_MetaHandle txmp = nullptr;
-    try {
-        txmp = reinterpret_cast<const XMP_MetaHandle *>(xmp);
-        XMP_OptionBits optionBits;
-        ret = txmp->GetProperty_Bool(schema, name, property, &optionBits);
-        if (propsBits) {
-            *propsBits = optionBits;
-        }
-    }
-    catch (const XMP_Error &e) {
-        set_error(e);
-        if (txmp) {
-            XMP_free(txmp);
-        }
-    }
-    return ret;
+void BnCrypto::writeVector(Parcel *reply, Vector<uint8_t> const &vector) const {
+reply->writeInt32(vector.size());
+size\_t arraySize = vector.size();
+if (arraySize > 0) {
+// Check if the stored size matches the actual array size
+uint32\_t storedSize = reply->readInt32();
+if (storedSize != arraySize) {
+// Handle error scenario, throw exception or return
+}
+reply->write(vector.array(), arraySize);
+}
 }

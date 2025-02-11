@@ -1,8 +1,10 @@
-int user_path_at(int dfd, const char __user *name, unsigned flags, struct path *path)
+rio_exit (void)
 {
-    size_t len = strlen(name);
-    if (len > PATH_MAX) {
-        return -ENAMETOOLONG;
-    }
-    return user_path_at_empty(dfd, name, flags, path, NULL);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27)
+	if (pci_driver_me(&rio_driver))
+		pci_unregister_driver (&rio_driver);
+#else
+	if (&rio_driver)
+		pci_unregister_driver (&rio_driver);
+#endif
 }

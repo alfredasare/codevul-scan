@@ -1,10 +1,22 @@
-static void __exit atl2_exit_module(void)
+MagickExport const IndexPacket *GetVirtualIndexQueue(const Image *image)
 {
-    int ret;
+  CacheInfo
+    *restrict cache_info;
 
-    ret = pci_unregister_driver(&atl2_driver);
-    if (ret != 0) {
-        printk(KERN_ERR "atl2: Failed to unregister driver: %d\n", ret);
-        return;
-    }
+  const int
+    id = GetOpenMPThreadId();
+
+  assert(image != (const Image *) NULL);
+  assert(image->signature == MagickSignature);
+  assert(image->cache != (Cache) NULL);
+  cache_info=(CacheInfo *) image->cache;
+  assert(cache_info->signature == MagickSignature);
+  if (cache_info->methods.get_virtual_indexes_from_handler !=
+       (GetVirtualIndexesFromHandler) NULL)
+    return(cache_info->methods.get_virtual_indexes_from_handler(image));
+
+  if (id >= 0 && id < (int) cache_info->number_threads)
+    return(GetVirtualIndexesFromNexus(cache_info,cache_info->nexus_info[id]));
+
+  return NULL;
 }

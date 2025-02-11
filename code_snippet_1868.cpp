@@ -1,17 +1,19 @@
-RTCPeerConnectionHandler::RTCPeerConnectionHandler()
+set_dumper_capsicum_rights(pcap_dumper_t *p, off_t max_size)
 {
-    // Validate and sanitize user input
-    if (strlen(user_input) > MAX_INPUT_LENGTH) {
-        throw std::runtime_error("Input too long");
-    }
+	int fd = fileno(pcap_dump_file(p));
+	cap_rights_t rights;
 
-    // Allocate memory for the input data
-    char* buffer = new char[strlen(user_input) + 1];
-    std::strcpy(buffer, user_input);
+	cap_rights_init(&rights, CAP_SEEK, CAP_WRITE, CAP_FCNTL);
+	if (cap_rights_limit(fd, &rights) < 0 && errno != ENOSYS) {
+		error("unable to limit dump descriptor");
+	}
 
-    // Use the validated and sanitized input data
-    //...
+	// Limit the amount of data that can be written to the file descriptor
+	if (ftruncate(fd, max_size) < 0 && errno != ENOSYS) {
+		error("unable to truncate dump descriptor");
+	}
 
-    // Delete the allocated memory
-    delete[] buffer;
+	if (cap_fcntls_limit(fd, CAP_FCNTL_GETFL) < 0 && errno != ENOSYS) {
+		error("unable to limit dump descriptor fcntls");
+	}
 }

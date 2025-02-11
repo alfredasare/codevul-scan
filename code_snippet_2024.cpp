@@ -1,41 +1,15 @@
-int usb_lock_device_for_reset(struct usb_device *udev,
-			      const struct usb_interface *iface)
+static void llc_cmsg_rcv(struct msghdr *msg, struct sk_buff *skb)
 {
-	unsigned long jiffies_expire = jiffies + HZ; // 1 second timeout
-	int attempts = 0;
-	struct mutex *mutex;
+	struct llc_sock *llc = llc_sk(skb->sk);
+	struct llc_pktinfo info = { 0 };
 
-	mutex = &udev->reset_mutex; // introduce a mutex for locking
-	mutex_lock(&mutex);
+	if (llc->cmsg_flags & LLC_CMSG_PKTINFO) {
+		llc_pdu_decode_dsap(skb, &info.lpi_sap);
+		llc_pdu_decode_da(skb, info.lpi_mac);
+		info.lpi_ifindex = llc_sk(skb->sk)->dev->ifindex;
 
-	if (udev->state == USB_STATE_NOTATTACHED)
-		return -ENODEV;
-	if (udev->state == USB_STATE_SUSPENDED)
-		return -EHOSTUNREACH;
-	if (iface && (iface->condition == USB_INTERFACE_UNBINDING ||
-			iface->condition == USB_INTERFACE_UNBOUND))
-		return -EINTR;
-
-	while (!mutex_lock_interruptible(mutex)) {
-		attempts++;
-
-		/* If we can't acquire the lock after waiting one second, or
-		 * after a maximum of 10 attempts, we're probably deadlocked */
-		if (time_after(jiffies, jiffies_expire) || attempts > 10) {
-			mutex_unlock(&mutex);
-			return -EBUSY;
+		if (capable(CAP_NET_ADMIN)) {
+			put_cmsg(msg, SOL_LLC, LLC_OPT_PKTINFO, sizeof(info), &info);
 		}
-
-		msleep(15);
-		if (udev->state == USB_STATE_NOTATTACHED)
-			return -ENODEV;
-		if (udev->state == USB_STATE_SUSPENDED)
-			return -EHOSTUNREACH;
-		if (iface && (iface->condition == USB_INTERFACE_UNBINDING ||
-				iface->condition == USB_INTERFACE_UNBOUND))
-			return -EINTR;
 	}
-
-	mutex_unlock(&mutex);
-	return 0;
 }

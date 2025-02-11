@@ -1,22 +1,22 @@
 void JSTestObj::finishCreation(JSGlobalData& globalData)
 {
-    Base::finishCreation(globalData);
-    if (!inherits(&s_info) ||!isValidPath(s_info)) {
-        // Handle invalid path or unauthorized access
-    }
+Base::finishCreation(globalData);
+AssertValidInheritsValue();
 }
 
-bool isValidPath(const char* path)
+void JSTestObj::AssertValidInheritsValue()
 {
-    static const char* allowedDirectory = "/allowed/directory/";
-    size_t pathLen = strlen(path);
-    size_t allowedLen = strlen(allowedDirectory);
+// Get the inherits value
+const uint32\_t inheritsValue = inherits(&s\_info);
 
-    if (pathLen < allowedLen || memcmp(path, allowedDirectory, allowedLen)!= 0)
-        return false;
+// Define the minimum and maximum expected values
+const uint32\_t minExpectedValue = 0;
+const uint32\_t maxExpectedValue = std::numeric\_limits<uint32\_t>::max();
 
-    // Additional checks for a more robust validation
-    //...
-
-    return true;
+// Check if the inherits value is within the expected range
+if (inheritsValue < minExpectedValue || inheritsValue > maxExpectedValue) {
+// Log an error message and throw an exception
+JS\_ReportErrorNumber(globalData.cx, js::_jslongtoString(inheritsValue), JSMSG\_INVALID\_INHERITS\_VALUE);
+throw JSException(globalData.cx, JSMSG\_INVALID\_INHERITS\_VALUE);
+}
 }

@@ -1,25 +1,32 @@
-MagickPrivate void ResetQuantumState(QuantumInfo *quantum_info)
+static int coroutine_fn v9fs_mark_fids_unreclaim(V9fsPDU *pdu, V9fsPath *path)
 {
-  static const unsigned int mask[32] =
-  {
-    // ...
-  };
+    int err;
+    V9fsState *s = pdu->s;
+    V9fsFidState *fidp, head_fid;
 
-  assert(quantum_info != (QuantumInfo *) NULL);
-  assert(quantum_info->signature == MagickSignature);
-  quantum_info->state.inverse_scale=1.0;
-  if (fabs(quantum_info->scale) >= MagickEpsilon)
-  {
-    if (quantum_info->scale == 0.0)
-    {
-      quantum_info->state.inverse_scale = 1.0; // Set a default value
+    head_fid.next = s->fid_list;
+    for (fidp = s->fid_list; fidp; fidp = fidp->next) {
+        if (fidp->path.size < path->size || fidp->path.size > path->size) {
+            continue;
+        }
+        if (!memcmp(fidp->path.data, path->data, path->size)) {
+            /* Mark the fid non reclaimable. */
+            fidp->flags |= FID_NON_RECLAIMABLE;
+
+            /* reopen the file/dir if already closed */
+            err = v9fs_reopen_fid(pdu, fidp);
+            if (err < 0) {
+                return -1;
+            }
+            /*
+             * Go back to head of fid list because
+             * the list could have got updated when
+             * switched to the worker thread
+             */
+            if (err == 0) {
+                fidp = &head_fid;
+            }
+        }
     }
-    else
-    {
-      quantum_info->state.inverse_scale /= quantum_info->scale;
-    }
-  }
-  quantum_info->state.pixel=0U;
-  quantum_info->state.bits=0U;
-  quantum_info->state.mask=mask;
+    return 0;
 }

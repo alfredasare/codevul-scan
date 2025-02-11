@@ -1,16 +1,20 @@
-void NavigationController::RestoreFromState(
-    const std::vector<TabNavigation>& navigations,
-    int selected_navigation,
-    bool from_last_session) {
-  DCHECK(entry_count() == 0 &&!pending_entry());
+void jbd2_journal_unlock_updates (journal_t *journal)
+{
+        if (!journal || !journal->j_barrier_count) {
+                /* Handle error or return early */
+                return;
+        }
 
-  // Validate the selected_navigation index
-  if (selected_navigation < 0 || selected_navigation >= static_cast<int>(navigations.size())) {
-    LOG(ERROR) << "Invalid selected_navigation index";
-    return;
-  }
+        J_ASSERT(journal->j_barrier_count != 0);
 
-  needs_reload_ = true;
-  CreateNavigationEntriesFromTabNavigations(navigations, &entries_);
-  FinishRestore(selected_navigation, from_last_session);
+        write_lock(&journal->j_state_lock);
+        if (journal->j_barrier_count <= 0) {
+                /* Handle error or return early */
+                write_unlock(&journal->j_state_lock);
+                return;
+        }
+        mutex_unlock(&journal->j_barrier);
+        --journal->j_barrier_count;
+        write_unlock(&journal->j_state_lock);
+        wake_up(&journal->j_wait_transaction_locked);
 }

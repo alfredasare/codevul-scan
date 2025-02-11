@@ -1,16 +1,18 @@
-void SerializerMarkupAccumulator::appendEndTag(Node* node)
+archive_read_set_callback_data2(struct archive *_a, void *client_data,
+unsigned int iindex)
 {
-    if (node->isElementNode() && isValidNode(node) &&!shouldIgnoreElement(toElement(node)))
-         MarkupAccumulator::appendEndTag(toElement(node));
-}
+	struct archive_read *a = (struct archive_read *)_a;
+	archive_check_magic(_a, ARCHIVE_READ_MAGIC, ARCHIVE_STATE_NEW,
+	    "archive_read_set_callback_data2");
 
-bool SerializerMarkupAccumulator::isValidNode(Node* node) {
-    const std::set<std::string> allowedPaths = {"allowed/path1", "allowed/path2"};
-    return allowedPaths.find(node->getPath())!= allowedPaths.end();
-}
-
-std::string SerializerMarkupAccumulator::sanitizeElement(const std::string& element) {
-    std::string sanitizedElement = element;
-    sanitizedElement.erase(std::remove_if(sanitizedElement.begin(), sanitizedElement.end(), [](char c){return!std::isalnum(c);}), sanitizedElement.end());
-    return sanitizedElement;
+	if (iindex >= a->client.nodes || iindex < 0)
+	{
+		archive_set_error(&a->archive, EINVAL,
+			"Invalid index specified.");
+		return ARCHIVE_FATAL;
+	}
+	a->client.dataset[iindex].data = client_data;
+	a->client.dataset[iindex].begin_position = -1;
+	a->client.dataset[iindex].total_size = -1;
+	return ARCHIVE_OK;
 }

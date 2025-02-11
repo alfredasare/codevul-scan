@@ -1,25 +1,25 @@
-SMB2_sess_sendreceive(struct SMB2_sess_data *sess_data)
+wkbConvCircularStringToShape(wkbObj *w, shapeObj *shape)
 {
-    int rc;
-    struct smb_rqst rqst;
-    struct smb2_sess_setup_req *req = alloca(sizeof(struct smb2_sess_setup_req)); // Initialize req here
-    struct kvec rsp_iov = { NULL, 0 };
+  int type;
+  lineObj line = {0, NULL, 0}; // Initialize numpoints to zero
+  const int MAX_POINTS = 1000; // Define the maximum number of points based on your application's requirements
 
-    /* Testing shows that buffer offset must be at location of Buffer[0] */
-    req->SecurityBufferOffset = cpu_to_le16(sizeof(struct smb2_sess_setup_req) - 1 /* pad */);
-    req->SecurityBufferLength = cpu_to_le16(sess_data->iov[1].iov_len);
+  /*endian = */wkbReadChar(w);
+  type = wkbTypeMap(w,wkbReadInt(w));
 
-    memset(&rqst, 0, sizeof(struct smb_rqst));
-    rqst.rq_iov = sess_data->iov;
-    rqst.rq_nvec = 2;
+  if( type != WKB_CIRCULARSTRING ) return MS_FAILURE;
 
-    /* BB add code to build os and lm fields */
-    rc = cifs_send_recv(sess_data->xid, sess_data->ses,
-                        &rqst,
-                        &sess_data->buf0_type,
-                        CIFS_LOG_ERROR | CIFS_NEG_OP, &rsp_iov);
-    cifs_small_buf_release(sess_data->iov[0].iov_base);
-    memcpy(&sess_data->iov[0], &rsp_iov, sizeof(struct kvec));
+  /* Stroke the string into a point array */
+  if ( arcStrokeCircularString(w, SEGMENT_ANGLE, &line) == MS_FAILURE ) {
+    if(line.point) free(line.point);
+    return MS_FAILURE;
+  }
 
-    return rc;
+  /* Fill in the lineObj */
+  if ( line.numpoints > 0 && line.numpoints <= MAX_POINTS ) { // Add bounds checking
+    msAddLine(shape, &line);
+    if(line.point) free(line.point);
+  }
+
+  return MS_SUCCESS;
 }

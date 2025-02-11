@@ -1,31 +1,25 @@
-_warc_read(struct archive_read *a, const void **buf, size_t *bsz, int64_t *off)
+int yr_arena_allocate_memory(
+  YR_ARENA* arena,
+  size_t size,
+  void** allocated_memory)
 {
-    struct warc_s *w = a->format->data;
-    const char *rab;
-    ssize_t nrd;
+  // Fail if there is no more memory to reserve
+  FAIL_ON_ERROR(yr_arena_reserve_memory(arena, size));
 
-    if (w->cntoff >= w->cntlen) {
-        //...
-    }
+  // Calculate the address to be assigned to allocated_memory
+  size_t new_used = arena->current_page->used + size;
 
-    if (w->cntoff < 0 || w->cntlen < 0) {
-        *bsz = 0U;
-        return ARCHIVE_ERROR;
-    }
+  // Perform bounds checking to ensure new_used does not exceed the allocated size
+  if (new_used > arena->current_page->size) {
+    // Release the reserved memory in case of failure
+    yr_arena_release_memory(arena);
 
-    rab = __archive_read_ahead(a, 1U, &nrd);
-    if (nrd < 0) {
-        *bsz = 0U;
-        return (int)nrd;
-    } else if (nrd > (size_t)(w->cntlen - w->cntoff)) {
-        nrd = w->cntlen - w->cntoff;
-    }
+    // Return an error code
+    return ERROR_OUT_OF_BOUNDS;
+  }
 
-    *off = w->cntoff;
-    *bsz = nrd;
-    *buf = rab;
+  *allocated_memory = arena->current_page->address + arena->current_page->used;
+  arena->current_page->used = new_used;
 
-    w->cntoff += nrd;
-    w->unconsumed = (size_t)nrd;
-    return ARCHIVE_OK;
+  return ERROR_SUCCESS;
 }

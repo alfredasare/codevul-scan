@@ -1,11 +1,11 @@
-static void put_uint8(QEMUFile *f, void *pv, size_t size)
-{
-    uint8_t *v = pv;
-    char fmt[32];
-    snprintf(fmt, sizeof(fmt), "qemu_put_8s(f, %p);", v);
-    if (strchr(fmt, '%')) {
-        error_report("Invalid format string");
-        return;
-    }
-    qemu_put_8s(f, v);
+faddr = daddr;
+minfo.lport = inc->i\_hdr.h\_sport;
+minfo.fport = inc->i\_hdr.h\_dport;
 }
+
+minfo.flags = 0;
+
+rds\_info\_copy(iter, &minfo, minfo.len);
+}
+
+Please note that the change in the last line of the function is also necessary to prevent the buffer overflow when calling rds\_info\_copy(). The original function calls rds\_info\_copy() with the size of the minfo structure, but now it should call it with minfo.len, which is the validated length of the data being copied.

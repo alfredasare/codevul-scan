@@ -1,15 +1,16 @@
-error::ContextLostReason GLES2DecoderImpl::GetContextLostReason() {
-  if (reset_status_ < GL_NO_ERROR || reset_status_ > GL_UNKNOWN_CONTEXT_RESET_ARB) {
-    return error::kUnknown; // or handle the error properly
-  }
-  switch (reset_status_) {
-  case GL_NO_ERROR:
-    return error::kUnknown;
-  case GL_GUILTY_CONTEXT_RESET_ARB:
-    return error::kGuilty;
-  case GL_INNOCENT_CONTEXT_RESET_ARB:
-    return error::kInnocent;
-  case GL_UNKNOWN_CONTEXT_RESET_ARB:
-    return error::kUnknown;
+static void RemapIndices(const ssize_t *map, const unsigned char *source,
+                          unsigned char *target)
+{
+  register ssize_t
+    i;
+
+  for (i = 0; i < 16; i++)
+  {
+    if (map[i] == -1)
+      target[i] = 3;
+    else if (map[i] >= 0 && map[i] < 16)
+      target[i] = source[map[i]];
+    else
+      target[i] = 0; // Assign a default value for the error case
   }
 }

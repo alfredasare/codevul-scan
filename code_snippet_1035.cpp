@@ -1,15 +1,13 @@
-g_NP_GetMIMEDescription(void)
-{
-  if (g_plugin_NP_GetMIMEDescription == NULL)
-	return NULL;
+void OMXNodeInstance::onMessages(std::list<omx\_message> &messages) {
+for (auto it = messages.begin(); it != messages.end(); ) {
+if (it->message != nullptr && handleMessage(*it)) {
+messages.erase(it++);
+} else {
+++it;
+}
+}
 
-  D(bugiI("NP_GetMIMEDescription\n"));
-
-  char *str = g_plugin_NP_GetMIMEDescription();
-  if (str!= NULL && str[0]!= '\0') {
-    D(bugiD("NP_GetMIMEDescription return: %s\n", str));
-  } else {
-    D(bugiD("NP_GetMIMEDescription return: <empty>\n"));
-  }
-  return str;
+if (!messages.empty()) {
+mObserver->onMessages(messages);
+}
 }

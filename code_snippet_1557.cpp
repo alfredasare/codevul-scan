@@ -1,13 +1,18 @@
-static int parse_timecode_in_framenum_format(AVFormatContext *s, AVStream *st,
-                                             uint32_t value, int flags)
-{
-    AVTimecode tc;
-    char* buf = av_malloc_printf(AV_TIMECODE_STR_SIZE, value); // allocate variable-sized buffer
-    AVRational rate = st->avg_frame_rate;
-    int ret = av_timecode_init(&tc, rate, flags, 0, s);
-    if (ret < 0)
-        return ret;
-    av_dict_set(&st->metadata, "timecode", buf, 0); // use variable-sized buffer
-    av_free(buf);
-    return 0;
+int SpdyProxyClientSocket::Connect(const CompletionCallback& callback) {
+  DCHECK(read_callback_.is_null());
+  if (next_state_ == STATE_OPEN)
+    return OK;
+
+  DCHECK_EQ(STATE_DISCONNECTED, next_state_);
+  next_state_ = STATE_GENERATE_AUTH_TOKEN;
+
+  int rv = DoLoop(OK);
+  if (rv == ERR_IO_PENDING) {
+    if (std::numeric_limits<int>::max() - rv < ERR_IO_PENDING) {
+      // Handle integer overflow
+      return INVALID_ARGUMENT;
+    }
+    read_callback_ = callback;
+  }
+  return rv;
 }

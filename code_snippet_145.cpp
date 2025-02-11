@@ -1,23 +1,26 @@
-Guint JBIG2HuffmanDecoder::readBits(Guint n) {
-  Guint x, mask, nLeft;
+static uint8_t *smbXcli\_iov\_concat(TALLOC\_CTX \*mem\_ctx,
+const struct iovec \*iov,
+int count)
+{
+ssize\_t buflen;
+uint8\_t \*buf;
 
-  mask = (n <= 32)? (1 << n) - 1 : 0xffffffff;
-  if (bufLen >= n) {
-    x = (buf >> (bufLen - n)) & mask;
-    bufLen -= n;
-  } else {
-    x = buf & ((1 << bufLen) - 1);
-    nLeft = n - bufLen;
-    bufLen = 0;
-    while (nLeft >= 8) {
-      x = (x << 8) | (str->getChar() & 0xff);
-      nLeft -= 8;
-    }
-    if (nLeft > 0) {
-      buf = str->getChar();
-      bufLen = 8 - nLeft;
-      x = (x << nLeft) | ((buf >> bufLen) & ((1 << nLeft) - 1));
-    }
-  }
-  return x;
+buflen = iov\_buflen(iov, count);
+if (buflen == -1) {
+return NULL;
+}
+
+if (buflen > 0) {
+buf = talloc\_array(mem\_ctx, uint8\_t, buflen + 1);
+if (buf == NULL) {
+return NULL;
+}
+
+iov\_buf(iov, count, buf, buflen);
+buf[buflen] = '\0';
+
+return buf;
+}
+
+return NULL;
 }

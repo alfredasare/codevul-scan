@@ -1,15 +1,10 @@
-int zsetstrokecolorspace(i_ctx_t * i_ctx_p) {
-    int code;
+static inline int stellaris_txpacket_datalen(stellaris_enet_state *s)
+{
+    uint16_t calculated_length = s->tx_fifo[0] | (s->tx_fifo[1] << 8);
 
-    char *path = zswapcolors(i_ctx_p);
-    if (path == NULL || !strstarts(path, i_ctx_p->allowed_dir_prefix) || contains_forbidden_chars(path)) {
-        return -1;
+    if (calculated_length > INT_MAX - sizeof(struct eth_hdr)) {
+        return -1; // Return an error code
     }
 
-    code = zsetcolorspace(i_ctx_p);
-    if (code >= 0) {
-        return o_push_estack;
-    }
-
-    return code;
+    return calculated_length;
 }

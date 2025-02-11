@@ -1,19 +1,13 @@
-void uwbd_event_queue(struct uwb_event *evt)
+const AtomicString& ScreenOrientation::orientation(Screen& screen)
 {
-    struct uwb_rc *rc = evt->rc;
-    unsigned long flags;
-
-    if (rc == NULL || evt == NULL) {
-        return;
+    ScreenOrientation& screenOrientation = ScreenOrientation::from(screen);
+    if (!screenOrientation.document()) {
+        return orientationToString(blink::WebScreenOrientationPortraitPrimary);
     }
-
-    spin_lock_irqsave(&rc->uwbd.event_list_lock, flags);
-    if (rc->uwbd.pid != 0) {
-        list_add(&evt->list_node, &rc->uwbd.event_list);
-        wake_up_all(&rc->uwbd.wq);
-    } else {
-        kfree(evt);
+    ScreenOrientationController* controllerPtr = ScreenOrientationController::from(*screenOrientation.document());
+    if (controllerPtr == nullptr) {
+        // Handle error or return a default value
+        return orientationToString(blink::WebScreenOrientationPortraitPrimary);
     }
-    spin_unlock_irqrestore(&rc->uwbd.event_list_lock, flags);
-    return;
+    return orientationToString(controllerPtr->orientation());
 }

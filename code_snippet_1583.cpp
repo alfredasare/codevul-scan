@@ -1,22 +1,38 @@
-sparse_skip_file (struct tar_stat_info *st)
+header_bytes(struct archive_read *a, size_t rbytes)
 {
-  bool rc = true;
-  struct tar_sparse_file file;
+	struct _7zip *zip = (struct _7zip *)a->format->data;
+	const unsigned char *p;
 
-  if (!tar_sparse_init (&file))
-    return dump_status_not_implemented;
+	if (zip->header_bytes_remaining < rbytes)
+		return (NULL);
+	if (zip->pack_stream_bytes_unconsumed)
+		read_consume(a);
 
-  file.stat_info = st;
-  file.fd = -1;
+	if (zip->header_is_encoded == 0) {
+		p = __archive_read_ahead(a, rbytes, NULL);
+		if (p == NULL)
+			return (NULL);
+		zip->header_bytes_remaining -= rbytes;
+		zip->pack_stream_bytes_unconsumed = rbytes;
+	} else {
+		const void *buff;
+		ssize_t bytes;
 
-  if (file.stat_info->archive_file_size > INT_MAX) {
-    return dump_status_invalid_input;
-  }
+		bytes = read_stream(a, &buff, rbytes, rbytes);
+		if (bytes <= 0)
+			return (NULL);
+		zip->header_bytes_remaining -= bytes;
+		p = buff;
+	}
 
-  rc = tar_sparse_decode_header (&file);
-  if (file.dumped_size > file.stat_info->archive_file_size) {
-    return dump_status_invalid_input;
-  }
-  skip_file (file.stat_info->archive_file_size - file.dumped_size);
-  return (tar_sparse_done (&file) && rc)? dump_status_ok : dump_status_short;
+	/* Update checksum */
+	zip->header_crc32 = crc32(zip->header_crc32, p, (unsigned)rbytes);
+
+	if (p == zip->header_buffer) {
+		zip->header_buffer_used = 0;
+	} else {
+		free((void *)p);
+	}
+
+	return (p);
 }

@@ -1,12 +1,12 @@
-void BnDrm::readVector(const Parcel &data, Vector<uint8_t> &vector) const {
-    const int MAX_VECTOR_SIZE = 1024;
-    uint32_t size = data.readInt32();
-    if (size < 0 || size > MAX_VECTOR_SIZE) {
-        throw std::runtime_error("Invalid vector size");
-    }
-    vector.insertAt(0, size);
-    uint8_t* buffer = new uint8_t[size];
-    data.read(buffer, size);
-    vector.editArray()->assign(buffer, buffer + size);
-    delete[] buffer;
+bool hsr_addr_is_self(struct hsr_priv *hsr, unsigned char *addr)
+{
+	struct hsr_node *node = list_first_or_null_rcu(&hsr->self_node_db, struct hsr_node,
+				      mac_list);
+	if (!node) {
+		WARN_ONCE(1, "HSR: No self node\n");
+		return false;
+	}
+
+	return ether_addr_equal(addr, node->MacAddressA) ||
+	       ether_addr_equal(addr, node->MacAddressB);
 }

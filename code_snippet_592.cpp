@@ -1,16 +1,28 @@
-virtual void OnJSONParseFailed(const std::string& error_message) {
-    if (!BrowserThread::IsValid(BrowserThread::IO)) {
-        return;
-    }
+int drm_mode_attachmode_crtc(struct drm_device *dev, struct drm_crtc *crtc,
+                             struct drm_display_mode *mode)
+{
+        struct drm_connector *connector;
+        int ret = 0;
+        list_for_each_entry(connector, &dev->mode_config.connector_list, head) {
+                if (!connector->encoder)
+                        break;
+                if (connector->encoder->crtc == crtc) {
+                        struct drm_display_mode *dup_mode = NULL;
+                        int need_dup = !connector->mode_equals(connector, mode);
 
-    std::set<std::string> allowed_directories = {"allowed_directory1", "allowed_directory2"};
-    if (!allowed_directories.count(BrowserThread::CurrentlyOn(BrowserThread::IO))) {
-        return;
-    }
+                        if (need_dup) {
+                                dup_mode = drm_mode_duplicate(dev, mode);
+                                if (!dup_mode)
+                                        return -ENOMEM;
+                        }
 
-    std::string safe_path = std::filesystem::path(BrowserThread::CurrentlyOn(BrowserThread::IO)) / "filename.txt";
-    manifest_parse_complete_ = true;
-    error_ = error_message;
-    parse_error_ = BeginInstallWithManifestFunction::MANIFEST_ERROR;
-    ReportResultsIfComplete();
+                        ret = drm_mode_attachmode(dev, connector, need_dup ? dup_mode : mode);
+                        if (ret)
+                                return ret;
+
+                        if (need_dup)
+                                drm_mode_put(dev, dup_mode);
+                }
+        }
+        return 0;
 }

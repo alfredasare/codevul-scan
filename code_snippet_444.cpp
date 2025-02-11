@@ -1,12 +1,13 @@
-mrb_io_s_for_fd(mrb_state *mrb, mrb_value klass)
+static void staticStringAttrAttributeSetter(v8::Local<v8::Value> jsValue, const v8::PropertyCallbackInfo<void>& info)
 {
-  struct RClass *c = mrb_class_ptr(klass);
-  enum mrb_vtype ttype = MRB_INSTANCE_TT(c);
-  mrb_value obj;
-
-  /* copied from mrb_instance_alloc() */
-  if (ttype == 0) ttype = MRB_TT_OBJECT;
-  obj = mrb_obj_value((struct RObject*)mrb_obj_alloc(mrb, ttype, c));
-  obj = mrb_io_initialize(mrb, obj);
-  return obj;
+    if (jsValue->IsString())
+    {
+        V8TRYCATCH_FOR_V8STRINGRESOURCE_VOID(V8StringResource<>, cppValue, jsValue);
+        TestObject::setStaticStringAttr(cppValue);
+    }
+    else
+    {
+        // Handle error case for non-string input
+        // ...
+    }
 }

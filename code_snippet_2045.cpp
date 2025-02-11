@@ -1,8 +1,14 @@
-static void reset_studio_dc_predictors(MpegEncContext *s)
+static void f2fs_write_failed(struct address_space *mapping, loff_t to)
 {
-    /* Reset DC Predictors */
-    int max_index = (1 << (s->avctx->bits_per_raw_sample + s->dct_precision + s->intra_dc_precision - 1)) - 1;
-    s->last_dc[0] = 1 << (s->avctx->bits_per_raw_sample + s->dct_precision + s->intra_dc_precision - 1);
-    s->last_dc[1] = s->last_dc[0];
-    s->last_dc[max_index] = s->last_dc[0];
+    struct inode *inode = mapping->host;
+    loff_t i_size = i_size_read(inode);
+
+    if (to > i_size && to - i_size <= LONG_MAX - i_size) {
+        truncate_pagecache(inode, i_size);
+        truncate_blocks(inode, to, true);
+    } else {
+        // Error handling for invalid input
+        truncate_pagecache(inode, i_size);
+        printk("Truncate aborted due to invalid 'to' value: %lld\n", to);
+    }
 }

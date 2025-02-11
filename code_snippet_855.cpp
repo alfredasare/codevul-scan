@@ -1,31 +1,27 @@
-static int proc_exe_link(struct dentry *dentry, struct path *exe_path)
-{
-    struct task_struct *task;
-    struct mm_struct *mm;
-    struct file *exe_file;
-    const char *allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_";
+static const int kMaxChildProcesses = 10; // Adjust this value based on your requirements
+static int numChildProcesses_ = 0;
 
-    task = get_proc_task(d_inode(dentry));
-    if (!task)
-        return -ENOENT;
-    mm = get_task_mm(task);
-    put_task_struct(task);
-    if (!mm)
-        return -ENOENT;
+static bool CreateInitProcessReaper(base::Closure* post_fork_parent_callback) {
+  if (numChildProcesses_ >= kMaxChildProcesses) {
+    LOG(ERROR) << "Error creating an init process: Maximum number of child processes reached";
+    return false;
+  }
 
-    for (int i = 0; i < dentry->d_name.len; i++) {
-        if (strchr(allowed_chars, dentry->d_name.name[i]) == NULL) {
-            return -EINVAL;
-        }
-    }
+  const bool init_created =
+      sandbox::CreateInitProcessReaper(post_fork_parent_callback);
+  if (!init_created) {
+    LOG(ERROR) << "Error creating an init process to reap zombies";
+    return false;
+  }
 
-    exe_file = get_mm_exe_file(mm);
-    mmput(mm);
-    if (exe_file) {
-        *exe_path = exe_file->f_path;
-        path_get(&exe_file->f_path);
-        fput(exe_file);
-        return 0;
-    } else
-        return -ENOENT;
+  ++numChildProcesses_;
+
+  // Add a cleanup function to decrement the numChildProcesses_ variable when the child process exits
+  base::ScopedClosureRunner runner(base::Bind(&DecrementChildProcessCount));
+
+  return true;
+}
+
+void DecrementChildProcessCount() {
+  --numChildProcesses_;
 }

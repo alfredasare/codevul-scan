@@ -1,16 +1,13 @@
-NO_INLINE void jsError_flash(const char *fmt,...) {
-  size_t len = strlen(fmt); 
-  if (len > sizeof(buff) - 1) { 
-    len = sizeof(buff) - 1;
-  }
-  char buff[len+1];
-  flash_strncpy(buff, fmt, len+1);
+static inline int DefragTrackerCompare(DefragTracker *t, Packet *p)
+{
+    uint32_t id;
+    if (PKT_IS_IPV4(p) && IPV4_GET_IPID_VALID(p)) {
+        id = (uint32_t)IPV4_GET_IPID(p);
+    } else if (PKT_IS_IPV6(p) && IPV6_EXTHDR_GET_FH_ID_VALID(p)) {
+        id = IPV6_EXTHDR_GET_FH_ID(p);
+    } else {
+        return -1; // or any other appropriate error value
+    }
 
-  jsiConsoleRemoveInputLine();
-  jsiConsolePrint("ERROR: ");
-  va_list argp;
-  va_start(argp, fmt);
-  vcbprintf((vcbprintf_callback)jsiConsolePrintString,0, buff, argp);
-  va_end(argp);
-  jsiConsolePrint("\n");
+    return CMP_DEFRAGTRACKER(t, p, id);
 }

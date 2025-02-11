@@ -1,21 +1,12 @@
-#include <ctype.h>
-#include <limits.h>
-
-char from_hex(char ch) {
-    if (!isxdigit(ch)) { 
-        return '\0';
-    }
-
-    char value;
-    if (isdigit(ch)) { 
-        value = ch - '0';
-    } else { 
-        value = tolower(ch) - 'a' + 10;
-    }
-
-    if (value < 0 || value > 15) {
-        return '\0';
-    }
-
-    return (char)value;
+static void m\_stop(struct seq\_file \*m, void \*v)
+{
+	struct proc\_maps\_private \*priv = m->private;
+	struct vm\_area\_struct \*vma = v;
+	
+	vma\_stop(priv, vma);
+	if (priv->task)
+		put\_task\_struct(priv->task);
+	
+	// Fix: Use a constant format string
+	seq\_printf(m, "Task stopped\n");
 }

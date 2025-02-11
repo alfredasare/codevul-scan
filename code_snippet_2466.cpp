@@ -1,22 +1,37 @@
-static void vp8_init_ctx(vpx_codec_ctx_t *ctx)
+#include <string.h>
+
+#define MAX_TIMEZONE_LENGTH 128 // Adjust the maximum length as needed
+
+DecodePosixTimezone(char *str, int *tzp)
 {
-    vpx_codec_alg_priv_t *priv = NULL;
+	size_t strLength = strnlen(str, MAX_TIMEZONE_LENGTH);
+	if (strLength >= MAX_TIMEZONE_LENGTH) {
+		return -1;
+	}
 
-    priv = vpx_calloc(1, sizeof(*priv));
-    if (!priv) {
-        return;
-    }
+	char *cp = str;
+	while (*cp != '\0' && isalpha((unsigned char) *cp))
+		cp++;
 
-    ctx->priv = (vpx_codec_priv_t *)priv;
-    ctx->priv->init_flags = ctx->init_flags;
+	if (DecodeTimezone(cp, &tz) != 0 || *cp == '\0') {
+		return -1;
+	}
 
-    priv->si.sz = sizeof(priv->si);
-    priv->decrypt_cb = NULL;
-    priv->decrypt_state = NULL;
+	char delim = *cp;
+	*cp = '\0';
+	int type = DecodeSpecial(MAXDATEFIELDS - 1, str, &val);
+	*cp = delim;
 
-    if (ctx->config.dec) {
-        /* Update the reference to the config structure to an internal copy. */
-        priv->cfg = *ctx->config.dec;
-        ctx->config.dec = &priv->cfg;
-    }
-}
+	switch (type)
+	{
+		case DTZ:
+		case TZ:
+			*tzp = (val * MINS_PER_HOUR) - tz;
+			break;
+
+		default:
+			return -1;
+	}
+
+	return 0;
+}	/* DecodePosixTimezone() */

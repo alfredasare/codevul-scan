@@ -1,11 +1,28 @@
-static int em_sahf(struct x86_emulate_ctxt *ctxt)
+xps_sample_gradient_stops(fz_shade *shade, struct stop *stops, int count)
 {
-    u32 flags;
+	float offset, d;
+	int i, k;
 
-    flags = X86_EFLAGS_CF | X86_EFLAGS_PF | X86_EFLAGS_AF | X86_EFLAGS_ZF | X86_EFLAGS_SF;
-    flags &= *reg_rmw(ctxt, VCPU_REGS_RAX) >> 8;
+	if (count <= 0 || stops == NULL) {
+		return;
+	}
 
-    ctxt->eflags &= ~0xffUL;
-    ctxt->eflags |= flags | X86_EFLAGS_FIXED;
-    return X86EMUL_CONTINUE;
+	k = 0;
+	for (i = 0; i < 256; i++)
+	{
+		offset = i / 255.0f;
+		while (k + 1 < count && offset > stops[k+1].offset)
+			k++;
+
+		if (k >= count - 1) {
+			break;
+		}
+
+		d = (offset - stops[k].offset) / (stops[k+1].offset - stops[k].offset);
+
+		shade->function[i][0] = lerp(stops[k].r, stops[k+1].r, d);
+		shade->function[i][1] = lerp(stops[k].g, stops[k+1].g, d);
+		shade->function[i][2] = lerp(stops[k].b, stops[k+1].b, d);
+		shade->function[i][3] = lerp(stops[k].a, stops[k+1].a, d);
+	}
 }

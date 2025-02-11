@@ -1,16 +1,14 @@
-void ff_amf_write_number(uint8_t **dst, double val)
-{
-    if (isnan(val) || isinf(val)) {
-        bytestream_put_byte(dst, AMF_DATA_TYPE_NULL);
-        return;
+void SessionService::UpdateSelectedTabIndex(std::vector<SessionWindow*>* windows) {
+  for (auto& i : *windows) {
+    int new_index = 0;
+    for (auto& j : i->tabs) {
+      if (j.tab_visual_index == i->selected_tab_index) {
+        new_index = &j - &i->tabs[0];
+        break;
+      }
     }
-
-    if (val > 9.999999e15 || val < -9.999999e15) {
-        bytestream_put_byte(dst, AMF_DATA_TYPE_NULL);
-        return;
+    if (new_index >= 0 && new_index < static_cast<int>(i->tabs.size())) {
+      i->selected_tab_index = new_index;
     }
-
-    long long int64 = llround(val);
-    bytestream_put_byte(dst, AMF_DATA_TYPE_NUMBER);
-    bytestream_put_be64(dst, int64);
+  }
 }

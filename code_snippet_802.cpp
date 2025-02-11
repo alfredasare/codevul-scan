@@ -1,30 +1,13 @@
-PHP_FUNCTION(parse_str)
+static int omninet_open(struct tty_struct *tty, struct usb_serial_port *port)
 {
-    char *arg;
-    zval *arrayArg = NULL;
-    char *res = NULL;
-    size_t arglen;
+	struct usb_serial	*serial = port->serial;
+	struct usb_serial_port	*wport;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|z/", &arg, &arglen, &arrayArg) == FAILURE) {
-        return;
-    }
+	if (serial->port_count < 2) {
+		return -ENODEV;
+	}
 
-    res = estrndup(arg, arglen);
-    res[arglen] = '\0'; // Add null termination to the buffer
-
-    if (arrayArg == NULL) {
-        zval tmp;
-        zend_array *symbol_table = zend_rebuild_symbol_table();
-
-        ZVAL_ARR(&tmp, symbol_table);
-        sapi_module.treat_data(PARSE_STRING, res, &tmp);
-    } else {
-        zval ret;
-
-        /* Clear out the array that was passed in. */
-        zval_dtor(arrayArg);
-        array_init(&ret);
-        sapi_module.treat_data(PARSE_STRING, res, &ret);
-        ZVAL_COPY_VALUE(arrayArg, &ret);
-    }
+	wport = serial->port[1];
+	tty_port_tty_set(&wport->port, tty);
+	return usb_serial_generic_open(tty, port);
 }

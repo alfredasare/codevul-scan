@@ -1,22 +1,24 @@
-bool ReplacePathURL(const char* base,
-                     const Parsed& base_parsed,
-                     const Replacements<base::char16>& replacements,
-                     CanonOutput* output,
-                     Parsed* new_parsed) {
-  if (!IsValidBasePath(base)) {
-    return false; // or throw an exception, depending on your error handling strategy
-  }
-  RawCanonOutput<1024> utf8;
-  URLComponentSource<char> source(base);
-  Parsed parsed(base_parsed);
-  SetupUTF16OverrideComponents(base, replacements, &utf8, &source, &parsed);
-  return DoCanonicalizePathURL<char, unsigned char>(source, parsed, output, new_parsed);
-}
+void uwbd_event_queue(struct uwb_event *evt)
+{
+	struct uwb_rc *rc = evt->rc;
+	unsigned long flags;
 
-#include <boost/filesystem.hpp>
+	if (!rc) {
+		dev_err(&evt->rc->dev, "Invalid rc pointer in uwbd_event_queue\n");
+		kfree(evt);
+		return;
+	}
 
-bool IsValidBasePath(const char* base) {
-  namespace fs = boost::filesystem;
-  fs::path path(base);
-  return fs::is_directory(path) || fs::is_regular_file(path);
+	spin_lock_irqsave(&rc->uwbd.event_list_lock, flags);
+	if (rc->uwbd.pid != 0) {
+		list_add(&evt->list_node, &rc->uwbd.event_list);
+		wake_up_all(&rc->uwbd.wq);
+	} else {
+		__uwb_rc_put(rc);
+		if (evt->type == UWB_EVT_TYPE_NOTIF)
+			kfree(evt->notif.rceb);
+		kfree(evt);
+	}
+	spin_unlock_irqrestore(&rc->uwbd.event_list_lock, flags);
+	return;
 }

@@ -1,18 +1,18 @@
-static int unlazy_link(struct nameidata *nd, struct path *link, unsigned seq)
+char* hostname_map(const char *hostname)
 {
-    char *sanitized_path = sanitize_path(link->mnt->mnt_path);
-    if (unlikely(!legitimize_path(nd, sanitized_path, seq))) {
-        //...
-    } else if (likely(unlazy_walk(nd, NULL, 0)) == 0) {
-        free(sanitized_path);
-        return 0;
-    }
-    free(sanitized_path);
-    path_put(link);
-    return -ECHILD;
-}
+    static const char *list[] = {SERVER_NAME_LIST};
+    size_t i, len_hostname = strlen(hostname);
 
-char *sanitize_path(char *path) {
-    char *sanitized_path = strndup(path, strlen(path));
-    return sanitized_path;
+    for (i = 0; i < sizeof(list) / sizeof(*list); ++i)
+    {
+        if (strncasecmp(hostname, list[i], len_hostname) == 0)
+        {
+            if (list[i][len_hostname] == '/')  /* check in case of a substring match */
+            {
+                return &list[i][len_hostname + 1];
+            }
+        }
+    }
+
+    return NULL;
 }

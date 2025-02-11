@@ -1,43 +1,31 @@
-#include <openssl/aes.h>
+static apr_status_t validate_status_line(request_rec *r)
+{
+    char *end;
 
-int kvm_write_guest_virt_system(struct x86_emulate_ctxt *ctxt,
-                               gva_t addr, void *val,
-                               unsigned int bytes,
-                               struct x86_exception *exception) {
-    struct kvm_vcpu *vcpu = emul_to_vcpu(ctxt);
-    void *data = encrypt_data(val, bytes);
-    int r = X86EMUL_CONTINUE;
+    if (r->status_line) {
+        int len = strlen(r->status_line);
 
-    while (bytes) {
-        gpa_t gpa = vcpu->arch.walk_mmu->gva_to_gpa(vcpu, addr,
-                                                     PFERR_WRITE_MASK,
-                                                     exception);
-        unsigned offset = addr & (PAGE_SIZE-1);
-        unsigned towrite = min(bytes, (unsigned)PAGE_SIZE - offset);
-        int ret;
-
-        if (gpa == UNMAPPED_GVA)
-            return X86EMUL_PROPAGATE_FAULT;
-        ret = kvm_write_guest(vcpu->kvm, gpa, data, towrite);
-        if (ret < 0) {
-            r = X86EMUL_IO_NEEDED;
-            goto out;
+        /* Check for proper format: HTTP status code followed by space and reason phrase */
+        if (len < 8
+            || strncmp(r->status_line, "HTTP/", 5) != 0
+            || !isdigit(r->status_line[5])
+            || r->status_line[6] != ' '
+            || apr_strtoi64(r->status_line + 7, &end, 10) != r->status
+            || (end - r->status_line) != (7 + strlen(AprHttpStatusText(r->status)))
+            || strcmp(end, AprHttpStatusText(r->status)) != 0) {
+            r->status_line = NULL;
+            return APR_EGENERAL;
         }
 
-        bytes -= towrite;
-        data = ((char *)data + towrite);
-        addr += towrite;
+        /* Since we passed the above check, we know that length three
+         * is equivalent to only a 3 digit numeric http status.
+         * RFC2616 mandates a trailing space, let's add it.
+         */
+        if (len == 8 + strlen(AprHttpStatusText(r->status))) {
+            r->status_line = apr_pstrcat(r->pool, r->status_line, " ", NULL);
+            return APR_EGENERAL;
+        }
+        return APR_SUCCESS;
     }
-out:
-    return r;
-}
-
-void *encrypt_data(void *val, unsigned int bytes) {
-    AES_KEY aes_key;
-    AES_set_encrypt_key("your_secret_key", 32, &aes_key);
-
-    unsigned char *encrypted_data = malloc(bytes);
-    AES_cbc_encrypt(val, encrypted_data, bytes, &aes_key, NULL, AES_ENCRYPT);
-
-    return encrypted_data;
+    return APR_EGENERAL;
 }

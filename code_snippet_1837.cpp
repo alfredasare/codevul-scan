@@ -1,18 +1,23 @@
-static int sd_release(struct gendisk *disk, fmode_t mode)
+static int mov_read_moov(MOVContext *c, AVIOContext *pb, MOVAtom atom)
 {
-    struct scsi_disk *sdkp = scsi_disk(disk);
-    struct scsi_device *sdev = sdkp->device;
-    unsigned int removable;
+    int ret;
+    size_t data_size;
 
-    SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp, "sd_release\n"));
+    if ((ret = mov_read_default(c, pb, atom)) < 0)
+        return ret;
 
-    removable = sdev->removable; 
-    if (atomic_dec_return(&sdkp->openers) == 0 && removable) {
-        if (scsi_block_when_processing_errors(sdev))
-            scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
+    /* Get the size of data to be read */
+    data_size = avio_size(pb);
+
+    /* Check if the data size is valid before processing it */
+    if (data_size > INT_MAX) {
+        av_log(c, AV_LOG_ERROR, "Invalid data size: %zu\n", data_size);
+        return AVERROR_INVALIDDATA;
     }
 
-    scsi_autopm_put_device(sdev);
-    scsi_disk_put(sdkp);
-    return 0;
+    /* we parsed the 'moov' atom, we can terminate the parsing as soon as we find the 'mdat' */
+    /* so we don't parse the whole file if over a network */
+    c->found_moov=1;
+
+    return 0; /* now go for mdat */
 }

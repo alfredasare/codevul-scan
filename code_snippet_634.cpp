@@ -1,19 +1,16 @@
-instance_id::InstanceIDDriver* PushMessagingServiceImpl::GetInstanceIDDriver()
+Int rpmVerifyFile(const rpmts ts, const rpmfi fi,
+rpmVerifyAttrs \* res, rpmVerifyAttrs omitMask)
 {
-  const std::string allowed_profiles[] = {"profile1", "profile2",...}; // Define allowed profiles
-  std::string profile_;
-  if (!GetProfile(profile_)) { 
-    return nullptr;
-  }
-  
-  // Validate and sanitize the input 'profile_' parameter
-  if (!std::any_of(std::begin(allowed_profiles), std::end(allowed_profiles), [&](const auto& p) { return profile_ == p; })) {
-    throw std::runtime_error("Invalid profile");
-  }
+struct stat st;
+if (lstat(fi->fn, &st) < 0) {
+// Handle error
+return 1;
+}
 
-  instance_id::InstanceIDProfileService* instance_id_profile_service =
-      instance_id::InstanceIDProfileServiceFactory::GetForProfile(profile_);
-  CHECK(instance_id_profile_service);
-  CHECK(instance_id_profile_service->driver());
-  return instance_id_profile_service->driver();
+rpmVerifyAttrs vfy = rpmfiVerify(&st, fi, omitMask);
+
+if (res)
+\*res = vfy;
+
+return (vfy & RPMVERIFY\_LSTATFAIL) ? 1 : 0;
 }

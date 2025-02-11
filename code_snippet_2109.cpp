@@ -1,33 +1,19 @@
-static void print_maps(struct pid_info_t* info)
+js_grisu2(double v, char *buffer, int *K)
 {
-    FILE *maps;
-    size_t offset;
-    char device[10];
-    long int inode;
-    char file[PATH_MAX];
-
-    if (strlen(info->path) + strlen("maps") + 1 > sizeof(info->path)) {
-        // Handle error or truncate the string if necessary
-        //...
-    }
-
-    strlcat(info->path, "maps", sizeof(info->path));
-
-    maps = fopen(info->path, "r");
-
-    if (!maps)
-        goto out;
-
-    while (fscanf(maps, "%*x-%*x %*s %zx %s %ld %s\n", &offset, device, &inode, file) == 4) {
-        if (inode == 0 || !strcmp(device, "00:00"))
-            continue;
-
-        printf("%-9s %5d %10s %4s %9s %18s %9zd %10ld %s\n",
-                info->cmdline, info->pid, info->user, "mem", "???", device, offset, inode, file);
-    }
-
-    fclose(maps);
-
-out:
-    info->path[info->parent_length] = '\0';
+	int length, mk;
+	diy_fp_t w_m, w_p, c_mk, Wp, Wm, delta;
+	int q = 64, alpha = -59, gamma = -56;
+	normalized_boundaries(v, &w_m, &w_p);
+	mk = k_comp(w_p.e + q, alpha, gamma);
+	c_mk = cached_power(mk);
+	Wp = multiply(w_p, c_mk);
+	Wm = multiply(w_m, c_mk);
+	Wm.f++; Wp.f--;
+	delta = minus(Wp, Wm);
+	*K = -mk;
+	length = digit_gen(Wp, delta, buffer, NULL, K); // Get length before writing
+	if (length > 0) {
+		digit_gen(Wp, delta, buffer, &length, K); // Write within bounds
+	}
+	return length;
 }

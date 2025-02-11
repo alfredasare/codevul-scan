@@ -1,21 +1,14 @@
-static void amd_gpio_irq_mask(struct irq_data *d)
-{
-    u32 pin_reg;
-    unsigned long flags;
-    struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
-    struct amd_gpio *gpio_dev = gpiochip_get_data(gc);
+c++
+#include <cstring>
+#include <stdexcept>
 
-    spin_lock_irqsave(&gpio_dev->lock, flags);
+static int CallStat(const char *path, stat_wrapper_t *sb) {
+  base::ThreadRestrictions::AssertIOAllowed();
 
-    if (!capable(CAP_SYS_RAWIO)) {
-        printk(KERN_ERR "Permission denied: cannot mask IRQ\n");
-        spin_unlock_irqrestore(&gpio_dev->lock, flags);
-        return;
-    }
+  // Check if the path contains any ".." or "/" characters
+  if (strchr(path, '/') || strchr(path, '.')) {
+    throw std::runtime_error("Invalid path");
+  }
 
-    pin_reg = readl(gpio_dev->base + (d->hwirq)*4);
-    pin_reg &= ~BIT(INTERRUPT_MASK_OFF);
-    writel(pin_reg, gpio_dev->base + (d->hwirq)*4);
-
-    spin_unlock_irqrestore(&gpio_dev->lock, flags);
+  return stat(path, sb);
 }

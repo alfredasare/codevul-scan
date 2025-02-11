@@ -1,19 +1,10 @@
-static bool IsDangerousHTTPEquiv(const String& value) {
-  String sanitizedValue = SanitizeInput(value);
-  String equiv = sanitizedValue.StripWhiteSpace();
-  return DeprecatedEqualIgnoringCase(equiv, "refresh") || 
-         DeprecatedEqualIgnoringCase(equiv, "set-cookie");
+void OfflinePageModelImpl::OnDeleteOrphanedArchivesDone(
+const std::vector<base::FilePath>& archives,
+bool success) {
+if (!archives.empty()) {
+UMA_HISTOGRAM_COUNTS("OfflinePages.Consistency.OrphanedArchivesCount",
+static\_cast<int32\_t>(archives.size()));
 }
-
-String SanitizeInput(const String& input) {
-  const String allowedChars = "[a-zA-Z0-9_\\-. ]";
-  String sanitized = "";
-  for (char c : input) {
-    if (RegexMatch(allowedChars, c)) {
-      sanitized += c;
-    } else {
-      sanitized += HtmlEscape(c);
-    }
-  }
-  return sanitized;
+UMA\_HISTOGRAM\_BOOLEAN("OfflinePages.Consistency.DeleteOrphanedArchivesResult",
+success);
 }

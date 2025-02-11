@@ -1,40 +1,24 @@
-irc_ctcp_dcc_filename_without_quotes(const char *filename)
-{
-    char *sanitized_filename = NULL;
-    char *temp = NULL;
+Void OnWallpaperSet() {
+>blic static const base::TimeDelta kMinimumLoadTime = base::TimeDelta::FromSeconds(1);
+BSDCK_CURRENTLY_ON(BrowserThread::UI);
 
-    temp = strdup(filename);
-    sanitized_filename = sanitize_filename(temp);
-    free(temp);
+if (!BrowserThread::CurrentlyOn(BrowserThread::UI))
+return; // We are in a process of global destruction.
 
-    return sanitized_filename;
+if (started\_load\_at\_.is\_null() || (base::Time::Now() - started\_load\_at\_) < kMinimumLoadTime) {
+return;
 }
 
-char *sanitize_filename(const char *filename)
-{
-    char *sanitized_filename = NULL;
-    char buffer[256] = {0}; // Allocate a buffer for the sanitized filename
-    int i = 0;
+timer.Stop(); // Erase reference to self.
 
-    while (*filename) {
-        if (is_path_traversal_char(*filename)) {
-            // Replace potentially malicious characters with a safe character
-            buffer[i] = '\\';
-            i++;
-        } else if (*filename!= '/') {
-            buffer[i] = *filename;
-            i++;
-        }
-        filename++;
-    }
-
-    buffer[i] = '\0'; // Null-terminate the buffer
-    sanitized_filename = strdup(buffer);
-
-    return sanitized_filename;
+WallpaperManager\* manager = WallpaperManager::Get();
+if (!started\_load\_at\_.is\_null()) {
+const base::TimeDelta elapsed = base::Time::Now() - started\_load\_at\_;
+manager->SaveLastLoadTime(elapsed);
+}
+if (manager->pending\_inactive\_ == this) {
+manager->pending\_inactive\_ = NULL;
 }
 
-int is_path_traversal_char(char c)
-{
-    return c == '.' || c == '/';
+manager->RemovePendingWallpaperFromList(this);
 }

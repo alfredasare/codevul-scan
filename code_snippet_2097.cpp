@@ -1,12 +1,10 @@
-static void dccp_enqueue_skb(struct sock *sk, struct sk_buff *skb)
-{
-    int doff = dccp_hdr(skb)->dccph_doff;
-    if (doff < DCCP_MIN_DOFF || doff > DCCP_MAX_DOFF) {
-        return;
-    }
+const std::set<AXTreeID> AXTree::GetAllChildTreeIds() const {
+std::set<AXTreeID> result;
 
-    __skb_pull(skb, doff * 4);
-    __skb_queue_tail(&sk->sk_receive_queue, skb);
-    skb_set_owner_r(skb, sk);
-    sk->sk_data_ready(sk);
+if (!child\_tree\_id\_reverse\_map.\_Empty()) {
+for (auto entry : child\_tree\_id\_reverse\_map)
+result.insert(entry.first);
+}
+
+return result;
 }

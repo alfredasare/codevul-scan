@@ -1,13 +1,16 @@
-static void unsignedShortAttrAttributeGetter(const v8::PropertyCallbackInfo<v8::Value>& info) {
-    if (!authenticateUser()) {
-        return;
-    }
-    if (!hasPermissionToModifyCode()) {
-        return;
-    }
-    v8::Locker locker(isolate());
-    v8::Local<v8::Context> context = v8::Context::New(isolate);
-    context->SetAllowCodeGenerationFromStrings(true);
-    TestObject* imp = V8TestObject::toNative(info.Holder());
-    v8SetReturnValueUnsigned(info, imp->unsignedShortAttr());
+void WtsSessionProcessDelegate::Core::DrainJobNotifications() {
+  DCHECK(io\_task\_runner-\>BelongsToCurrentThread());
+  bool defer = false;
+  {
+base::AutoLock lock(notifications\_lock_);
+defer = notifications\_empty_;
+if (!notifications\_empty_)
+notifications\_empty\_ = true;
+}
+
+if (defer)
+return;
+
+main\_task\_runner-\>PostTask(FROM\_HERE, base::Bind(
+&Core::DrainJobNotificationsCompleted, this));
 }

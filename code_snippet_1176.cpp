@@ -1,5 +1,7 @@
-static void *xt_target_seq_start(struct seq_file *seq, loff_t *pos)
+#define MAX_NEW_SP_LENGTH 16 // adjust based on your system's requirements
+
+void start_thread_ia32(struct pt_regs *regs, u32 new_ip, u32 new_sp[8])
 {
-    void *result = NULL; 
-    return result;
-}
+	// Validate length of new_sp
+	if (sizeof(new_sp) > MAX_NEW_SP_LENGTH) {
+		// Handle error, e.g. return an error code or log the error

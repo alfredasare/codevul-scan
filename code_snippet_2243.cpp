@@ -1,16 +1,24 @@
-int DH_compute_key_padded(unsigned char *key, const BIGNUM *pub_key, DH *dh)
+static void mcryptd_opportunistic_flush(void)
 {
-    int rv, pad;
-    rv = dh->meth->compute_key(key, pub_key, dh);
-    if (rv <= 0)
-        return rv;
-    unsigned char random_pad[BN_num_bytes(dh->p)];
-    if (!RAND_bytes(random_pad, BN_num_bytes(dh->p)))
-        return -1; // error handling
-    pad = BN_num_bytes(dh->p) - rv;
-    if (pad > 0) {
-        memmove(key + pad, key, rv);
-        memset(key + pad, random_pad[0], pad);
-    }
-    return rv + pad;
+	struct mcryptd_flush_list *flist;
+	struct mcryptd_alg_cstate *cstate;
+
+	flist = per_cpu_ptr(mcryptd_flist, smp_processor_id());
+	while (single_task_running()) {
+		mutex_lock(&flist->lock);
+		cstate = list_first_entry_or_null(&flist->list,
+				struct mcryptd_alg_cstate, flush_list);
+		if (!cstate || !cstate->flusher_engaged) {
+			mutex_unlock(&flist->lock);
+			return;
+		}
+		list_del(&cstate->flush_list);
+		cstate->flusher_engaged = false;
+
+		/* Re-acquire the lock before using cstate */
+		mutex_lock(&flist->lock);
+		cstate->alg_state->flusher(cstate);
+		mutex_unlock(&flist->lock);
+		mutex_unlock(&flist->lock);
+	}
 }

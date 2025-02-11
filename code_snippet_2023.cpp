@@ -1,15 +1,17 @@
-static int etm_event_validate(struct perf_event *event) {
-    if (!event || event->size < sizeof(struct perf_event)) {
-        return -EINVAL;
-    }
-    return 0;
-}
+poppler_rectangle_copy (PopplerRectangle *rectangle)
+{
+  PopplerRectangle *new_rectangle;
 
-static void etm_event_read(struct perf_event *event) {
-    int ret = etm_event_validate(event);
-    if (ret) {
-        printk(KERN_ERR "Invalid perf_event struct\n");
-        return;
-    }
-    // Process the validated event struct
+  g_return_val_if_fail (rectangle != NULL, NULL);
+
+  new_rectangle = g_new (PopplerRectangle, 1);
+  if (rectangle == NULL) {
+      g_warning ("The input rectangle is a null pointer");
+      g_free(new_rectangle);
+      return NULL;
+  }
+
+  *new_rectangle = *rectangle;
+
+  return new_rectangle;
 }

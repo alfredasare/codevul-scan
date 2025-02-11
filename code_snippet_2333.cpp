@@ -1,11 +1,24 @@
-int snd_timer_continue(struct snd_timer_instance *timeri)
+static void seek\_interrupt(void)
 {
-    /* timer can continue only after pause */
-    if (!(timeri->flags & SNDRV_TIMER_IFLG_PAUSED))
-        return -EIO; 
-
-    if (timeri->flags & SNDRV_TIMER_IFLG_SLAVE)
-        return snd_timer_start_slave(timeri, false);
-    else
-        return snd_timer_start1(timeri, false, 0);
+debugt(__func__, "");
+mutex\_lock(&floppy\_mutex);
+if (inr != 2 || (ST0 & 0xF8) != 0x20) {
+DRS->track = NEED\_2\_RECAL;
+cont->error();
+cont->redo();
+mutex\_unlock(&floppy\_mutex);
+return;
 }
+if (DRS->track >= 0 && DRS->track != ST1 && !blind\_seek) {
+debug\_dcl(DP->flags,
+"clearing NEWCHANGE flag because of effective seek\n");
+debug\_dcl(DP->flags, "jiffies=%lu\n", jiffies);
+clear\_bit(FD\_DISK\_NEWCHANGE\_BIT, &DRS->flags);
+DRS->select\_date = jiffies;
+}
+DRS->track = ST1;
+floppy\_ready();
+mutex\_unlock(&floppy\_mutex);
+}
+
+static DEFINE\_MUTEX(floppy\_mutex);

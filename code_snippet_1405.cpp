@@ -1,7 +1,7 @@
-void ResetScreenHandler::PrepareToShow() {
-    try {
-        // Code that could potentially throw an exception
-    } catch (const std::exception& e) {
-        std::cerr << "An error occurred: " << e.what() << std::endl;
-    }
+void GraphicsContext::setPlatformShouldAntialias(bool enable)
+{
+    if (paintingDisabled())
+        return;
+
+    platformContext()->setUseAntialiasing(static_cast<decltype(platformContext()->setUseAntialiasing(true))>(enable));
 }

@@ -1,23 +1,27 @@
-static int exitcode_proc_open(struct inode *inode, struct file *file)
+gstate_to_update(fz_context *ctx, pdf_filter_processor *p)
 {
-    const char *allowed_paths[] = {"/proc", "/sys", "/etc"};
-    char *path = dentry_path(inode);
+	filter_gstate *gstate = p->gstate;
 
-    if (!is_within_allowed_paths(path, allowed_paths)) {
-        return -EPERM;
-    }
+	/* If we're not the top, that's fine */
+	if (gstate->next != NULL)
+		return gstate;
 
-    return single_open(file, exitcode_proc_show, NULL);
+	/* Check if the object is of the correct type before pushing */
+	if (filter_gstate_type_correct(gstate)) {
+		filter_push(ctx, p);
+		gstate = p->gstate;
+		gstate->pushed = 1;
+		if (p->chain->op_q)
+			p->chain->op_q(ctx, p->chain);
+	}
+
+	return p->gstate;
 }
 
-bool is_within_allowed_paths(const char *path, const char **allowed_paths)
+/* Helper function to check the type */
+int filter_gstate_type_correct(filter_gstate *gstate)
 {
-    char *p = path;
-    while (*p!= '\0') {
-        if (strchr(allowed_paths[0], *p)!= NULL) {
-            return true;
-        }
-        p++;
-    }
-    return false;
+	/* Implement type checking logic here */
+	/* Return 1 if the type is correct, 0 otherwise */
+	return gstate->type == FILTER_GSTATE_TYPE_INTENDED;
 }

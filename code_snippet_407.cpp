@@ -1,19 +1,20 @@
-void RendererSchedulerImpl::BeginFrameNotExpectedSoon() {
-  TRACE_EVENT0(TRACE_DISABLED_BY_DEFAULT("renderer.scheduler"),
-               "RendererSchedulerImpl::BeginFrameNotExpectedSoon");
-  helper_.CheckOnValidThread();
-  if (helper_.IsShutdown())
-    return;
+const int MAX_EXPECTED_COUNT = 100; // Replace this value with the appropriate maximum
 
-  if (!&main_thread_only()->begin_frame_not_expected_soon ||!main_thread_only()->begin_frame_not_expected_soon) {
-    main_thread_only()->begin_frame_not_expected_soon = true;
+void OnNotificationBalloonCountObserver::CheckBalloonCount() {
+  if (count_ < 0 || count_ > MAX_EXPECTED_COUNT) {
+    return;
   }
 
-  idle_helper_.EnableLongIdlePeriod();
-  {
-    base::AutoLock lock(any_thread_lock_);
-    if (any_thread().begin_main_frame_on_critical_path) {
-      any_thread().begin_main_frame_on_critical_path = false;
-    }
+  bool balloon_count_met = AreActiveNotificationProcessesReady() &&
+      static_cast<int>(collection_->GetActiveBalloons().size()) == count_;
+
+  if (balloon_count_met && automation_) {
+    AutomationJSONReply(automation_,
+                        reply_message_.release()).SendSuccess(NULL);
+  }
+
+  if (balloon_count_met || !automation_) {
+    collection_->set_on_collection_changed_callback(base::Closure());
+    delete this;
   }
 }

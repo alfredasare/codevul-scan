@@ -1,23 +1,9 @@
-static git_index_reuc_entry *reuc_entry_alloc(const char *path)
+static void put_amf_string(AVIOContext *pb, const char *str, size_t max_buffer_size)
 {
-    size_t pathlen = strlen(path),
-           structlen = sizeof(struct reuc_entry_internal),
-           alloclen;
-    struct reuc_entry_internal *entry;
-
-    if (GIT_ADD_SIZET_OVERFLOW(&alloclen, structlen, pathlen) ||
-        GIT_ADD_SIZET_OVERFLOW(&alloclen, alloclen, 1))
-        return NULL;
-
-    entry = git__calloc(1, alloclen);
-    if (!entry || entry->path) {
-        free(entry);
-        return NULL;
+    size_t len = strlen(str);
+    if (len > max_buffer_size) {
+        return;
     }
-
-    entry->pathlen = pathlen;
-    memcpy(entry->path, path, pathlen);
-    entry->entry.path = entry->path;
-
-    return (git_index_reuc_entry *)entry;
+    avio_wb16(pb, len);
+    avio_write(pb, str, len);
 }

@@ -1,12 +1,10 @@
-static void rds_conn_message_info_retrans(struct socket *sock,
-					  unsigned int len,
-					  struct rds_info_iterator *iter,
-					  struct rds_info_lengths *lens)
+void ebt_unregister_table(struct net *net, struct ebt_table *table,
+			  const struct nf_hook_ops *ops)
 {
-	if (!rds_authenticate_critical_data(len, iter)) {
-		/* Authentication failed, return an error */
+	if (!net || !table)
 		return;
-	}
 
-	rds_conn_message_info(sock, len, iter, lenses, 0);
+	if (ops && net && table)
+		nf_unregister_net_hooks(net, ops, hweight32(table->valid_hooks));
+	__ebt_unregister_table(net, table);
 }

@@ -1,20 +1,40 @@
-static void hugetlb_unregister_node(struct node *node)
+static int vmw_legacy_srf_destroy(struct vmw_resource *res)
 {
-    struct hstate *h;
-    struct node_hstate *nhs = &node_hstates[node->dev.id];
+	struct vmw_private *dev_priv = res->dev_priv;
+	uint32_t submit_size;
+	uint8_t *cmd;
 
-    if (!nhs->hugepages_kobj)
-        return;		/* no hstate attributes */
+	BUG_ON(res->id == -1);
 
-    for_each_hstate(h) {
-        int idx = hstate_index(h);
-        if (idx >= 0 && idx < ARRAY_SIZE(nhs->hstate_kobjs) &&
-            nhs->hstate_kobjs[idx]) {
-            kobject_put(nhs->hstate_kobjs[idx]);
-            nhs->hstate_kobjs[idx] = NULL;
-        }
-    }
+	submit_size = vmw_surface_destroy_size();
 
-    kobject_put(nhs->hugepages_kobj);
-    nhs->hugepages_kobj = NULL;
+	/* Check if the allocated space is sufficient */
+	if (submit_size > PAGE_SIZE) {
+		DRM_ERROR("Buffer size exceeded the limit: %u\n", submit_size);
+		return -EINVAL;
+	}
+
+	cmd = vmw_fifo_reserve(dev_priv, submit_size);
+	if (unlikely(!cmd)) {
+		DRM_ERROR("Failed reserving FIFO space for surface "
+			  "eviction.\n");
+		return -ENOMEM;
+	}
+
+	vmw_surface_destroy_encode(res->id, cmd);
+	vmw_fifo_commit(dev_priv, submit_size);
+
+	/*
+	 * Surface memory usage accounting.
+	 */
+
+	dev_priv->used_memory_size -= res->backup_size;
+
+	/*
+	 * Release the surface ID.
+	 */
+
+	vmw_resource_release_id(res);
+
+	return 0;
 }

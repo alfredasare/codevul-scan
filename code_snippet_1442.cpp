@@ -1,34 +1,21 @@
-struct dentry *d_add_ci(struct dentry *dentry, struct inode *inode, struct qstr *name)
-{
-    struct dentry *found;
-    struct dentry *new;
+void RegisterContentSchemes(const char** additional_savable_schemes) {
+ url_util::AddStandardScheme(kChromeDevToolsScheme);
+ url_util::AddStandardScheme(kChromeUIScheme);
+ url_util::AddStandardScheme(kMetadataScheme);
 
-    found = d_hash_and_lookup(dentry->d_parent, __getname(name));
-    if (!found) {
-        new = d_alloc(dentry->d_parent, __getname(name));
-        if (!new) {
-            found = ERR_PTR(-ENOMEM);
-        } else {
-            found = d_splice_alias(inode, new);
-            if (found) {
-                dput(new);
-                return found;
-            }
-            return new;
-        }
-    }
-    iput(inode);
-    return found;
-}
+ url_util::LockStandardSchemes();
 
-const char *__getname(struct qstr *name)
-{
-    const char *p = name->name;
-    while (*p) {
-        if (*p == '/' || *p == '\\') {
-            return NULL; // invalid character found
-        }
-        p++;
-    }
-    return name->name; // valid name
+ if (additional_savable_schemes) {
+ int schemes = 0;
+ while (additional_savable_schemes[schemes]) { // Changed '++schemes' to 'schemes++'
+ g_savable_schemes = new char*[schemes + arraysize(kDefaultSavableSchemes) + 1]; // Added 1 to accommodate the extra scheme
+ memcpy(g_savable_schemes,
+ kDefaultSavableSchemes,
+ arraysize(kDefaultSavableSchemes) * sizeof(char*));
+ g_savable_schemes[arraysize(kDefaultSavableSchemes) + schemes - 1] =
+ base::strdup(additional_savable_schemes[schemes]);
+ g_savable_schemes[arraysize(kDefaultSavableSchemes) + schemes] = 0; // Null terminate the array
+ schemes++;
+ }
+ }
 }

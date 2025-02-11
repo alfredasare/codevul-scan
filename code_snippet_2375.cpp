@@ -1,19 +1,17 @@
-struct ctl_table * __net_init ipv6_icmp_sysctl_init(struct net *net)
+zsetstrokecolorspace(i_ctx_t * i_ctx_p)
 {
-    struct ctl_table *table;
+    int code;
 
-    if (!net) {
-        printk(KERN_ERR "Invalid net structure\n");
-        return NULL;
-    }
+    code = zswapcolors(i_ctx_p);
+    if (code < 0)
+        return code;
 
-    table = kmemdup(ipv6_icmp_table_template,
-                    sizeof(ipv6_icmp_table_template),
-                    GFP_KERNEL);
+    /* Now, the actual continuation routine */
+    push_op_estack(setstrokecolorspace_cont);
 
-    if (table) {
-        table[0].data = &net->ipv6.sysctl.icmpv6_time;
-    }
+    code = zsetcolorspace(i_ctx_p);
+    if (code < 0)
+        return code;
 
-    return table;
+    return o_push_estack;
 }

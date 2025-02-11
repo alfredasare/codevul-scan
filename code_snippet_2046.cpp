@@ -1,13 +1,13 @@
-size_t yystpcpy(char *yydest, const char *yysrc)
-{
-    size_t dest_len = strlen(yydest);
-    size_t src_len = strlen(yysrc);
+Here's the fixed version of the code using `SafeInt`:
 
-    if (dest_len >= src_len) {
-        memcpy(yydest, yysrc, src_len);
-    } else {
-        /* Handle error or truncate the source string */
-    }
+++
+#include <Microsoft::SafeInt>
 
-    return yydest + src_len;
-}
+const ContentSuggestion* GetSuggestionToNotifyAbout(Category category) {
+  const auto& suggestions = service_->GetSuggestionsForCategory(category);
+  if (variations::GetVariationParamByFeatureAsBool(
+           kContentSuggestionsNotificationsFeature,
+           kContentSuggestionsNotificationsAlwaysNotifyParam, false)) {
+    if (category.IsKnownCategory(KnownCategories::ARTICLES) &&
+        !suggestions.empty() &&
+        safe_int<size_t>(suggestions.size()) >

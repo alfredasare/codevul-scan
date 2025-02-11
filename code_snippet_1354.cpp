@@ -1,15 +1,11 @@
-static int rfcomm_release_dev(void __user *arg)
+const char *json_tokener_error_desc(enum json_tokener_error jerr)
 {
-    struct rfcomm_dev_req req;
-    struct rfcomm_dev *dev;
+	size_t jerr_int = (size_t)jerr;
+	const size_t json_tokener_errors_len = sizeof(json_tokener_errors) / sizeof(json_tokener_errors[0]);
 
-    if (copy_from_user(&req, arg, sizeof(req)))
-        return -EFAULT;
+	if (jerr_int >= json_tokener_errors_len) {
+		return "Unknown error, invalid json_tokener_error value passed to json_tokener_error_desc()";
+	}
 
-    BT_DBG("rfcomm_release_dev called");
-
-    dev = rfcomm_dev_get(req.dev_id);
-    if (!dev)
-        return -ENODEV;
-
-    //...
+	return json_tokener_errors[jerr_int];
+}

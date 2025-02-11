@@ -1,22 +1,17 @@
-int xfpregs_get(struct task_struct *target, const struct user_regset *regset,
-               unsigned int pos, unsigned int count,
-               void *kbuf, void __user *ubuf)
+#define MAX_SLUB_DEBUG_SLABS_LEN 64
+
+static unsigned long kmem_cache_flags(unsigned long objsize,
+	unsigned long flags, const char *name,
+	void (*ctor)(struct kmem_cache *, void *))
 {
-    struct fpu *fpu = &target->thread.fpu;
+	char slub_debug_slabs_limited[MAX_SLUB_DEBUG_SLABS_LEN];
 
-    if (!boot_cpu_has(X86_FEATURE_FXSR))
-        return -ENODEV;
+	/*
+	 * Enable debugging if selected on the kernel commandline.
+	 */
+	if (slub_debug && (!slub_debug_slabs ||
+	    strncmp(slub_debug_slabs_limited, name, strnlen(slub_debug_slabs, MAX_SLUB_DEBUG_SLABS_LEN)) == 0))
+		flags |= slub_debug;
 
-    fpu__activate_fpstate_read(fpu);
-    fpstate_sanitize_xstate(fpu);
-
-    int ret = user_regset_copyout(&pos, &count, &kbuf, &ubuf,
-                                  &fpu->state.fxsave, 0, -1);
-
-    if (ret < 0) {
-        // Log the error securely
-        printk(KERN_WARNING "Error accessing FXSAVE state: %d\n");
-    }
-
-    return ret;
+	return flags;
 }

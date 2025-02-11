@@ -1,31 +1,8 @@
-static int addFillStyle(SWFShape shape, SWFFillStyle fill)
+cmsFloat64Number CMSEXPORT cmsIT8GetPropertyDbl(cmsHANDLE hIT8, const char* cProp)
 {
-    int i;
+    const char *v = cmsIT8GetProperty(hIT8, cProp);
 
-    assert(STYLE_INCREMENT > 0);
+    if (v == NULL || strlen(cProp) >= MAX_PROPERTY_LENGTH) return 0.0; // Add length check
 
-    for (i = 0; i < shape->nFills; ++i)
-    {
-        if (SWFFillStyle_equals(fill, shape->fills[i]))
-            return i;
-    }
-
-    if (shape->isEnded)
-        return -1;
-
-    size_t new_size = (shape->nFills + STYLE_INCREMENT) * sizeof(SWFFillStyle);
-    if (new_size > MAX_FILL_SIZE)
-    {
-        return -2;
-    }
-
-    shape->fills = (SWFFillStyle*)realloc(shape->fills, new_size);
-    if (shape->fills == NULL)
-    {
-        return -3;
-    }
-
-    shape->fills[shape->nFills] = fill;
-    ++shape->nFills;
-    return shape->nFills;
+    return ParseFloatNumber(v);
 }

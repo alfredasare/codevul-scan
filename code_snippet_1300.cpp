@@ -1,1 +1,5 @@
-xfs_buf_update_cksum(bp, (uint32_t)XFS_ATTR3_LEAF_CRC_OFF);
+pr_sgr_end_if (char const *s)
+{
+  if (color_option && s != NULL)
+    pr_sgr_end (s);
+}

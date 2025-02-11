@@ -1,15 +1,15 @@
-static void ip_rt_build_flow_key(struct flowi4 *fl4, const struct sock *sk, const struct sk_buff *skb) {
-    if (skb)
-        build_skb_flow_key(fl4, skb, sk);
-    else
-        build_sk_flow_key(fl4, sk);
-}
+static inline int put_compat_mq_attr(const struct mq_attr *attr,
+                        struct compat_mq_attr __user *uattr)
+{
+	struct compat_mq_attr v;
 
-static void build_skb_flow_key(struct flowi4 *fl4, const struct sk_buff *skb, const struct sock *sk) {
-    //... (rest of the function remains the same)
+	memset(&v, 0, sizeof(v));
+	v.mq_flags = attr->mq_flags;
+	v.mq_maxmsg = attr->mq_maxmsg;
+	v.mq_msgsize = attr->mq_msgsize;
+	v.mq_curmsgs = attr->mq_curmsgs;
+	if (copy_to_user(uattr, &v, sizeof(v)) != sizeof(v))
+		return -EFAULT;
 
-    /* Null-terminate the buffer */
-    fl4->flow_label[FL4_FLOW_LABEL_MAX] = '\0';
-
-    return;
+	return 0;
 }

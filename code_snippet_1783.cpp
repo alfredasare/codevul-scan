@@ -1,8 +1,10 @@
-static struct ovl_entry *ovl_alloc_entry(void)
+IW_IMPL(void*) iw_realloc(struct iw_context *ctx, void *oldmem,
+	size_t oldmem_size, size_t newmem_size)
 {
-    struct ovl_entry *entry = kzalloc(sizeof(struct ovl_entry), GFP_KERNEL);
-    if (!entry) {
-        return NULL;
-    }
-    return entry;
+	void *newmem = iw_realloc_ex(ctx, 0, oldmem, oldmem_size, newmem_size);
+	if (!newmem && newmem_size > 0) {
+		free(oldmem);
+		return NULL;
+	}
+	return newmem;
 }

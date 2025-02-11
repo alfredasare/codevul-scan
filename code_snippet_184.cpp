@@ -1,16 +1,23 @@
-void xs_init_match(struct xtables_match *match)
+static int bt_seq_open(struct inode *inode, struct file *file)
 {
-    if (match->udata_size!= 0) {
-        match->udata = NULL;
-        if (match->udata_size > MAX_UDATA_SIZE) {
-            xtables_error(RESOURCE_PROBLEM, "udata size exceeds limit");
-            return;
-        }
-        match->udata = strdup(match->init_data);
-        if (match->udata == NULL) {
-            xtables_error(RESOURCE_PROBLEM, "malloc");
-        }
-    }
-    if (match->init!= NULL)
-        match->init(match->m);
+	struct bt_sock_list *sk_list;
+	struct bt_seq_state *s;
+
+	if (!inode || !inode->i_private) {
+		return -EINVAL;
+	}
+	sk_list = inode->i_private;
+
+	s = __seq_open_private(file, &bt_seq_ops,
+			       sizeof(struct bt_seq_state));
+	if (!s)
+		return -ENOMEM;
+
+	if (!sk_list) {
+		__seq_release(file, s);
+		return -EINVAL;
+	}
+
+	s->l = sk_list;
+	return 0;
 }

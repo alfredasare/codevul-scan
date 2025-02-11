@@ -1,21 +1,8 @@
-static void __iriap_close(struct iriap_cb *self)
+static int sctp_error(struct sock *sk, int flags, int err)
 {
-    IRDA_DEBUG(4, "%s()\n", __func__);
-
-    IRDA_ASSERT(self!= NULL, return;);
-
-    // Validate and sanitize the IAS_MAGIC value
-    if (strcmp(self->magic, IAS_MAGIC)!= 0) {
-        dev_err(&self->dev, "Invalid IAS_MAGIC value\n");
-        return;
-    }
-
-    del_timer(&self->watchdog_timer);
-
-    if (self->request_skb)
-        dev_kfree_skb(self->request_skb);
-
-    self->magic = 0;
-
-    kfree(self);
+	if (err == -EPIPE)
+		err = sk_stream_error(sk) ? : GENERIC_CONNECTION_RESET;
+	if (err == GENERIC_CONNECTION_RESET && !(flags & MSG_NOSIGNAL))
+		send_sig(SIGPIPE, current, 0);
+	return err;
 }

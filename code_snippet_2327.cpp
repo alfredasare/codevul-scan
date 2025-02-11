@@ -1,24 +1,35 @@
-static void sysbus_esp_realize(DeviceState *dev, Error **errp)
+PHP\_FUNCTION(locale\_accept\_from\_http)
 {
-    SysBusDevice *sbd = SYS_BUS_DEVICE(dev);
-    SysBusESPState *sysbus = ESP(dev);
-    ESPState *s = &sysbus->esp;
-    Error *err = NULL;
+	UEnumeration \*available;
+	char \*http\_accept = NULL;
+	int http\_accept\_len;
+	UErrorCode status = 0;
+	int len;
+	char resultLocale[INTL\_MAX\_LOCALE\_LEN+1];
+	UAcceptResult outResult;
 
-    sysbus_init_irq(sbd, &s->irq);
-    assert(sysbus->it_shift >= 0 && sysbus->it_shift < ARRAY_SIZE(ESP_REGS));
+	if(zend\_parse\_parameters( ZEND\_NUM\_ARGS() TSRMLS\_CC, "s", &http\_accept, &http\_accept\_len) == FAILURE)
+	{
+		intl\_error\_set( NULL, U\_ILLEGAL\_ARGUMENT\_ERROR,
+		"locale\_accept\_from\_http: unable to parse input parameters", 0 TSRMLS\_CC );
+		RETURN\_FALSE;
+	}
+	available = ures\_openAvailableLocales(NULL, &status);
+	INTL\_CHECK\_STATUS(status, "locale\_accept\_from\_http: failed to retrieve locale list");
 
-    s->chip_id = TCHI_FAS100A;
-    memory_region_init_io(&sysbus->iomem, OBJECT(sysbus), &sysbus_esp_mem_ops,
-                          sysbus, "esp", ESP_REGS + sysbus->it_shift);
-    sysbus_init_mmio(sbd, &sysbus->iomem);
+	// Check if the length of http\_accept is not greater than the size of resultLocale
+	if (http\_accept\_len > INTL\_MAX\_LOCALE\_LEN) {
+		uenum\_close(available);
+		INTL\_SET\_ERROR(status, "locale\_accept\_from\_http: http\_accept is too long", "");
+		RETURN\_FALSE;
+	}
 
-    qdev_init_gpio_in(dev, sysbus_esp_gpio_demux, 2);
-
-    scsi_bus_new(&s->bus, sizeof(s->bus), dev, &esp_scsi_info, NULL);
-    scsi_bus_legacy_handle_cmdline(&s->bus, &err);
-    if (err != NULL) {
-        error_propagate(errp, err);
-        return;
-    }
+	len = uloc\_acceptLanguageFromHTTP(resultLocale, INTL\_MAX\_LOCALE\_LEN, 
+						&outResult, http\_accept, available, &status);
+	uenum\_close(available);
+	INTL\_CHECK\_STATUS(status, "locale\_accept\_from\_http: failed to find acceptable locale");
+	if (len < 0 || outResult == ULOC\_ACCEPT\_FAILED) {
+		RETURN\_FALSE;
+	}
+	RETURN\_STRINGL(resultLocale, len, 1);
 }

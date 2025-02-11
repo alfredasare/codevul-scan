@@ -1,11 +1,23 @@
-static int logi_dj_recv_send_report(struct dj_receiver_dev *djrcv_dev,
-				   struct dj_report *dj_report)
+struct io_context *get_io_context(gfp_t gfp_flags, int node)
 {
-    ...
-    size_t i;
-    ...
-    for (i = 0; i < DJREPORT_SHORT_LENGTH - 1 && i < sizeof(report->field[0]->value) / sizeof(report->field[0]->value[0]); i++) {
-        report->field[0]->value[i] = data[i];
-    }
-    ...
+	struct io_context *ret = NULL;
+
+	/*
+	 * Check for unlikely race with exiting task. ioc ref count is
+	 * zero when ioc is being detached.
+	 */
+	do {
+		ret = current_io_context(gfp_flags, node);
+		if (!ret)
+			break;
+
+		spin_lock(&ret->refcount_lock);
+		if (atomic_long_inc_return(&ret->refcount) == 1) {
+			spin_unlock(&ret->refcount_lock);
+			break;
+		}
+		spin_unlock(&ret->refcount_lock);
+	} while (1);
+
+	return ret;
 }

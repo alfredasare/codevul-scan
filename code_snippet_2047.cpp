@@ -1,12 +1,9 @@
-static void ocfs2_write_failure(struct inode *inode,
-                             struct ocfs2_write_ctxt *wc,
-                             loff_t user_pos, unsigned user_len)
+static inline dma_addr_t pci\_map\_single\_debug(struct pci\_dev \*pdev, void \*ptr,
+size\_t size, int direction)
 {
-   ...
-    if (wc->w_target_page) {
-        char buffer[PAGE_SIZE];
-        sprintf(buffer, "New buffers: %p", wc->w_target_page);
-        printk(KERN_INFO "OCFS2: %s", buffer);
-    }
-   ...
+dma\_addr\_t addr = pci\_map\_single(pdev, ptr, size, direction);
+if ((addr + size - 1) >= 0x100000000LL)
+pr\_crit("%s: pci\_map\_single() returned memory at 0x%llx!\n",
+pci\_name(pdev), (unsigned long long)addr);
+return addr;
 }

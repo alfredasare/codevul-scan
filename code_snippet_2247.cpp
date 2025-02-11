@@ -1,32 +1,15 @@
-static int rpc_req(int rpc_prog, int rpc_proc, uint32_t *data, int datalen)
+gx_dc_pattern2_can_overlap(const gx_device_color *pdevc)
 {
-    struct rpc_call pkt;
-    unsigned long id;
-    int sport;
-    int ret;
-    unsigned char *payload = net_udp_get_payload(nfs_con); // review this function
+    gs_pattern2_instance_t * pinst;
 
-    id = ++rpc_id;
-    pkt.id = htonl(id);
-    pkt.type = htonl(MSG_CALL);
-    pkt.rpcvers = htonl(2);	/* use RPC version 2 */
-    pkt.prog = htonl(rpc_prog);
-    pkt.vers = htonl(2);	/* portmapper is version 2 */
-    pkt.proc = htonl(rpc_proc);
-
-    unsigned char buf[ sizeof(pkt) + sizeof(uint32_t)*datalen ];
-    strncpy_s((char *)buf, sizeof(buf), (char *)&pkt, sizeof(pkt)); 
-    strncpy_s((char *)(buf + sizeof(pkt)), sizeof(buf) - sizeof(pkt), (char *)data, datalen * sizeof(uint32_t)); 
-
-    if (rpc_prog == PROG_PORTMAP)
-        sport = SUNRPC_PORT;
-    else if (rpc_prog == PROG_MOUNT)
-        sport = nfs_server_mount_port;
-    else
-        sport = nfs_server_nfs_port;
-
-    nfs_con->udp->uh_dport = htons(sport);
-    ret = net_udp_send(nfs_con, sizeof(pkt) + datalen * sizeof(uint32_t));
-
-    return ret;
+    if (pdevc && pdevc->type == &gx_dc_pattern2) {
+        pinst = (gs_pattern2_instance_t *)pdevc->ccolor.pattern;
+        switch (pinst->templat.Shading->head.type) {
+            case 3: case 6: case 7:
+                return true;
+            default:
+                return false;
+        }
+    }
+    return false;
 }

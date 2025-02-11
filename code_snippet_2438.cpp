@@ -1,12 +1,12 @@
-static int jpc_sot_dumpparms(jpc_ms_t *ms, FILE *out)
-{
-    jpc_sot_t *sot = &ms->parms.sot;
-    if (sot != NULL) {
-        fprintf(out, "tileno = %d; len = %d; partno = %d; numparts = %d\n",
-          sot->tileno, sot->len, sot->partno, sot->numparts);
-    } else {
-        fprintf(stderr, "Error: sot pointer is null\n");
-        return -1;
-    }
-    return 0;
-}
+virtual void cancelBuffer(int buf, const sp<Fence>& fence) {
+> Parcel data, reply;
+>     data.writeInterfaceToken(IGraphicBufferProducer::getInterfaceDescriptor());
+>     data.writeInt32(buf);
+>-    data.write(*fence.get());
+>+    if (fence != nullptr) {
+>+        data.write(*fence.get());
+>+    } else {
+>+        data.writeInt32(-1); // Use a default value or error code if fence is null
+>+    }
+>     remote()->transact(CANCEL_BUFFER, data, &reply);
+> }

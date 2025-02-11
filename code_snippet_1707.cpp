@@ -1,19 +1,11 @@
-cifs_reclassify_socket4(struct socket *sock)
+static int check_revocation(X509_STORE_CTX *ctx)
 {
-    struct sock *sk = sock->sk;
-    BUG_ON(sock_owned_by_user(sk));
-
-    // Validate input strings
-    if (!cifs_slock_key[0] || strlen(cifs_slock_key[0]) > MAX_KEY_LENGTH) {
-        printk(KERN_ERR "Invalid cifs_slock_key\n");
-        return;
-    }
-
-    if (!cifs_key[0] || strlen(cifs_key[0]) > MAX_KEY_LENGTH) {
-        printk(KERN_ERR "Invalid cifs_key\n");
-        return;
-    }
-
-    sock_lock_init_class_and_name(sk, "slock-AF_INET-CIFS",
-        cifs_slock_key[0], "sk_lock-AF_INET-CIFS", cifs_key[0]);
-}
+    int i = 0, last = 0, ok = 0;
+    if (!(ctx->param->flags & X509_V_FLAG_CRL_CHECK))
+        return 1;
+    if (ctx->param->flags & X509_V_FLAG_CRL_CHECK_ALL)
+        last = sk_X509_num(ctx->chain) - 1;
+    else {
+        /* If checking CRL paths this isn't the EE certificate */
+        if (ctx->parent)
+            return

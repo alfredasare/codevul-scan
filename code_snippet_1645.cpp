@@ -1,6 +1,11 @@
-static int prefixmatch(const struct in6_addr *s, const struct in6_addr *d)
+gs_gstate_update_device(gs_gstate *pgs, gx_device *dev)
 {
-    unsigned i;
-    for (i = 0; i < IN6ADDRSZ &&!((s->s6_addr[i/8]^d->s6_addr[i/8])&(128>>(i%8))); i++);
-    return i;
+    if (dev && dev->color_info.num_components <= GX_MAX_COLORS) {
+        gx_set_cmap_procs(pgs, dev);
+    } else {
+        // Handle the error case when the array index is out of bounds
+        // ...
+    }
+
+    gx_unset_both_dev_colors(pgs);
 }

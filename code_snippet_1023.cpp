@@ -1,17 +1,12 @@
-void NetworkThrottleManagerImpl::MaybeUnblockThrottles() {
-  RecomputeOutstanding();
-
-  while (outstanding_throttles_.size() < kActiveRequestThrottlingLimit &&
-        !blocked_throttles_.empty()) {
-    BlockedThrottle* blockedThrottle = blocked_throttles_.front();
-    if (IsAuthorizedBlockedThrottle(blockedThrottle)) {
-      UnblockThrottle(blockedThrottle);
-    } else {
-      // Handle unauthorized blocked throttle
-    }
-  }
+static void correctstack(lua_State *L, TValue *oldstack) {
+> ptrdiff\_t diff = (char*)L->top - (char*)oldstack;
+L->top += diff;
+for (GCObject *up = L->openupval; up != NULL; up = up->gch.next)
+gco2uv(up)->v += diff;
+for (CallInfo *ci = L->base\_ci; ci <= L->ci; ci++) {
+ci->top += diff;
+ci->base += diff;
+ci->func += diff;
 }
-
-bool NetworkThrottleManagerImpl::IsAuthorizedBlockedThrottle(BlockedThrottle* blockedThrottle) {
-  return blockedThrottle->GetOwner()->IsAuthorized();
+L->base += diff;
 }

@@ -1,21 +1,15 @@
-#include <string.h>
+static av_cold int decode_close(AVCodecContext *avctx)
+{
+    SCPRContext *s = avctx ? avctx->priv_data : nullptr;
 
-const char* allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
-
-bool isValidName(const char* name) {
-    for (int i = 0; name[i]; i++) {
-        if (strchr(allowedChars, name[i]) == NULL) {
-            return false;
-        }
+    if (!s) {
+        /* Handle error, e.g., return an error code */
+        return -1;
     }
-    return true;
-}
 
-android::SoftOMXComponent *createSoftOMXComponent(
-    const char *name, const OMX_CALLBACKTYPE *callbacks,
-    OMX_PTR appData, OMX_COMPONENTTYPE **component) {
-    if (!isValidName(name)) {
-        return NULL;
-    }
-    return new android::SoftGSM(name, callbacks, appData, component);
+    av_freep(&s->blocks);
+    av_frame_free(&s->last_frame);
+    av_frame_free(&s->current_frame);
+
+    return 0;
 }

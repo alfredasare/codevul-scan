@@ -1,31 +1,24 @@
-session_open(Authctxt *authctxt, int chanid)
-{
-    Session *s = session_new();
-    debug("session_open: channel %d", chanid);
-    if (s == NULL) {
-        error("no more sessions");
-        return 0;
+const WebEmStoredSession CWebServer::GetSession(const std::string &sessionId) {
+    WebEmStoredSession session;
+
+    if (sessionId.empty()) {
+        _log.Log(LOG_ERROR, "SessionStore : cannot get session without id.");
+    } else {
+        std::vector<std::vector<std::string> > result;
+        // Use parameterized query
+        result = m_sql.safe_query("SELECT SessionID, Username, AuthToken, ExpirationDate FROM UserSessions WHERE SessionID = ?", sessionId);
+
+        if (!result.empty()) {
+            session.id = result[0][0].c_str();
+            session.username = base64_decode(result[0][1]);
+            session.auth_token = result[0][2].c_str();
+
+            std::string sExpirationDate = result[0][3];
+            time_t now = mytime(NULL);
+            struct tm tExpirationDate;
+            ParseSQLdatetime(session.expires, tExpirationDate, sExpirationDate);
+        }
     }
 
-    // Validate and sanitize authctxt and pw
-    if (authctxt == NULL || authctxt->valid == FALSE) {
-        fatal("invalid authctxt");
-        return 0;
-    }
-    if (authctxt->pw == NULL || strlen(authctxt->pw) == 0) {
-        fatal("empty user password");
-        return 0;
-    }
-
-    // Validate chanid
-    if (chanid <= 0 || chanid > MAX_CHANNEL_ID) {
-        fatal("invalid channel ID");
-        return 0;
-    }
-
-    s->authctxt = authctxt;
-    s->pw = authctxt->pw;
-    debug("session_open: session %d: link with channel %d", s->self, chanid);
-    s->chanid = chanid;
-    return 1;
+    return session;
 }

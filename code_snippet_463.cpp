@@ -1,9 +1,16 @@
-static void tcp_mtup_probe_success(struct sock *sk)
-{
-    //...
+void AppLauncherHandler::HandleSaveAppPageName(const base::ListValue* args) {
+  base::string16 name;
+  CHECK(args->GetString(0, &name));
 
-    tp->snd_cwnd = (tp->snd_cwnd * tcp_mss_to_mtu(sk, tp->mss_cache)) / icsk->icsk_mtup.probe_size;
-    tp->snd_cwnd = (tp->snd_cwnd > INT_MAX)? INT_MAX : tp->snd_cwnd;
+  int page_index;
+  if (!args->GetInteger(1, &page_index) || page_index < 0 || page_index >= prefs::kNtpAppPageNames.size()) {
+    // Handle error or return early if the input is not an integer or out of bounds.
+    return;
+  }
 
-    //...
+  base::AutoReset<bool> auto_reset(&ignore_changes_, true);
+  PrefService* prefs = Profile::FromWebUI(web_ui())->GetPrefs();
+  ListPrefUpdate update(prefs, prefs::kNtpAppPageNames);
+  base::ListValue* list = update.Get();
+  list->Set(static_cast<size_t>(page_index), new base::StringValue(name));
 }

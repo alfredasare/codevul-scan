@@ -1,19 +1,19 @@
-std::unique_ptr<ImageProcessorClient> ImageProcessorClient::Create(
-    const ImageProcessor::PortConfig& input_config,
-    const ImageProcessor::PortConfig& output_config,
-    size_t num_buffers,
-    std::vector<std::unique_ptr<VideoFrameProcessor>> frame_processors) {
-  // Validate input parameters
-  if (input_config.size() > kMaxInputConfigSize ||
-      output_config.size() > kMaxOutputConfigSize) {
-    LOG(ERROR) << "Invalid input/config size";
-    return nullptr;
+#include <boost/uuid/uuid.hpp>   // Include Boost UUID library for generating UUIDs
+#include <stdexcept>            // For std::runtime_error
+
+class BlobManager {
+ public:
+  void IncrementRefCount(const boost::uuids::uuid& uuid) {
+    IncrementBlobRefCount(uuid);
   }
 
-  auto ip_client = base::WrapUnique(new ImageProcessorClient(std::move(frame_processors)));
-  if (!ip_client->CreateImageProcessor(input_config, output_config, num_buffers)) {
-    LOG(ERROR) << "Failed to create ImageProcessor";
-    return nullptr;
+  // Other methods and member variables
+ private:
+  void IncrementBlobRefCount(const boost::uuids::uuid& uuid) {
+    // Validate the UUID before incrementing the reference count
+    if (uuid.is_nil()) {
+      throw std::runtime_error("Invalid UUID");
+    }
+    // Implementation here
   }
-  return ip_client;
-}
+};

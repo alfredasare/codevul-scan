@@ -1,12 +1,34 @@
-#include <random>
+void dtls1_reset_seq_numbers(SSL *s, int rw)
+{
+    unsigned char *seq;
+    unsigned int seq_bytes = sizeof(s->s3->read_sequence);
 
-std::string WebUILoginView::GetClassName() const {
-  // Generate a cryptographically secure random session ID
-  std::random_device rd;
-  std::mt19937 mt(rd());
-  std::uniform_int_distribution<int> dist(0, 100000); // adjust the distribution as needed
+    if (rw & SSL3_CC_READ) {
+        seq = s->s3->read_sequence;
+        s->d1->r_epoch++;
+        memcpy(&(s->d1->bitmap), &(s->d1->next_bitmap), sizeof(DTLS1_BITMAP));
+        memset(&(s->d1->next_bitmap), 0x00, sizeof(DTLS1_BITMAP));
 
-  std::string sessionID = std::to_string(dist(mt));
+        /*
+         * We must not use any buffered messages received from the previous
+         * epoch
+         */
+        dtls1_clear_received_buffer(s);
+    } else {
+        seq = s->s3->write_sequence;
+        memcpy(s->d1->last_write_sequence, seq,
+               sizeof(s->s3->write_sequence));
+        s->d1->w_epoch++;
+    }
 
-  return sessionID;
+    seq = calloc(1, seq_bytes);
+    if (!seq) {
+        /* Handle allocation failure appropriately */
+    }
+    memset(seq, 0x00, seq_bytes);
+
+    /* Perform necessary operations on the initialized seq buffer */
+    /* ... */
+
+    free(seq);
 }

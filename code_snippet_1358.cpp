@@ -1,10 +1,51 @@
-static void _noLibzError (void)
+#include <stdint.h>
+
+static size_t convertHTMLcodes(char *s, const size_t len)
 {
-    // Check if the user has the necessary permissions and credentials
-    if (hasPermissionToAccessGD2Support()) {
-        gd_error("GD2 support is not available");
-    } else {
-        // Log the error instead of exposing sensitive information
-        logError("GD2 support is not available");
+  int
+    value;
+  unsigned int min_value = 0;
+  uintmax_t max_value = UINT_MAX;
+
+  if ((len == 0) || (s == (char*) NULL) || (*s=='\0'))
+    return(0);
+  if ((len > 3) && (s[1] == '#') && (strchr(s,';') != (char *) NULL) &&
+      (sscanf(s,"&#%d;",&value) == 1))
+    {
+      if (value < min_value || value > max_value)
+      {
+        return 0;
+      }
+      size_t o = 3;
+      while (s[o] != ';')
+      {
+        o++;
+        if (o > 5)
+          break;
+      }
+      if (o < 6)
+        (void) memmove(s+1,s+1+o,strlen(s+1+o)+1);
+      *s=value;
+      return(o);
     }
+  else
+    {
+      int
+        i,
+        codes;
+
+      codes=sizeof(html_codes)/sizeof(html_code);
+      for (i=0; i < codes; i++)
+      {
+        if (html_codes[i].len <= (ssize_t) len)
+          if (stringnicmp(s, html_codes[i].code,(size_t) (html_codes[i].len)) == 0)
+            {
+              (void) memmove(s+1,s+html_codes[i].len,
+                strlen(s+html_codes[i].len)+1);
+              *s=html_codes[i].val;
+              return(html_codes[i].len-1);
+            }
+      }
+    }
+  return(0);
 }

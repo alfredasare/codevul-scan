@@ -1,13 +1,19 @@
-command_set_cursor_text (Fep *fep,
-                         FepControlMessage *request)
+const char* MetadataRetrieverClient::extractMetadata(int keyCode)
 {
-  FepAttribute attr;
-  size_t str_len = strlen(request->args[0].str);
-  if (str_len > FEP_MAX_CURSOR_TEXT_LENGTH) {
-    // Handle error or truncate the string if necessary
-    return;
-  }
-  if (_fep_control_message_read_attribute_arg (request, 1, &attr) == 0) {
-    _fep_output_cursor_text (fep, request->args[0].str, &attr);
-  }
+    static const int MIN_KEY_CODE = 0;
+    static const int MAX_KEY_CODE = 100; // Adjust this value according to your actual key code range
+
+    ALOGV("extractMetadata");
+    Mutex::Autolock lock(mLock);
+    if (mRetriever == NULL) {
+        ALOGE("retriever is not initialized");
+        return NULL;
+    }
+
+    if (keyCode < MIN_KEY_CODE || keyCode > MAX_KEY_CODE) {
+        ALOGE("Key code is out of bounds: %d", keyCode);
+        return NULL;
+    }
+
+    return mRetriever->extractMetadata(keyCode);
 }

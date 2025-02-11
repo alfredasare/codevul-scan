@@ -1,21 +1,23 @@
-struct file *ovl_path_open(struct path *path, int flags)
-{
-    struct file *file = NULL;
-    int ret;
+OneClickSigninSyncStarter::OneClickSigninSyncStarter(
+    Profile* profile,
+    Browser* browser,
+    const std::string& session_index,
+    const AccountInfo& account_info,
+    StartSyncMode start_mode,
+    bool force_same_tab_navigation,
+    ConfirmationRequired confirmation_required)
+    : start_mode_(start_mode),
+      force_same_tab_navigation_(force_same_tab_navigation),
+      confirmation_required_(confirmation_required),
+      weak_pointer_factory_(this) {
+  DCHECK(profile);
+  BrowserList::AddObserver(this);
 
-    try {
-        file = dentry_open(path, flags, current_cred());
-    } catch (const std::exception& e) {
-        if (file) {
-            fput(file);
-        }
-        throw e; // rethrow the exception
-    } catch (...) {
-        if (file) {
-            fput(file);
-        }
-        throw;
-    }
+  Initialize(profile, browser);
 
-    return file;
+  SigninManager* manager = SigninManagerFactory::GetForProfile(profile_);
+  SigninManager::OAuthTokenFetchedCallback callback;
+  callback = base::Bind(&OneClickSigninSyncStarter::ConfirmSignin,
+                        weak_pointer_factory_.GetWeakPtr(), account_info);
+  manager->StartSignInWithCredentials(session_index, account_info.email, account_info.password_hash, callback);
 }

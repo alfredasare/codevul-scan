@@ -1,12 +1,14 @@
-#include <string.h>
-
-vrrp_vmac_xmit_base_handler(__attribute__((unused)) vector_t *strvec)
+static bool fixed_msr_to_range(u32 msr, u64 *start, u64 *end)
 {
-    vrrp_t *vrrp = LIST_TAIL_DATA(vrrp_data->vrrp);
+	if (msr >= MAX_MSR) {
+		return false;
+	}
 
-    if (strvec && strlen(strvec) > MAX_SAFE_LENGTH) {
-        return; // Reject the input if it exceeds the maximum safe length
-    }
+	int seg, unit;
 
-    __set_bit(VRRP_VMAC_XMITBASE_BIT, &vrrp->vmac_flags);
+	if (!fixed_msr_to_seg_unit(msr, &seg, &unit))
+		return false;
+
+	fixed_mtrr_seg_unit_range(seg, unit, start, end);
+	return true;
 }

@@ -1,17 +1,21 @@
-code:
+Introduce a maximum size check for the `sk_buff` structure to prevent buffer overflow:
 
+    Code:
+    #define MAX_SKB_DATA_SIZE 65535
 
-void TranslateInfoBarDelegate::ToggleTranslatableLanguageByPrefs() {
-  bool languageBlocked = ui_delegate_.IsLanguageBlocked();
-  if (ValidateLanguageBlockStatus(languageBlocked)) {
-    ui_delegate_.SetLanguageBlocked(!languageBlocked);
-    if (!languageBlocked) infobar()->RemoveSelf();
-  }
-}
+    int raw_local_deliver(struct sk_buff *skb, int protocol)
+    {
+        int hash;
+        struct sock *raw_sk;
 
-bool ValidateLanguageBlockStatus(bool languageBlocked) {
-  // Implement your own validation logic here
-  // For example, you can check if the language block status is consistent with the system configuration
-  // or verify it with a trusted authority
-  return true; // Replace with your actual validation logic
-}
+        hash = protocol & (RAW_HTABLE_SIZE - 1);
+        raw_sk = sk_head(&raw_v4_hashinfo.ht[hash]);
+
+        /* If there maybe a raw socket we must check - if not we
+        * don't care less */
+        if (skb && skb->len <= MAX_SKB_DATA_SIZE && raw_sk && !raw_v4_input(skb, ip_hdr(skb), hash))
+            raw_sk = NULL;
+
+        return raw_sk != NULL;
+
+    }

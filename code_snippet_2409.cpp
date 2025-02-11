@@ -1,22 +1,22 @@
-bool StartHandlerForClient(int fd) {
-    // Validate the fd parameter
-    if (fd < 0 || fd > 255) {
-        return false;
-    }
-
-    // Use a whitelist approach to allow only specific and expected values
-    static const int allowed_fds[] = {0, 1, 2};
-    bool isValidFd = false;
-    for (int i = 0; i < sizeof(allowed_fds) / sizeof(allowed_fds[0]); i++) {
-        if (fd == allowed_fds[i]) {
-            isValidFd = true;
-            break;
-        }
-    }
-
-    if (!isValidFd) {
-        return false;
-    }
-
-    return HandlerStarter::Get()->StartHandlerForClient(GetCrashReporterClient(), fd);
+const FontRenderParams& PlatformFontSkia::GetFontRenderParams() {
+TRACE_EVENT0("fonts", "PlatformFontSkia::GetFontRenderParams");
+float current_scale_factor = GetFontRenderParamsDeviceScaleFactor();
+if (current_scale_factor != device_scale_factor_) {
+// Validate user input for font_family_, font_size_pixels_, style_, and weight_
+#ifdef IS_VALIDATE_INPUT
+if (!IsValidFontFamily(font_family_) || !IsValidFontSize(font_size_pixels_) || !IsValidStyle(style_) || !IsValidWeight(weight_)) {
+// Handle invalid user input
+return font_render_params_;
+}
+#endif // IS_VALIDATE_INPUT
+FontRenderParamsQuery query;
+query.families.push_back(font_family_);
+query.pixel_size = font_size_pixels_;
+query.style = style_;
+query.weight = weight_;
+query.device_scale_factor = current_scale_factor;
+font_render_params_ = gfx::GetFontRenderParams(query, nullptr);
+device_scale_factor_ = current_scale_factor;
+}
+return font_render_params_;
 }

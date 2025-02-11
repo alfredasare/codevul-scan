@@ -1,15 +1,7 @@
-void WaitForEvents(size_t numbers_of_events) {
-  size_t max_iterations = 100; // adjust this value based on your system's resources
-  size_t iterations = 0;
+bool Block::IsKey() const {
+    if (m_flags < std::uint8_t{0} || m_flags > std::uint8_t{127}) {
+        throw std::out_of_range("m_flags is out of bounds");
+    }
 
-  while (records_.size() < numbers_of_events && iterations < max_iterations) {
-    loop_.reset(new base::RunLoop);
-    loop_->Run();
-    loop_.reset();
-    iterations++;
-  }
-
-  if (iterations >= max_iterations) {
-    // handle the case where the loop exceeded the maximum iterations
-  }
+    return ((m_flags & static_cast<std::uint8_t>(1 << 7)) != 0);
 }

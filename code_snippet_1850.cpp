@@ -1,16 +1,14 @@
-tt_cmap14_init( TT_CMap14  cmap,
-                 FT_Byte*   table )
+MagickBooleanType RandomThresholdImage(Image *image, const char *thresholds, size_t thresholds_len, ExceptionInfo *exception)
 {
-    cmap->cmap.data = table;
+  MagickBooleanType
+    status;
 
-    if (table && table + 6 < cmap->cmap.data + cmap->cmap.size) {
-        cmap->num_selectors = FT_PEEK_ULONG(table);
-        cmap->max_results = 0;
-        cmap->results = NULL;
-    } else {
-        // Handle buffer overread or invalid input
-        // For example, return an error or set a flag to indicate an issue
-    }
+  // Limit the length of the thresholds input to prevent buffer overflow.
+  if (thresholds_len > MAX_THRESHOLDS_LENGTH) {
+    // Handle error, e.g., return an error code or throw an exception.
+    return MagickFalse;
+  }
 
-    return FT_Err_Ok;
+  status = RandomThresholdImageChannel(image, DefaultChannels, thresholds, exception);
+  return (status);
 }

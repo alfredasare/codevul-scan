@@ -1,30 +1,28 @@
-code:
-
-
-static wchar_t *ConvertUTF8ToUTF16(const unsigned char *source, size_t *length)
+static int udf\_rmdir(struct inode *dir, struct dentry *dentry)
 {
-    wchar_t *utf16;
+	int retval;
+	struct inode *inode = dentry->d\_inode;
+	struct udf\_fileident\_bh fibh;
+	struct fileIdentDesc *fi, cfi;
+	struct kernel\_lb\_addr tloc;
+	const char *dentry\_name = dentry->d\_name.name;
 
-    *length = UTF8ToUTF16(source, NULL);
-    if (*length == 0)
-    {
-        size_t len;
-        len = wcslen((wchar_t *)source);
-        if (len == 0)
-        {
-            *length = strlen((const char *)source);
-            utf16 = (wchar_t *)malloc((*length + 1) * sizeof(*utf16));
-            if (utf16 == NULL)
-                return NULL;
-            for (size_t i = 0; i < len; i++)
-                utf16[i] = source[i];
-            utf16[len] = L'\0';
-            return utf16;
-        }
-    }
-    utf16 = (wchar_t *)malloc((*length + 1) * sizeof(*utf16));
-    if (utf16 == NULL)
-        return NULL;
-    *length = UTF8ToUTF16(source, utf16);
-    return utf16;
+	if (!dentry\_name || strlen(dentry\_name) > NAME\_MAX) {
+		retval = -EINVAL;
+		goto out;
+	}
+
+	retval = -ENOENT;
+	fi = udf\_find\_entry(dir, &dentry->d\_name, &fibh, &cfi);
+	if (!fi)
+		goto out;
+
+	// ... remaining code ...
+
+out:
+	if (fibh.sbh != fibh.ebh)
+		brelse(fibh.ebh);
+	brelse(fibh.sbh);
+
+	return retval;
 }

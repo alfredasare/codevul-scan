@@ -1,12 +1,42 @@
-#include <iostream>
-#include <random>
+#include <libxml/parserInternals.h>
+#include <libxml/xmlIO.h>
 
-static size_t ChooseBufferSize(size_t callback_buffer_size) {
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_int_distribution<size_t> dist(256, 16384);
+static xmlParserCtxtPtr context = NULL;
 
-    size_t buffer_size = dist(mt);
+CURLcode Curl_nss_connect_nonblocking(struct connectdata *conn,
+                                      int sockindex, bool *done)
+{
+  xmlSubstituteEntitiesDefault(1);
+  xmlKeepBlanksDefault(0);
 
-    return buffer_size;
+  context = xmlCreatePushParserCtxt(&error_handler, NULL, "", 0, NULL);
+
+  if (context == NULL) {
+    *done = TRUE;
+    return CURLE_OUT_OF_MEMORY;
+  }
+
+  // Assuming xmlString is an input string containing XML data.
+  int result = xmlCtxtUseOptions(context, XML_PARSE_NOENT | XML_PARSE_NONET);
+
+  if (result != 0) {
+    *done = TRUE;
+    xmlFreeParserCtxt(context);
+    context = NULL;
+    return CURLE_FAILED_INIT;
+  }
+
+  result = xmlParseDocument(context, (xmlChar *)xmlString);
+
+  if (result != 0) {
+    *done = TRUE;
+    xmlFreeParserCtxt(context);
+    context = NULL;
+    return CURLE_FAILED_INIT;
+  }
+
+  *done = TRUE;
+  xmlFreeParserCtxt(context);
+  context = NULL;
+  return CURLE_OK;
 }

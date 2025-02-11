@@ -1,11 +1,29 @@
-compile_length_string_raw_node(StrNode* sn, regex_t* reg)
+GF_Err mdia\_Write(GF\_Box *s, GF\_BitStream *bs)
 {
-  if (sn == NULL) {
-    return 0; // or handle the error as needed
-  }
-
-  if (sn->end <= sn->s)
-    return 0;
-
-  return add_compile_string_length(sn->s, 1 /* sb */, (int )(sn->end - sn->s), reg, 0);
+GF\_Err e;
+GF\_MediaBox *ptr = (GF\_MediaBox *)s;
+e = gf\_isom\_box\_write\_header(s, bs);
+if (e) return e;
+if (ptr->mediaHeader) {
+// Add null check
+if (ptr->mediaHeader->data != NULL && ptr->mediaHeader->size != 0) {
+e = gf\_isom\_box\_write((GF\_Box *) ptr->mediaHeader, bs);
+if (e) return e;
+}
+}
+if (ptr->handler) {
+// Add null check
+if (ptr->handler->data != NULL && ptr->handler->size != 0) {
+e = gf\_isom\_box\_write((GF\_Box *) ptr->handler, bs);
+if (e) return e;
+}
+}
+if (ptr->information) {
+// Add null check
+if (ptr->information->data != NULL && ptr->information->size != 0) {
+e = gf\_isom\_box\_write((GF\_Box *) ptr->information, bs);
+if (e) return e;
+}
+}
+return GF\_OK;
 }

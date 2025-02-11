@@ -1,27 +1,15 @@
-cpl_flush ()
+void unregister_sysctl_table(struct ctl_table_header *table)
 {
-  struct cpelement *cpe, *p;
-  int i;
+ struct ctl_table *entry, *next;
 
-  if (!coproc_list.head) {
-    return; // Check if the list is empty before iterating
-  }
+ list_for_each_entry_safe(entry, next, &table->ctl_table, ctl_node) {
+ if (entry->proc_fops) {
+ unregister_syscall(entry->proc_fops->proc_open, entry->proc_fops->proc_read, entry->proc_fops->proc_write);
+ }
 
-  // Get the size of the list
-  i = coproc_list.ncoproc;
+ if (entry->subtable)
+ unregister_sysctl_table(entry->subtable);
+ }
 
-  for (cpe = coproc_list.head; i--;) {
-    p = cpe;
-    cpe = cpe->next;
-
-    coproc_dispose (p->coproc);
-    cpe_dispose (p);
-
-    // Update the size after each iteration
-    if (i >= 0)
-      cpe = cpe->next;
-  }
-
-  coproc_list.head = coproc_list.tail = 0;
-  coproc_list.ncoproc = 0;
+ kfree(table);
 }

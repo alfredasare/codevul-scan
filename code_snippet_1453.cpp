@@ -1,8 +1,20 @@
-GF_Box *dvcC_New()
+extr_init (void)
 {
-    GF_DOVIConfigurationBox *tmp = (GF_DOVIConfigurationBox *)gf_malloc(sizeof(GF_DOVIConfigurationBox));
-    if (tmp == NULL) return NULL;
-    memset(tmp, 0, sizeof(GF_DOVIConfigurationBox));
-    tmp->type = GF_ISOM_BOX_TYPE_DVCC;
-    return (GF_Box *)tmp;
+  we_are_root = geteuid () == ROOT_UID;
+  same_permissions_option += we_are_root;
+  same_owner_option += we_are_root;
+
+  newdir_umask = umask (0);
+  if (0 < same_permissions_option)
+    current_umask = 0;
+  else
+    {
+      umask (newdir_umask);
+      current_umask = newdir_umask;
+
+      if (chdir("/path/to/your/desired/directory") != 0)
+      {
+          /* Handle the error appropriately */
+      }
+    }
 }

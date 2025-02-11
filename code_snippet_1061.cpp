@@ -1,39 +1,15 @@
-void _WM_do_meta_text(struct _mdi *mdi, struct _event_data *data) {
-    //...
+void fz_new_colorspace_context(fz_context *ctx)
+{
+	ctx->colorspace = fz_malloc_struct(ctx, fz_colorspace_context);
+	if (!ctx->colorspace) {
+		fz_throw(ctx, FZ_ERROR_MEM, "Out of memory");
+	}
 
-    if (mdi->extra_info.mixer_options & WM_MO_TEXTASLYRIC) {
-        // Sanitize and validate the input data
-        char *sanitized_string = sanitize_string(data->data.string);
-        if (sanitized_string!= NULL) {
-            mdi->lyric = sanitized_string;
-            free(sanitized_string);  // Free the allocated memory
-        }
-    }
-
-    return;
-}
-
-char *sanitize_string(const char *input) {
-    char *output = NULL;
-    size_t output_len = 0;
-
-    const char *allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
-    for (size_t i = 0; input[i]!= '\0'; i++) {
-        if (strchr(allowed_chars, input[i])!= NULL) {
-            output_len++;
-        }
-    }
-
-    output = malloc(output_len + 1);
-    if (output!= NULL) {
-        size_t j = 0;
-        for (size_t i = 0; input[i]!= '\0'; i++) {
-            if (strchr(allowed_chars, input[i])!= NULL) {
-                output[j++] = input[i];
-            }
-        }
-        output[output_len] = '\0';
-    }
-
-    return output;
+	ctx->colorspace->ctx_refs = 1;
+	set_no_icc(ctx->colorspace);
+#ifdef NO_ICC
+	fz_set_cmm_engine(ctx, NULL);
+#else
+	fz_set_cmm_engine(ctx, &fz_cmm_engine_lcms);
+#endif
 }

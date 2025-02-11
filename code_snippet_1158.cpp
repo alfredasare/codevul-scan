@@ -1,24 +1,19 @@
-#include <openssl/aes.h>
-
-void XMLHttpRequest::send(DOMFormData* body, ExceptionState& es)
+void WebRuntimeFeatures::enableGamepad(const QString& directoryPath)
 {
-    //... (rest of the function remains the same)
+    QString sanitizedDirectoryPath = QString::fromLocalFile(directoryPath);
 
-    if (areMethodAndURLValidForSend()) {
-        // Encrypt the form data
-        unsigned char* encryptedData = nullptr;
-        int encryptedDataLen = 0;
-        AES_encrypt(body->data(), body->size(), &encryptedData, &encryptedDataLen);
-
-        m_requestEntityBody = FormData::createMultiPart(encryptedData, encryptedDataLen, body->encoding(), document());
-        delete[] encryptedData; // Free the encrypted data
-
-        String contentType = getRequestHeader("Content-Type");
-        if (contentType.isEmpty()) {
-            contentType = String("multipart/form-data; boundary=") + m_requestEntityBody->boundary().data();
-            setRequestHeaderInternal("Content-Type", contentType);
-        }
+    if (!sanitizedDirectoryPath.isEmpty() && QDir(sanitizedDirectoryPath).exists()) {
+        RuntimeEnabledFeatures::setGamepadEnabled(true, sanitizedDirectoryPath);
+    } else {
+        qWarning() << "Invalid gamepad directory path:" << directoryPath;
     }
+}
 
-    //... (rest of the function remains the same)
+void RuntimeEnabledFeatures::setGamepadEnabled(bool enable, const QString& directoryPath)
+{
+    if (enable) {
+        // Implement gamepad enabling logic with the sanitized directory path.
+    } else {
+        // Implement gamepad disabling logic.
+    }
 }

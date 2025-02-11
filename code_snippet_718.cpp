@@ -1,6 +1,10 @@
-void reset_vma_resv_huge_pages(struct vm_area_struct *vma)
+void HTMLInputElement::reportMemoryUsage(MemoryObjectInfo* memoryObjectInfo) const
 {
-    VM_BUG_ON(!is_vm_hugetlb_page(vma));
-    if (!(vma->vm_flags & VM_MAYSHARE))
-        vma->vm_private_data = (void *)1;
+    MemoryClassInfo info(memoryObjectInfo, this, WebCoreMemoryTypes::DOM);
+    HTMLTextFormControlElement::reportMemoryUsage(memoryObjectInfo);
+    info.addMember(m_name.utf8(), "name");
+    info.addMember(m_valueIfDirty.utf8(), "valueIfDirty");
+    info.addMember(m_suggestedValue.utf8(), "suggestedValue");
+    info.addMember(m_inputType.utf8(), "inputType");
+    info.addMember(m_listAttributeTargetObserver.get(), "listAttributeTargetObserver");
 }

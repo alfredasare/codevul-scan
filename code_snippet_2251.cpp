@@ -1,18 +1,13 @@
-static WebString GetSuggestedValueWrapper(WebFormControlElement element)
+void address_space_stq_le(AddressSpace *as, hwaddr addr, uint64_t val,
+                   MemTxAttrs attrs, MemTxResult *result)
 {
-    try
-    {
-        if (element.FormControlType() == "textarea")
-            return element.To<WebFormControlElement>().SuggestedValue();
-
-        if (element.FormControlType() == "select-one")
-            return element.To<WebSelectElement>().SuggestedValue();
-
-        return element.To<WebInputElement>().SuggestedValue();
+    // Validate the input 'addr'
+    if (addr >= as->size) {
+        // Handle the error condition, e.g., return an error code or log an error message
+        return;
     }
-    catch (Exception ex)
-    {
-        Logger.LogError(ex);
-        return "Error occurred while processing request";
-    }
-}
+
+    // Validate the input 'attrs'
+    if (!isValidAttrs(attrs)) {
+        // Handle the error condition, e.g., return an error code or log an error message
+        return;

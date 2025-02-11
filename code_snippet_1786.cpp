@@ -1,17 +1,20 @@
-static void check_guest_throttling(void)
-{
-    int64_t t1;
+Fixed code:
 
-    if (!mig_throttle_on) {
-        return;
-    }
+bool TypedUrlModelAssociator::DeleteAllNodes(sync_api::WriteTransaction* trans) {
+bool success = true;
+sync_api::WriteNode sync\_node;
 
-    t1 = qemu_clock_get_ns(QEMU_CLOCK_REALTIME);
+for (TypedUrlToSyncIdMap::iterator node\_id = id\_map.\_begin();
+node\_id != id\_map.\_end() && success; ++node\_id) {
+if (!sync\_node.InitByIdLookup(trans, node\_id->second)) {
+LOG(ERROR) << "Typed url node lookup failed.";
+success = false;
+} else {
+sync\_node.Remove();
+}
+}
 
-    /* If it has been more than 40 ms since the last time the guest
-     * was throttled then do it again.
-     */
-    if (40 < (t1 - qemu_clock_get_ns(QEMU_CLOCK_REALTIME))/1000000) {
-        mig_throttle_guest_down();
-    }
+id\_map.\_clear();
+id\_map\_inverse.\_clear();
+return success;
 }

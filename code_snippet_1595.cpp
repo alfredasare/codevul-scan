@@ -1,20 +1,27 @@
-static void dw2102_disconnect(struct usb_interface *intf)
+struct dentry *d_add_ci(struct dentry *dentry, struct inode *inode,
+			struct qstr *name)
 {
-    struct dvb_usb_device *d = usb_get_intfdata(intf);
-    struct dw2102_state *st = (struct dw2102_state *)d->priv;
-    struct i2c_client *client;
+	struct dentry *found;
+	struct dentry *new;
 
-    /* remove I2C client for tuner */
-    client = st->i2c_client_tuner;
-    if (client) {
-        i2c_unregister_device(client);
-    }
-
-    /* remove I2C client for demodulator */
-    client = st->i2c_client_demod;
-    if (client) {
-        i2c_unregister_device(client);
-    }
-
-    dvb_usb_device_exit(intf);
+	/*
+	 * First check if a dentry matching the name already exists,
+	 * if not go ahead and create it now.
+	 */
+	found = d_hash_and_lookup(dentry->d_parent, name);
+	if (!found) {
+		new = d_alloc(dentry->d_parent, name);
+		if (!new) {
+			found = ERR_PTR(-ENOMEM);
+		} else {
+			found = d_splice_alias(inode, new);
+			if (IS_ERR(found)) {
+				dput(new);
+			} else {
+				return found;
+			}
+		}
+	}
+	iput(inode);
+	return found;
 }

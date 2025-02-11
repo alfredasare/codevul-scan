@@ -1,12 +1,17 @@
-static MagickBooleanType WritePNGImage(const ImageInfo *image_info, Image *image)
+mm_answer_sessid(int sock, Buffer *m)
 {
-  if (!image) {
-    ThrowBinaryException(CoderError,"Image pointer is null", image_info->filename);
-    return MagickFalse;
-  }
-  (void) image;
-  printf("Your PNG library is too old: You have libpng-%s\n", PNG_LIBPNG_VER_STRING);
+	int i;
 
-  ThrowBinaryException(CoderError,"PNG library is too old", image_info->filename);
-  return MagickTrue;
+	debug3("%s entering", __func__);
+
+	if (buffer_len(m) > 16) {
+		error("%s: ssh1 session id too long", __func__);
+		return (-1);
+	}
+	buffer_copy_bytes(session_id, buffer_ptr(m), buffer_len(m));
+
+	/* Turn on permissions for getpwnam */
+	monitor_permit(mon_dispatch, MONITOR_REQ_PWNAM, 1);
+
+	return (0);
 }

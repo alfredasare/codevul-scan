@@ -1,16 +1,24 @@
-void Con_DrawInput( void ) {
-    int y = 0; // Initialize y to 0
+static void remove_sits_in_journal(struct f2fs_sb_info *sbi)
+{
+	struct curseg_info *curseg = CURSEG_I(sbi, CURSEG_COLD_DATA);
+	struct f2fs_journal *journal = curseg->journal;
+	int i;
 
-    if ( clc.state!= CA_DISCONNECTED &&!(Key_GetCatcher( ) & KEYCATCH_CONSOLE ) ) {
-        return;
-    }
+	down_write(&curseg->journal_rwsem);
+	down_write(&sbi->sit_table_rwsem);
 
-    y = con.vislines - ( SMALLCHAR_HEIGHT * 2 );
+	for (i = 0; i < sits_in_cursum(journal); i++) {
+		unsigned int segno;
+		bool dirtied;
 
-    re.SetColor( con.color );
+		segno = le32_to_cpu(segno_in_journal(journal, i));
+		dirtied = __mark_sit_entry_dirty(sbi, segno);
 
-    SCR_DrawSmallChar( con.xadjust + 1 * SMALLCHAR_WIDTH, y, ']' );
+		if (!dirtied)
+			add_sit_entry(segno, &SM_I(sbi)->sit_entry_set);
+	}
+	update_sits_in_cursum(journal, -i);
 
-    Field_Draw( &g_consoleField, con.xadjust + 2 * SMALLCHAR_WIDTH, y,
-        SCREEN_WIDTH - 3 * SMALLCHAR_WIDTH, qtrue, qtrue );
+	up_write(&sbi->sit_table_rwsem);
+	up_write(&curseg->journal_rwsem);
 }

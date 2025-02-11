@@ -1,10 +1,32 @@
-UNCURL_EXPORT int32_t uncurl_ws_close(struct uncurl_conn *ucc, uint16_t status_code)
+static int rfcomm_release_dev(void __user *arg)
 {
-    uint16_t status_code_be = htons(status_code);
-    char buffer[4]; // assume uint16_t is 2 bytes
+	struct rfcomm_dev_req req;
+	struct rfcomm_dev *dev;
 
-    // sanitize the format string using snprintf
-    snprintf(buffer, sizeof(buffer), "%hu", status_code_be);
+	if (get_user(req.dev_id, (int __user *)arg) ||
+	    get_user(req.flags, (int __user *)arg + sizeof(req.dev_id)))
+		return -EFAULT;
 
-    return uncurl_ws_write(ucc, buffer, strlen(buffer), UNCURL_WSOP_CLOSE);
+	BT_DBG("dev_id %d flags 0x%x", req.dev_id, req.flags);
+
+	dev = rfcomm_dev_get(req.dev_id);
+	if (!dev)
+		return -ENODEV;
+
+	if (dev->flags != NOCAP_FLAGS && !capable(CAP_NET_ADMIN)) {
+		tty_port_put(&dev->port);
+		return -EPERM;
+	}
+
+	if (req.flags & (1 << RFCOMM_HANGUP_NOW))
+		rfcomm_dlc_close(dev->dlc, 0);
+
+	/* Shut down TTY synchronously before freeing rfcomm_dev */
+	if (dev->port.tty)
+		tty_vhangup(dev->port.tty);
+
+	if (!test_bit(RFCOMM_RELEASE_ONHUP, &dev->flags))
+		rfcomm_dev_del(dev);
+	tty_port_put(&dev->port);
+	return 0;
 }

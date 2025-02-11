@@ -1,20 +1,28 @@
-int UDPSocketWin::SendToOrWrite(IOBuffer* buf,
-                                int buf_len,
-                                const IPEndPoint* address,
-                                const CompletionCallback& callback) {
-  DCHECK(CalledOnValidThread());
-  DCHECK_NE(INVALID_SOCKET, socket_);
-  DCHECK(write_callback_.is_null());
-  DCHECK(!callback.is_null());  // Synchronous operation not supported.
-  DCHECK_GT(buf_len, 0);
+php_http_url_t *php_http_url_parse_authority(const char *str, size_t len, unsigned flags TSRMLS_DC)
+{
+	struct parse_state *state = ecalloc(1, sizeof(*state));
+	size_t maxlen = 3 * len;
 
-  if (address)
-    delete send_to_address_;  // Clean up any existing memory
+	state->end = str + len;
+	state->ptr = str;
+	state->flags = flags;
 
-  int nwrite = InternalSendTo(buf, buf_len, address);
-  if (nwrite!= ERR_IO_PENDING)
-    return nwrite;
+	TSRMLS_SET_CTX(state->ts);
 
-  write_callback_ = callback;
-  return ERR_IO_PENDING;
+	if (!(state->ptr = parse_authority(state))) {
+		efree(state);
+		return NULL;
+	}
+
+	state = erealloc(state, sizeof(*state) + state->maxlen);
+
+	if (state->ptr != state->end) {
+		php_error_docref(NULL TSRMLS_CC, E_WARNING,
+				"Failed to parse URL authority, unexpected character at pos %u in '%s'",
+				(unsigned) (state->ptr - str), str);
+		efree(state);
+		return NULL;
+	}
+
+	return (php_http_url_t *) state;
 }

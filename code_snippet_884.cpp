@@ -1,8 +1,31 @@
-#include <openssl/sha.h>
-
-static struct tcp_md5sig_key *tcp_v4_reqsk_md5_lookup(struct sock *sk, struct request_sock *req)
+static int vmx_set_vmx_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
 {
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256((unsigned char *)inet_rsk(req)->rmt_addr, strlen(inet_rsk(req)->rmt_addr), hash);
-    return tcp_v4_md5_do_lookup(sk, hash);
+	const u32 valid_msr_indices[] = {MSR_IA32_FEATURE_CONTROL, /* Add other valid MSR indices here */};
+	u32 msr_index = msr_info->index;
+	u64 data = msr_info->data;
+	bool host_initialized = msr_info->host_initiated;
+
+	if (!nested_vmx_allowed(vcpu))
+		return 0;
+
+	if (msr_index >= ARRAY_SIZE(valid_msr_indices) ||
+	    !valid_msr_indices[msr_index]) {
+		pr_err("Invalid MSR index: %#x\n", msr_index);
+		return -EINVAL;
+	}
+
+	if (msr_index == MSR_IA32_FEATURE_CONTROL) {
+		if (!host_initialized &&
+				to_vmx(vcpu)->nested.msr_ia32_feature_control
+				& FEATURE_CONTROL_LOCKED)
+			return 0;
+		to_vmx(vcpu)->nested.msr_ia32_feature_control = data;
+		return 1;
+	}
+
+	/*
+	 * No need to treat VMX capability MSRs specially: If we don't handle
+	 * them, handle_wrmsr will #GP(0), which is correct (they are readonly)
+	 */
+	return 0;
 }

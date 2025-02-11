@@ -1,45 +1,11 @@
-struct file *open_exec(const char *name)
+#include <stdint.h>
+
+int32_t le4_safe(const unsigned char *p)
 {
-    struct file *file;
-    int err;
-    struct filename tmp = {.name = name };
-    static const struct open_flags open_exec_flags = {
-      .open_flag = O_LARGEFILE | O_RDONLY | __FMODE_EXEC,
-      .acc_mode = MAY_EXEC | MAY_OPEN,
-      .intent = LOOKUP_OPEN,
-      .lookup_flags = LOOKUP_FOLLOW,
-    };
-
-    // Validate input file name
-    if (strlen(name) > FILE_NAME_MAX) {
-        return ERR_PTR(-ENAMETOOLONG);
-    }
-
-    // Use snprintf to copy the file name into a buffer
-    char buffer[FILE_NAME_MAX + 1];
-    snprintf(buffer, FILE_NAME_MAX, "%s", name);
-
-    file = do_filp_open(AT_FDCWD, &tmp, &open_exec_flags);
-    if (IS_ERR(file))
-        goto out;
-
-    err = -EACCES;
-    if (!S_ISREG(file_inode(file)->i_mode))
-        goto exit;
-
-    if (file->f_path.mnt->mnt_flags & MNT_NOEXEC)
-        goto exit;
-
-    fsnotify_open(file);
-
-    err = deny_write_access(file);
-    if (err)
-        goto exit;
-
-out:
-    return file;
-
-exit:
-    fput(file);
-    return ERR_PTR(err);
+	uint64_t val = ((uint64_t)p[0] << 16) + (((uint64_t)p[1]) << 24) + (p[2] << 0) + (p[3] << 8);
+	if (val > INT32_MAX || val < INT32_MIN) {
+		// Handle error condition
+		return INT32_MIN;
+	}
+	return (int32_t)val;
 }

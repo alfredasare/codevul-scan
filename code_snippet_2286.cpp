@@ -1,15 +1,9 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#define MAX_TX_CANDIDATES_SIZE 1000 // Define this value according to your system's specifications.
 
-#define SECRET_KEY_ENV_VAR "API_KEY"
-
-static void DefragTrackerPrintStats(void) {
-    char* apiKey = getenv(SECRET_KEY_ENV_VAR);
-    if (apiKey == NULL) {
-        printf("Error: API key not set.\n");
-        exit(1);
-    }
-
-    printf("API Key: %s\n", apiKey);
+static inline bool RuleMatchCandidateTxArrayHasSpace(const DetectEngineThreadCtx *det_ctx,
+                                                       const uint32_t need)
+{
+    if ((det_ctx->tx_candidates_size >= need) && (need <= MAX_TX_CANDIDATES_SIZE))
+        return 1;
+    return 0;
 }

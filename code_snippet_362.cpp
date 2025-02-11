@@ -1,25 +1,21 @@
-static void commit_tree(struct mount *mnt, struct mount *shadows)
+cdf_read(const cdf_info_t *info, off_t off, void *buf, size_t len)
 {
-    struct mount *parent = mnt->mnt_parent;
-    struct mount *m;
-    LIST_HEAD(head);
-    struct mnt_namespace *n = parent->mnt_ns;
-    int i = 0;
-
-    BUG_ON(parent == mnt);
-
-    list_add_tail(&head, &mnt->mnt_list);
-
-    list_for_each_entry(m, &head, mnt_list) {
-        if (i >= 1024) {
-            break;
-        }
-        m->mnt_ns = n;
-        i++;
+    const off_t max_offset = info->i_size - len;
+    if (off < 0 || off > max_offset || off + len > max_offset) {
+        errno = EINVAL;
+        return -1;
     }
 
-    list_splice(&head, n->list.prev);
+    if (info->i_buf != NULL && info->i_len >= (size_t)(off + len)) {
+        (void)memcpy(buf, &info->i_buf[off], len);
+        return (ssize_t)len;
+    }
 
-    attach_shadowed(mnt, parent, shadows);
-    touch_mnt_namespace(n);
+    if (info->i_fd == -1)
+        return -1;
+
+    if (pread(info->i_fd, buf, len, off) != (ssize_t)len)
+        return -1;
+
+    return (ssize_t)len;
 }

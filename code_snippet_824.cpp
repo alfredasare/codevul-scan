@@ -1,17 +1,31 @@
-void DownloadManagerImpl::GetNextId(GetNextIdCallback callback) {
-  DCHECK_CURRENTLY_ON(BrowserThread::UI);
-  if (IsNextIdInitialized()) {
-    std::move(callback).Run(next_download_id_++);
-    return;
-  }
-
-  GetNextIdCallback callbackCopy = std::move(callback);
-  id_callbacks_.emplace_back(std::make_unique<GetNextIdCallback>(callbackCopy));
-  if (!is_history_download_id_retrieved_ && id_callbacks_.size() == 1u) {
-    if (delegate_) {
-      delegate_->GetNextId(base::BindRepeating(&DownloadManagerImpl::OnHistoryNextIdRetrived, weak_factory_.GetWeakPtr()));
-    } else {
-      OnHistoryNextIdRetrived(download::DownloadItem::kInvalidId);
-    }
-  }
+void gdImageDestroy (gdImagePtr im)
+{
+        int i;
+        if (im != NULL) {
+                if (im->pixels != NULL) {
+                        for (i = 0; i < im->sy; i++) {
+                                gdFree(im->pixels[i]);
+                        }
+                        gdFree(im->pixels);
+                }
+                if (im->tpixels != NULL) {
+                        for (i = 0; i < im->sy; i++) {
+                                gdFree(im->tpixels[i]);
+                        }
+                        gdFree(im->tpixels);
+                }
+                if (im->AA_opacity != NULL) {
+                        for (i = 0; i < im->sy; i++) {
+                                gdFree(im->AA_opacity[i]);
+                        }
+                        gdFree(im->AA_opacity);
+                }
+                if (im->polyInts != NULL) {
+                        gdFree(im->polyInts);
+                }
+                if (im->style != NULL) {
+                        gdFree(im->style);
+                }
+                gdFree(im);
+        }
 }

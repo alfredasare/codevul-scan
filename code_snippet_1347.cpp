@@ -1,32 +1,40 @@
-void rds_inc_info_copy(struct rds_incoming *inc,
-		       struct rds_info_iterator *iter,
-		       __be32 saddr, __be32 daddr, int flip)
+static int phar_update_cached_entry(zval *data, void *argument) /* {{{ */
 {
-    struct rds_info_message minfo;
+	phar_entry_info *entry = (phar_entry_info *)Z_PTR_P(data);
 
-    minfo.seq = be64_to_cpu(inc->i_hdr.h_sequence);
-    minfo.len = be32_to_cpu(inc->i_hdr.h_len);
-    minfo.tos = inc->i_conn->c_tos;
+	entry->phar = (phar_archive_data *)argument;
 
-    if (flip) {
-        minfo.laddr = daddr;
-        minfo.faddr = saddr;
-        minfo.lport = inc->i_hdr.h_dport;
-        minfo.fport = inc->i_hdr.h_sport;
-    } else {
-        minfo.laddr = saddr;
-        minfo.faddr = daddr;
-        minfo.lport = inc->i_hdr.h_sport;
-        minfo.fport = inc->i_hdr.h_dport;
-    }
+	if (entry->link) {
+		entry->link = estrdup(entry->link);
+	}
 
-    // Clear or mask sensitive fields
-    minfo.lport = 0;
-    minfo.fport = 0;
-    minfo.laddr = 0;
-    minfo.faddr = 0;
+	if (entry->tmp) {
+		entry->tmp = estrdup(entry->tmp);
+	}
 
-    minfo.flags = 0;
+	entry->metadata_str.s = NULL;
+	entry->filename = estrndup(entry->filename, entry->filename_len);
+	entry->is_persistent = 0;
 
-    rds_info_copy(iter, &minfo, sizeof(minfo));
+	if (Z_TYPE(entry->metadata) != IS_UNDEF) {
+		if (entry->metadata_len > 0) {
+			char *buf = NULL;
+			size_t buf_size = entry->metadata_len + 1; /* +1 for null termination */
+
+			buf = estrndup((char *) Z_PTR(entry->metadata), buf_size);
+			if (!buf) {
+				/* handle error */
+				return ZEND_HASH_APPLY_STOP;
+			}
+
+			/* assume success, we would have failed before */
+			phar_parse_metadata(&buf, &entry->metadata, entry->metadata_len);
+			efree(buf);
+		} else {
+			zval_copy_ctor(&entry->metadata);
+			entry->metadata_str.s = NULL;
+		}
+	}
+	return ZEND_HASH_APPLY_KEEP;
 }
+/* }}} */

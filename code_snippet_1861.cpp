@@ -1,17 +1,27 @@
-xfs_attr_fork_remove(
-    struct xfs_inode	*ip,
-    struct xfs_trans	*tp)
+CMS_ContentInfo *CMS_compress(BIO *in, int comp_nid, unsigned int flags)
 {
-    xfs_idestroy_fork(ip, XFS_ATTR_FORK);
-    ip->i_d.di_forkoff = 0;
-    ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
+    CMS_ContentInfo *cms;
+    const SSL_COMP *compression_method;
 
-    int i = 0;
-    for (; i < 100 && ip->i_d.di_anextents > 0; i++) {
-        ASSERT(ip->i_d.di_anextents > 0);
-        ASSERT(ip->i_afp == NULL);
+    if (comp_nid <= 0)
+        comp_nid = NID_zlib_compression;
 
-        xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-        ip->i_d.di_anextents--;
+    compression_method = SSL_COMP_get_compression_method(comp_nid);
+    if (!compression_method) {
+        /* Handle error: unsupported compression method */
+        return NULL;
     }
+
+    cms = cms_CompressedData_create(comp_nid);
+    if (!cms)
+        return NULL;
+
+    if (!(flags & CMS_DETACHED))
+        CMS_set_detached(cms, 0);
+
+    if ((flags & CMS_STREAM) || CMS_final(cms, in, NULL, flags))
+        return cms;
+
+    CMS_ContentInfo_free(cms);
+    return NULL;
 }

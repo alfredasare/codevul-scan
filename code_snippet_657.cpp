@@ -1,11 +1,19 @@
-int WebContext::devtoolsPort() const {
-  if (IsInitialized()) {
-    return DevToolsManager::Get(context_.get())->port();
-  }
+static const wbxml_decoding *get_wbxml_decoding_from_public_id (guint32 public_id)
+{
+	const wbxml_decoding *map = NULL;
 
-  if (construct_props_->devtools_port <= 0 || construct_props_->devtools_port > 65535) {
-    return -1; 
-  }
+	DebugLog(("get_wbxml_decoding_from_public_id: public_id = %u\n",
+		  public_id));
+	if (public_id >= 2) {
+		const wbxml_integer_list *item = well_known_public_id_list;
 
-  return construct_props_->devtools_port;
+		while (item != NULL && item->public_id != 0 && item->map != NULL) {
+			if (item->public_id == public_id) {
+				map = item->map;
+				break;
+			}
+			item++;
+		}
+	}
+	return map;
 }

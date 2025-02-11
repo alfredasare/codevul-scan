@@ -1,13 +1,16 @@
-status_t OMX::createPersistentInputSurface(
-    sp<IGraphicBufferProducer> *bufferProducer,
-    sp<IGraphicBufferConsumer> *bufferConsumer) {
-    if (bufferProducer == nullptr || bufferConsumer == nullptr) {
-        return STATUS_ERROR;
-    }
-    std::set<std::string> allowedExtensions = {"png", "jpg", "jpeg"};
-    if (!allowedExtensions.count(bufferProducer->getMimeType())) {
-        return STATUS_ERROR;
-    }
-    std::string sanitizedInput = ESAPI::encodeForHTML(bufferProducer->getData());
-    return OMXNodeInstance::createPersistentInputSurface(bufferProducer, bufferConsumer, sanitizedInput);
+info = CloneStringInfo(clone\_image->iptc\_profile.info);
 }
+
+if (clone\_image->profiles != (void *) NULL)
+{
+ if (image->profiles != (void *) NULL)
+ DestroyImageProfiles(image);
+ image->profiles = CloneSplayTree((SplayTreeInfo *) clone\_image->profiles,
+ (void *(*)(void \*)) ConstantString,(void *(*)(void \*)) CloneStringInfo);
+}
+
+return(MagickTrue);
+}
+
+
+The provided code snippet includes null-pointer checks and uses `MagickTrue` to indicate success. It also uses `CloneStringInfo` function to safely clone the `info` fields when the length is greater than 0.

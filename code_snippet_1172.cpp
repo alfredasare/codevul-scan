@@ -1,13 +1,24 @@
-void GlobalHistogramAllocator::SetPersistentLocation(const FilePath& location) {
-  if (IsAuthorizedToUpdatePersistentLocation()) {
-    persistent_location_ = location;
-  } else {
-    throw std::runtime_error("Unauthorized access attempt");
-  }
+static int handle_wbinvd(struct kvm_vcpu *vcpu)
+{
+	int ret;
+
+	save_vcpu_state(vcpu);
+
+	ret = kvm_emulate_wbinvd(vcpu);
+
+	restore_vcpu_state(vcpu);
+
+	return ret;
 }
 
-bool GlobalHistogramAllocator::IsAuthorizedToUpdatePersistentLocation() {
-  // Implement your authentication and authorization logic here
-  // For example, you could check if the user is logged in and has the required permissions
-  return IsUserLoggedIn() && HasRequiredPermissions();
+void save_vcpu_state(struct kvm_vcpu *vcpu)
+{
+	kvm_vcpu_get_reg(vcpu, VCPU_REGS_RIP, &vcpu->arch.rip);
+	kvm_vcpu_get_reg(vcpu, VCPU_REGS_RSP, &vcpu->arch.rsp);
+	// Save other necessary registers and state here
 }
+
+void restore_vcpu_state(struct kvm_vcpu *vcpu)
+{
+	kvm_vcpu_set_reg(vcpu, VCPU_REGS_RIP, vcpu->arch.rip);
+	kvm_vcpu_set_reg

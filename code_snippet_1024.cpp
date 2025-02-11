@@ -1,29 +1,16 @@
-int DGAGetOldDGAMode(int index)
+static void kvm_pv_kick_cpu_op(struct kvm *kvm, unsigned long flags, int apicid)
 {
-    if (index < 0 || index >= pScreenPriv->numScreens) {
-        return -1;
-    }
+	if (apicid < 0 || apicid > KVM_MAX_APICIDS) {
+		pr_err("Invalid APIC ID: %d\n", apicid);
+		return;
+	}
 
-    DGAScreenPtr pScreenPriv = DGA_GET_SCREEN_PRIV(screenInfo.screens[index]);
-    ScrnInfoPtr pScrn = pScreenPriv->pScrn;
-    DGAModePtr mode;
-    int i, w, h, p;
+	struct kvm_lapic_irq lapic_irq;
 
-    w = pScrn->currentMode->HDisplay;
-    h = pScrn->currentMode->VDisplay;
-    p = pad_to_int32(pScrn->displayWidth * bits_to_bytes(pScrn->bitsPerPixel));
+	lapic_irq.shorthand = 0;
+	lapic_irq.dest_mode = 0;
+	lapic_irq.dest_id = apicid;
 
-    for (i = 0; i < pScreenPriv->numModes; i++) {
-        mode = &(pScreenPriv->modes[i]);
-
-        if ((mode->viewportWidth == w) && (mode->viewportHeight == h) &&
-            (mode->bytesPerScanline == p) &&
-            (mode->bitsPerPixel == pScrn->bitsPerPixel) &&
-            (mode->depth == pScrn->depth)) {
-
-            return mode->num;
-        }
-    }
-
-    return 0;
+	lapic_irq.delivery_mode = APIC_DM_REMRD;
+	kvm_irq_delivery_to_apic(kvm, 0, &lapic_irq, NULL);
 }

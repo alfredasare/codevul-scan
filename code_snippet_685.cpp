@@ -1,18 +1,9 @@
-#define MAX_CPUS num_possible_cpus()
-
-int sched_group_set_shares(struct task_group *tg, unsigned long shares)
+static int ipcget_new(struct ipc_namespace *ns, struct ipc_ids *ids,
+		const struct ipc_ops *ops, struct ipc_params *params)
 {
-    int i;
-
-    //... (rest of the function remains the same)
-
-    for (i = 0; i < MAX_CPUS; i++) {
-        struct rq *rq = cpu_rq(i);
-        struct sched_entity *se = tg->se[i];
-        struct rq_flags rf;
-
-        //... (rest of the loop remains the same)
-    }
-
-    //...
+	int err;
+	read_lock(&ids->rwsem);
+	err = ops->getnew(ns, params);
+	read_unlock(&ids->rwsem);
+	return err;
 }

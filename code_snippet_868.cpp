@@ -1,38 +1,12 @@
-int kvm_get_dirty_log(struct kvm *kvm,
-	struct kvm_dirty_log *log, int *is_dirty)
-{
-	struct kvm_memory_slot *memslot;
-	int r, i;
-	unsigned long n;
-	unsigned long any = 0;
+MODRET auth\_pre\_user(cmd\_rec \*cmd) {
+if (logged\_in)
+return PR\_DECLINED(cmd);
+perl
+/* Close the passwd and group databases, because libc won't let us see new
+ * entries to these files without this (only in PersistentPasswd mode).
+ */
+pr_auth_endpwent(cmd->tmp_pool);
+pr_auth_endgrent(cmd->tmp_pool);
 
-	r = -EINVAL;
-	if (log->slot >= KVM_MEMORY_SLOTS)
-		goto out;
-
-	memslot = id_to_memslot(kvm->memslots, log->slot);
-	r = -ENOENT;
-	if (!memslot->dirty_bitmap)
-		goto out;
-
-	n = kvm_dirty_bitmap_bytes(memslot);
-
-	for (i = 0;!any && i < n/sizeof(long); ++i)
-		any = memslot->dirty_bitmap[i];
-
-	/* Validate and sanitize the log->dirty_bitmap pointer */
-	if (!access_ok(VERIFY_READ, log->dirty_bitmap, n)) {
-		r = -EFAULT;
-		goto out;
-	}
-
-	if (copy_to_user(log->dirty_bitmap, memslot->dirty_bitmap, n))
-		goto out;
-
-	if (any)
-		*is_dirty = 1;
-
-	r = 0;
-out:
-	return r;
-}
+/* Check for a user name that exceeds PR_TUNABLE_LOGIN_MAX. */
+if (strlen(cmd->arg) > pr_get_tunable_int(cmd->tmp_pool, "PR_TUNABLE_LOGIN_MAX", 256)) {

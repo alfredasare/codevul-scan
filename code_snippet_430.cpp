@@ -1,14 +1,19 @@
-JsVar *jspGetConstructor(JsVar *object) {
-  if (!jsvIsObject(object)) return 0;
-  JsVar *proto = jsvObjectGetChild(object, JSPARSE_INHERITS_VAR, 0);
-  if (jsvIsObject(proto)) {
-    JsVar *constr = jsvObjectGetChild(proto, JSPARSE_CONSTRUCTOR_VAR, 0);
-    if (jsvIsFunction(constr) && constr->childCount > 0) {
-      jsvUnLock(proto);
-      return constr;
+#include <mutex>
+
+class LayerTreeHostImpl {
+public:
+    // ...
+
+private:
+    std::mutex scroll_mutex_;
+
+    bool GetScrollOffsetForLayer(int layer_id, gfx::ScrollOffset* offset) {
+        std::unique_lock<std::mutex> lock(scroll_mutex_);
+        LayerImpl* layer = active_tree()->FindActiveTreeLayerById(layer_id);
+        if (!layer)
+            return false;
+
+        *offset = layer->CurrentScrollOffset();
+        return true;
     }
-    jsvUnLock(constr);
-  }
-  jsvUnLock(proto);
-  return 0;
-}
+};

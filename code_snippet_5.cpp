@@ -1,10 +1,11 @@
 bool RenderBlock::hasMarginAfterQuirk(const RenderBox* child) const
 {
-    if (!child ||!child->isWritingModeRoot())
-        return false;
+    if (!child) return false;
+    if (!child->isWritingModeRoot())
+        return child->isRenderBlock() ? toRenderBlock(child)->hasMarginAfterQuirk() : child->style()->hasMarginAfterQuirk();
 
     if (child->isHorizontalWritingMode() == isHorizontalWritingMode())
-        return child->isRenderBlock()? toRenderBlock(child)->hasMarginBeforeQuirk() : child->style()->hasMarginBeforeQuirk();
+        return child->isRenderBlock() ? toRenderBlock(child)->hasMarginBeforeQuirk() : child->style()->hasMarginBeforeQuirk();
 
     return false;
 }

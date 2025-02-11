@@ -1,22 +1,18 @@
-assegment_append_asns (struct assegment *seg, as_t *asnos, int num)
+status_t MediaMetadataRetriever::setDataSource(
+    const sp<IMediaHTTPService> &httpService,
+    const char *srcUrl,
+    const KeyedVector<String8, String8> *headers)
 {
-  as_t *newas;
-  int max_num = ASSEGMENT_MAX_DATA_SIZE - seg->length;
-
-  if (num > max_num) {
-    return NULL;
-  }
-
-  newas = XREALLOC (MTYPE_AS_SEG_DATA, seg->as, ASSEGMENT_DATA_SIZE (seg->length + num, 1));
-
-  if (newas)
-    {
-      seg->as = newas;
-      memcpy (seg->as + seg->length, asnos, ASSEGMENT_DATA_SIZE(num, 1));
-      seg->length += num;
-      return seg;
+    ALOGV("setDataSource");
+    Mutex::Autolock _l(mLock);
+    if (mRetriever == 0) {
+        ALOGE("retriever is not initialized");
+        return INVALID_OPERATION;
     }
-
-  assegment_free_all (seg);
-  return NULL;
+    if (srcUrl == NULL || httpService == nullptr) {
+        ALOGE("data source or httpService is a null pointer");
+        return UNKNOWN_ERROR;
+    }
+    ALOGV("data source (%s)", srcUrl);
+    return mRetriever->setDataSource(httpService, srcUrl, headers);
 }

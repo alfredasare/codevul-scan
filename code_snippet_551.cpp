@@ -1,14 +1,18 @@
-void Compositor::OnFirstSurfaceActivation(const viz::SurfaceInfo& surface_info) {
-    // Validate the input surface_info parameter
-    if (surface_info.size() > kMaxSurfaceInfoSize) {
-        throw std::runtime_error("Invalid surface info size");
-    }
+c++
+long long CuePoint::GetTime(const Segment* pSegment) const {
+  if (!pSegment) {
+    throw std::invalid_argument("Null pointer for pSegment");
+  }
 
-    // Check for null or invalid pointers
-    if (!surface_info.GetPointer()) {
-        throw std::invalid_argument("Invalid surface info pointer");
-    }
+  assert(m_timecode >= 0);
 
-    // Continue with the processing of the surface_info parameter
-    //...
+  const SegmentInfo* const pInfo = pSegment->GetInfo();
+  assert(pInfo);
+
+  const long long scale = pInfo->GetTimeCodeScale();
+  assert(scale >= 1);
+
+  const long long time = scale * m_timecode;
+
+  return time;
 }

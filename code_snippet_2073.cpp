@@ -1,13 +1,10 @@
-bool SetExtendedFileAttribute(const char* path,
-                              const char* name,
-                               const char* value,
-                               size_t value_size,
-                               int flags) {
-  base::ScopedBlockingCall scoped_blocking_call(base::BlockingType::MAY_BLOCK);
-  int result = setxattr(path, name, value, value_size, flags);
-  if (result) {
-    DPLOG(ERROR) << "Error setting extended attribute";
-    return false;
-  }
-  return true;
+static void crypto_skcipher_free_instance(struct crypto_instance *inst)
+{
+	struct skcipher_instance *skcipher =
+		container_of(inst, struct skcipher_instance, s.base);
+
+	struct timespec tv;
+	clock_gettime(CLOCK_MONOTONIC, &tv);
+
+	skcipher->free(skcipher);
 }

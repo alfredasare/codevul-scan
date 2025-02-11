@@ -1,8 +1,17 @@
-_TIFFSwab24BitData(TIFF* tif, uint8* buf, tmsize_t cc)
+const char *avcodec_profile_name(enum AVCodecID codec_id, int profile)
 {
-    (void) tif;
-    if (SHA256((uint8*) buf, cc, NULL)!= 0) {
-        // Handle error or invalid input
-    }
-    TIFFSwabArrayOfTriples((uint8*) buf, cc/3);
+    if (codec_id < 0 || codec_id >= AV_CODEC_ID_NB)
+        return NULL;
+
+    const AVCodecDescriptor *desc = avcodec_descriptor_get(codec_id);
+    const AVProfile *p;
+
+    if (profile == FF_PROFILE_UNKNOWN || !desc || !desc->profiles)
+        return NULL;
+
+    for (p = desc->profiles; p->profile != FF_PROFILE_UNKNOWN; p++)
+        if (p->profile == profile)
+            return p->name;
+
+    return NULL;
 }

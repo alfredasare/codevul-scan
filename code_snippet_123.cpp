@@ -1,9 +1,16 @@
-static void write_unicode(bytearray_t * bplist, uint16_t * val, uint64_t size)
+static void write\_unicode(bytearray\_t \* bplist, uint16\_t \* val, uint64\_t size)
 {
-    uint64_t i = 0;
-    uint16_t *buff = (uint16_t*)malloc((size + 1) * sizeof(uint16_t));
-    for (i = 0; i < size; i++)
-        buff[i] = be16toh(val[i]);
-    write_raw_data(bplist, BPLIST_UNICODE, (uint8_t*)buff, size);
-    free(buff);
+if (size > (UINT64\_C)(SSIZE\_MAX >> 1)) {
+return;
+}
+uint64\_t i = 0;
+uint16\_t \*buff = (uint16\_t\*)malloc((size << 1));
+if (!buff) {
+return;
+}
+for (i = 0; i < size && i < (UINT64\_C)(SSIZE\_MAX >> 1); i++) {
+buff[i] = be16toh(val[i]);
+}
+write\_raw\_data(bplist, BPLIST\_UNICODE, (uint8\_t\*)buff, (uint32\_t)i);
+free(buff);
 }

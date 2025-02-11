@@ -1,14 +1,2 @@
-void LayerWebKitThread::remove(Vector<RefPtr<LayerWebKitThread> >& vector, LayerWebKitThread* sublayer)
-{
-    if (!sublayer) {
-        return; // Handle invalid input
-    }
-
-    size_t foundIndex = vector.find(sublayer);
-    if (foundIndex == Vector<RefPtr<LayerWebKitThread>>::npos) {
-        return; // Not found
-    }
-
-    vector.erase(foundIndex);
-    setNeedsCommit();
-}
+fb->len = (fb->len > 0) ? fb->len : FILEWBUF\_INIT\_LEN;
+wp = reallocarray(fb->wbuf, fb->len, sizeof(wchar\_t));

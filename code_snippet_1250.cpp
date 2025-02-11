@@ -1,12 +1,22 @@
-static int kvm_vm_ioctl_set_memory_region(struct kvm *kvm,
-					  struct kvm_userspace_memory_region *mem)
+static struct page *no\_page\_table(struct vm\_area\_struct *vma,
+unsigned int flags)
 {
-	if ((u16)mem->slot >= KVM_USER_MEM_SLOTS)
-		return -EINVAL;
+struct vm\_area\_struct *locked\_vma;
+int ret;
 
-	if (kvm->memory_regions[mem->slot].freed) {
-		return -EBUSY; /* Memory region already freed */
-	}
+// Acquire the lock on the vma structure
+down\_read(&vma->vm\_file->f\_dentry->d\_lock);
+locked\_vma = vma;
 
-	return kvm_set_memory_region(kvm, mem);
+ret = (flags & FOLL\_DUMP) && (!locked\_vma->vm\_ops || !locked\_vma->vm\_ops->fault) ? -EFAULT : 0;
+
+// Release the lock on the vma structure
+up\_read(&locked\_vma->vm\_file->f\_dentry->d\_lock);
+return retval\_to\_page(ret);
+}
+
+// Helper function to convert integer return value to struct page *
+struct page \*retval\_to\_page(int ret)
+{
+return ret ? ERR\_PTR(ret) : NULL;
 }

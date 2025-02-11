@@ -1,28 +1,4 @@
-rb_update_read_stamp(struct ring_buffer_per_cpu *cpu_buffer,
-                     struct ring_buffer_event *event)
-{
-    u64 delta;
-
-    switch (event->type_len) {
-        case RINGBUF_TYPE_PADDING:
-            return;
-
-        case RINGBUF_TYPE_TIME_EXTEND:
-            delta = (u64)event->array[0] << 32;
-            delta += event->time_delta;
-            cpu_buffer->read_stamp += delta;
-            return;
-
-        case RINGBUF_TYPE_TIME_STAMP:
-            /* FIXME: not implemented */
-            return;
-
-        case RINGBUF_TYPE_DATA:
-            cpu_buffer->read_stamp += event->time_delta;
-            return;
-
-        default:
-            BUG();
-    }
-    return;
+mutex_unlock(&vcpu->apic_mutex); // Unlock the mutex after accessing shared resource
 }
+
+Please note that the mutex initialization is not shown in this snippet, but it should be done before the `kvm_lapic_sync_from_vapic` function is called for the first time.

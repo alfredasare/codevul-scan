@@ -1,23 +1,24 @@
-int PDFiumEngine::Form_GetPlatform(FPDF_FORMFILLINFO* param, void* platform, int length) {
-  if (length <= 0 || length > 1024) {
-    return -1; // Return error or handle invalid length
+void ExtensionInstallPrompt::ConfirmReEnable(Delegate* delegate,
+                                             const Extension* extension) {
+  DCHECK(ui_loop_ == base::MessageLoop::current());
+  extension_ = extension;
+  delegate_ = delegate;
+  bool is_remote_install =
+      profile_ &&
+      extensions::ExtensionPrefs::Get(profile_)->HasDisableReason(
+          extension->id(), extensions::Extension::DISABLE_REMOTE_INSTALL);
+  PromptType type = UNSET_PROMPT_TYPE;
+  if (is_remote_install)
+    type = REMOTE_INSTALL_PROMPT;
+  else
+    type = RE_ENABLE_PROMPT;
+  // Ensure 'size' is within valid range before creating the 'Prompt' object.
+  size_t max_prompt_size = static_cast<size_t>(std::numeric_limits<int>::max());
+  if (type == REMOTE_INSTALL_PROMPT && max_prompt_size <= prompt_storage_.size()) {
+    LOG(ERROR) << "Prompt size exceeded the maximum allowed value.";
+    return;
   }
+  prompt_ = new Prompt(type);
 
-  if (!platform) {
-    return -1; // Return error or handle invalid platform
-  }
-
-  int platform_flag = -1;
-
-#if defined(WIN32)
-  platform_flag = 0;
-#elif defined(__linux__)
-  platform_flag = 1;
-#else
-  platform_flag = 2;
-#endif
-
-  std::string javascript = "alert(\"Platform:" + std::to_string(platform_flag) + "\")";
-
-  return platform_flag;
+  LoadImageIfNeeded();
 }

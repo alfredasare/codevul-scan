@@ -1,13 +1,11 @@
-void StyleResolver::resetFontSelector()
-{
-    ASSERT(m_fontSelector);
-    m_fontSelector->unregisterForInvalidationCallbacks(this);
-    m_fontSelector->clearDocument();
-    invalidateMatchedPropertiesCache();
+void ChromeOSSendHandwritingStroke(InputMethodStatusConnection* connection,
+const HandwritingStroke& stroke) {
+g\_return\_if\_fail(connection);
 
-    m_fontSelector = CSSFontSelector::create(&m_document);
-    if (!m_fontSelector) {
-        m_fontSelector = CSSFontSelector::createDefaultFontSelector();
-    }
-    m_fontSelector->registerForInvalidationCallbacks(this);
+// Add input validation here
+if (stroke.IsValid()) {
+connection->SendHandwritingStroke(stroke);
+} else {
+// Handle invalid input
+}
 }

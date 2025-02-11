@@ -1,15 +1,36 @@
-static inline __be32 try_6rd(struct ip_tunnel *tunnel,
-			     const struct in6_addr *v6dst)
+static int btrfs_writepage_end_io_hook(struct page *page, u64 start, u64 end,
+				struct extent_state *state, int uptodate)
 {
-    __be32 dst = 0;
-    if (!validate_ipv6_address(v6dst)) {
-        return -EINVAL;
-    }
-    check_6rd(tunnel, v6dst, &dst);
-    return dst;
-}
+	struct inode *inode = page->mapping->host;
+	struct btrfs_root *root = BTRFS_I(inode)->root;
+	struct btrfs_ordered_extent *ordered_extent = NULL;
+	struct btrfs_workqueue *wq;
+	btrfs_work_func_t func;
+	u64 file_size;
 
-bool validate_ipv6_address(const struct in6_addr *addr)
-{
-    return!inet_pton(AF_INET6, "::", addr) &&!inet_pton(AF_INET6, "fe80::/64", addr);
+	trace_btrfs_writepage_end_io_hook(page, start, end, uptodate);
+
+	ClearPagePrivate2(page);
+	file_size = i_size_read(inode);
+
+	if (start >= file_size || end > file_size || start > end)
+		return 0;
+
+	if (!btrfs_dec_test_ordered_pending(inode, &ordered_extent, start,
+					    end - start + 1, uptodate))
+		return 0;
+
+	if (btrfs_is_free_space_inode(inode)) {
+		wq = root->fs_info->endio_freespace_worker;
+		func = btrfs_freespace_write_helper;
+	} else {
+		wq = root->fs_info->endio_write_workers;
+		func = btrfs_endio_write_helper;
+	}
+
+	btrfs_init_work(&ordered_extent->work, func, finish_ordered_fn, NULL,
+			NULL);
+	btrfs_queue_work(wq, &ordered_extent->work);
+
+	return 0;
 }

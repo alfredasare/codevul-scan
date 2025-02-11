@@ -1,10 +1,4 @@
-static void netlink_remove(struct sock *sk)
-{
-    netlink_table_grab();
-    if (sk_del_node_init(sk) && sk->sk_protocol < NL_MAXPROTO) {
-        nl_table[sk->sk_protocol].hash.entries--;
-    }
-    if (nlk_sk(sk)->subscriptions)
-        __sk_del_bind_node(sk);
-    netlink_table_ungrab();
+c++
+bool BaseRenderingContext2D::IsValidBlendMode(SkBlendMode op) {
+  return op >= SkBlendMode::kZero && op <= SkBlendMode::kLastEnum;
 }

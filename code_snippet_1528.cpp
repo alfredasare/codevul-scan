@@ -1,12 +1,14 @@
-ieee8021q_tci_string(const uint16_t tci)
-{
-    static char buf[256];
-    char temp[64];
-
-    snprintf(temp, sizeof(temp), "vlan %u, p %u", tci & 0xfff, tci >> 13);
-    if (tci & 0x1000) {
-        strcat(temp, ", DEI");
-    }
-    snprintf(buf, sizeof(buf), "%s", temp);
-    return buf;
+n ret;
 }
+
+*pHandle = (effect\_handle\_t<pContext);
+
+pContext->mState = LOUDNESS\_ENHANCER\_STATE\_INITIALIZED;
+
+ALOGV(" LELib\_Create context is %p", pContext);
+
+return 0;
+
+}
+
+Note: Please replace MIN\_SESSION\_ID, MAX\_SESSION\_ID, MIN\_IO\_ID, and MAX\_IO\_ID with the actual valid ranges for sessionId and ioId in your application.

@@ -1,14 +1,13 @@
-code:
+#define MAX_PADDING 32
 
-
-void ospf6_print_ls_type(netdissect_options *ndo, register u_int ls_type, register const rtrid_t *ls_stateid)
+u32 fscrypt_fname_encrypted_size(const struct inode *inode, u32 ilen)
 {
-    char buffer[256]; // Define a buffer size to avoid buffer overflow
-    snprintf(buffer, sizeof(buffer), "\n\t    %s LSA (%d), %s Scope%s, LSA-ID %s",
-             tok2str(ospf6_lsa_values, "Unknown", ls_type & LS_TYPE_MASK),
-             ls_type & LS_TYPE_MASK,
-             tok2str(ospf6_ls_scope_values, "Unknown", ls_type & LS_SCOPE_MASK),
-             ls_type & 0x8000 ? ", transitive" : "",
-             ipaddr_string(ndo, ls_stateid));
-    ND_PRINT((ndo, buffer)); // Print the sanitized buffer
+	int padding = 32;
+	struct fscrypt_info *ci = inode->i_crypt_info;
+
+	if (ci)
+		padding = 4 << (ci->ci_flags & FS_POLICY_FLAGS_PAD_MASK);
+	padding = min(padding, MAX_PADDING); // Limit padding value
+	ilen = max(ilen, (u32)FS_CRYPTO_BLOCK_SIZE);
+	return round_up(ilen, padding);
 }

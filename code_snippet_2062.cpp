@@ -1,14 +1,35 @@
-WavpackContext *WavpackOpenFileOutput (WavpackBlockOutput blockout, void *wv_id, void *wvc_id)
+static int recv_pkt(git_pkt **out, gitno_buffer *buf)
 {
-    WavpackContext *wpc = malloc (sizeof (WavpackContext));
+	const char *ptr = buf->data, *line_end = ptr;
+	git_pkt *pkt = NULL;
+	int pkt_type, error = 0, ret;
 
-    if (!wpc)
-        return NULL;
+	do {
+		if (buf->offset > 0)
+			error = git_pkt_parse_line(&pkt, ptr, &line_end, buf->offset);
+		else
+			error = GIT_EBUFS;
 
-    wpc->total_samples = -1;
-    wpc->stream_version = CUR_STREAM_VERS;
-    wpc->blockout = blockout;
-    wpc->wv_out = wv_id;
-    wpc->wvc_out = wvc_id;
-    return wpc;
+		if (error == 0)
+			break; /* return thepkt */
+
+		if (error < 0 && error != GIT_EBUFS)
+			return error;
+
+		if ((ret = gitno_recv(buf)) < 0)
+			return ret;
+	} while (error);
+
+	gitno_consume(buf, line_end);
+	if (pkt != NULL) {
+		pkt_type = pkt->type;
+		if (out != NULL)
+			*out = pkt;
+		else
+			git__free(pkt);
+	} else {
+		pkt_type = GIT_EBUFS; /* Assign an appropriate error code */
+	}
+
+	return pkt_type;
 }

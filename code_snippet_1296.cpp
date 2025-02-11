@@ -1,32 +1,21 @@
-++
-void RegisterContentSchemes(const char** additional_savable_schemes) {
-  url_util::AddStandardScheme(kChromeDevToolsScheme);
-  url_util::AddStandardScheme(kChromeUIScheme);
-  url_util::AddStandardScheme(kMetadataScheme);
+sg_get_rq_mark(Sg_fd * sfp, int pack_id)
+{
+	Sg_request *resp;
+	unsigned long iflags;
 
-  url_util::LockStandardSchemes();
+	if (sfp->headrp == NULL) {
+		fprintf(stderr, "Error: headrp is NULL\n");
+		return NULL;
+	}
 
-  if (additional_savable_schemes) {
-    int maxSchemes = 10; // Define a reasonable limit for the number of schemes
-    int schemes = 0;
-    while (additional_savable_schemes[++schemes]!= NULL && schemes < maxSchemes);
-    if (schemes > maxSchemes) {
-      LOG(ERROR) << "Excessive number of savable schemes detected. Limiting to " << maxSchemes;
-      schemes = maxSchemes;
-    }
-
-    g_savable_schemes = new char*[schemes + arraysize(kDefaultSavableSchemes)];
-    memcpy(g_savable_schemes,
-           kDefaultSavableSchemes,
-           arraysize(kDefaultSavableSchemes) * sizeof(char*));
-    for (int i = 0; i < schemes; ++i) {
-      const char* scheme = additional_savable_schemes[i];
-      if (!base::startswith(scheme, "http://") &&!base::startswith(scheme, "https://")) {
-        LOG(WARNING) << "Invalid scheme: " << scheme << ". Skipping.";
-        continue;
-      }
-      g_savable_schemes[arraysize(kDefaultSavableSchemes) + i - 1] = base::strdup(scheme);
-    }
-    g_savable_schemes[arraysize(kDefaultSavableSchemes) + schemes - 1] = 0;
-  }
+	write_lock_irqsave(&sfp->rq_list_lock, iflags);
+	for (resp = sfp->headrp; resp; resp = resp->nextrp) {
+		if ((1 == resp->done) && (!resp->sg_io_owned) &&
+		    ((-1 == pack_id) || (resp->header.pack_id == pack_id))) {
+			resp->done = 2;	/* guard against other readers */
+			break;
+		}
+	}
+	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+	return resp;
 }

@@ -1,17 +1,18 @@
-String Location::toString() const {
-  USVStringOrTrustedURL result;
-  String href_value = getHrefValue(); // Get the href value from a trusted source
-  if (!isValidHref(href_value)) { // Validate the href value
-    result = "Invalid href"; // Set a default value if invalid
-  } else {
-    href(result); // Safe to call href with validated input
-  }
-  DCHECK(result.IsUSVString());
-  return result.GetAsUSVString();
-}
+static bool VerifyNumber(const uint8* buffer,
+                         int buffer_size,
+                         int* offset,
+                         int max_digits) {
+  RCHECK(*offset < buffer_size);
 
-bool Location::isValidHref(const String& href) {
-  // Implement your custom validation logic here
-  // For example, check if the href starts with a valid scheme (e.g., "http://", "https://")
-  return href.startsWith("http://") || href.startsWith("https://");
+  while (isspace(buffer[*offset])) {
+    ++(*offset);
+    RCHECK(*offset < buffer_size);
+  }
+
+  int numSeen = 0;
+  while (--max_digits >= 0 && *offset + numSeen < buffer_size && isdigit(buffer[*offset + numSeen])) {
+    ++numSeen;
+  }
+
+  return (numSeen > 0);
 }

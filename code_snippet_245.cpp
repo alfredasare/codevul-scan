@@ -1,13 +1,29 @@
-void b43_dma_tx_resume(struct b43_wldev *dev)
+#include <boost/algorithm/string/replace.hpp>
+#include <sstream>
+#include <cctype>
+
+String HTMLFormElement::method() const
 {
-    size_t ring_size;
-    ring_size = dev->dma.tx_ring_mcast->buf_size;
-    if (ring_size > sizeof(dev->dma.tx_ring_mcast->buf))
-        ring_size = sizeof(dev->dma.tx_ring_mcast->buf);
-    memcpy(dev->dma.tx_ring_mcast->buf, dev->dma.tx_ring_AC_VO->buf, ring_size);
-    ring_size = dev->dma.tx_ring_AC_VO->buf_size;
-    if (ring_size > sizeof(dev->dma.tx_ring_AC_VO->buf))
-        ring_size = sizeof(dev->dma.tx_ring_AC_VO->buf);
-    memcpy(dev->dma.tx_ring_AC_VO->buf, dev->dma.tx_ring_AC_VI->buf, ring_size);
-    //...
+    std::string unsafe_method = FormSubmission::Attributes::methodString(m_attributes.method());
+    std::string safe_method;
+
+    std::stringstream ss(unsafe_method);
+    std::string token;
+    while (ss >> token) {
+        token.erase(std::remove_if(token.begin(), token.end(), [](char c) {
+            return !std::isalnum(c, std::locale()) && c != '_' && c != '-' && c != '+';
+        }), token.end());
+        if (!token.empty()) {
+            safe_method += (safe_method.empty() ? "" : " ") + token;
+        }
+    }
+
+    if (!safe_method.empty()) {
+        boost::replace_all(safe_method, " ,", ",");
+        boost::to_lower(safe_method);
+    } else {
+        safe_method = "get";
+    }
+
+    return safe_method;
 }

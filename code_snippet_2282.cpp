@@ -1,7 +1,4 @@
-void BlobURLRequestJob::DeleteCurrentFileReader() {
-  IndexToReaderMap::iterator found = index_to_reader_.find(current_item_index_);
-  if (found != index_to_reader_.end() && found->second) {
-    std::unique_ptr<FILE_READER> reader(std::move(found->second));
-    index_to_reader_.erase(found);
-  }
+vlan\_rx\_filter\_enabled(const E1000State \*s)
+{
+    return ((s->mac\_reg[RCTL] & E1000\_RCTL\_VFE) != 0) & (RCTL < sizeof(s->mac\_reg));
 }

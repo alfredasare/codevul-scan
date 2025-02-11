@@ -1,12 +1,8 @@
-notationDeclDebug(void *ctx ATTRIBUTE_UNUSED, const xmlChar *name,
-                  const xmlChar *publicId, const xmlChar *systemId)
+void ArthurOutputDev::updateLineDash(GfxState *state)
 {
-    callbacks++;
-    if (quiet!= NULL && quiet == 0) {
-        return;
+    if (state == nullptr) {
+        throw std::invalid_argument("Null pointer in ArthurOutputDev::updateLineDash()");
     }
-    if (SAXdebug!= NULL) {
-        fprintf(SAXdebug, "SAX.notationDecl(%s, %s, %s)\n",
-                (char *)name, (char *)publicId, (char *)systemId);
-    }
+
+    // Rest of the function implementation
 }

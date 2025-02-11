@@ -1,30 +1,22 @@
-static MngBox mng_read_box(MngBox previous_box, char delta_type, unsigned char *p)
+static struct PointerBarrierDevice *AllocBarrierDevice(size_t max_deviceid)
 {
-   MngBox
-      box;
+    struct PointerBarrierDevice *pbd = NULL;
 
-  // Validate input arguments
-  if (sizeof(MngBox) > sizeof(previous_box) || delta_type > 1) {
-      return (MngBox){0};
-  }
+    if (max_deviceid >= SIZE_MAX - sizeof(struct PointerBarrierDevice)) {
+        return NULL;
+    }
 
-  // Check for buffer overflows
-  if (sizeof(p) < sizeof(box.left) + sizeof(box.right) + sizeof(box.top) + sizeof(box.bottom)) {
-      return (MngBox){0};
-  }
+    pbd = malloc(sizeof(struct PointerBarrierDevice) + max_deviceid * sizeof(int));
 
-  box.left=(long) (((png_uint_32) p[0] << 24) | ((png_uint_32) p[1] << 16) | ((png_uint_32) p[2] << 8) | (png_uint_32) p[3]);
-  box.right=(long) (((png_uint_32) p[4]  << 24) | ((png_uint_32) p[5] << 16) | ((png_uint_32) p[6] << 8) | (png_uint_32) p[7]);
-  box.top=(long) (((png_uint_32) p[8]  << 24) | ((png_uint_32) p[9] << 16) | ((png_uint_32) p[10] << 8) | (png_uint_32) p[11]);
-  box.bottom=(long) (((png_uint_32) p[12] << 24) | ((png_uint_32) p[13] << 16) | ((png_uint_32) p[14] << 8) | (png_uint_32) p[15]);
+    if (!pbd)
+        return NULL;
 
-  if (delta_type!= 0)
-  {
-      box.left+=previous_box.left;
-      box.right+=previous_box.right;
-      box.top+=previous_box.top;
-      box.bottom+=previous_box.bottom;
-  }
+    pbd->deviceid = -1; /* must be set by caller */
+    pbd->barrier_event_id = 1;
+    pbd->release_event_id = 0;
+    pbd->hit = FALSE;
+    pbd->seen = FALSE;
+    xorg_list_init(&pbd->entry);
 
-  return(box);
+    return pbd;
 }

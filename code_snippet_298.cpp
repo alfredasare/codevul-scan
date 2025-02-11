@@ -1,20 +1,11 @@
-const char *avcodec_profile_name(enum AVCodecID codec_id, int profile)
+int av_get_audio_frame_duration(AVCodecContext *avctx, int frame\_bytes)
 {
-    const AVCodecDescriptor *desc = avcodec_descriptor_get(codec_id);
-    const AVProfile *p;
-
-    // Validate the profile parameter
-    if (profile < 0 || profile > FF_MAX_PROFILES)
-    {
-        return "Invalid profile";
-    }
-
-    if (profile == FF_PROFILE_UNKNOWN ||!desc ||!desc->profiles)
-        return NULL;
-
-    for (p = desc->profiles; p->profile!= FF_PROFILE_UNKNOWN; p++)
-        if (p->profile == profile)
-            return p->name;
-
-    return NULL;
+int max\_frame\_bytes = avctx->frame\_size \* avctx->channels \* avctx->bits\_per\_coded\_sample / 8;
+if (frame\_bytes > max\_frame\_bytes)
+frame\_bytes = max\_frame\_bytes;
+return get\_audio\_frame\_duration(avctx->codec\_id, avctx->sample\_rate,
+avctx->channels, avctx->block\_align,
+avctx->codec\_tag, avctx->bits\_per\_coded\_sample,
+avctx->bit\_rate, avctx->extradata, avctx->frame\_size,
+frame\_bytes);
 }

@@ -1,18 +1,12 @@
-xmlXPtrNewRange(xmlNodePtr start, int startindex,
-                xmlNodePtr end, int endindex) {
-    xmlXPathObjectPtr ret;
+dquot_dirty(dquot);
+ret = ext4\_write\_dquot(dquot);
+} else {
+ret = dquot\_mark\_dquot\_dirty(dquot);
+}
 
-    if (!start ||!end) {
-        return(NULL); // Check for NULL pointers
-    }
+/* Release the write lock */
+fcntl(quota\_file->f\_dentry->d\_inode->i\_ino, F\_SETLK, &flock);
+return ret;
+}
 
-    if (startindex < 0 || endindex < 0) {
-        return(NULL); // Check for negative indices
-    }
-
-    ret = (xmlXPathObjectPtr) xmlMalloc(sizeof(xmlXPathObject));
-    if (ret == NULL) {
-        xmlXPtrErrMemory("allocating range");
-        return(NULL);
-    }
-    // Rest of the code remains the same...
+Note that releasing the lock should always succeed, so it's not necessary to check for errors.

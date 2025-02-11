@@ -1,5 +1,13 @@
-#include <cctype>
+is_delimiter(unsigned char c)
+{
+    const unsigned char valid_delimiters[] = { ' ', '\t', ',' };
+    const size_t num_valid_delimiters = sizeof(valid_delimiters) / sizeof(unsigned char);
 
-bool is_delimiter(unsigned char c) {
-    return isblank(c) || c == ',';
+    for (size_t i = 0; i < num_valid_delimiters; ++i) {
+        if (c == valid_delimiters[i]) {
+            return true;
+        }
+    }
+
+    return false;
 }

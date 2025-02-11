@@ -1,22 +1,10 @@
-static int fwnet_open(struct net_device *net)
+int js_toint32(js_State *J, int idx)
 {
-    struct fwnet_device *dev = netdev_priv(net);
-    int ret;
-
-    if (dev == NULL) {
-        printk(KERN_ERR "fwnet_open: netdev_priv returned NULL\n");
-        return -ENODEV;
+    js_number num = jsV_tonumber(J, stackidx(J, idx));
+    if (jsNumberIsInteger(num) && jsNumberGetDouble(num) <= INT32_MAX && jsNumberGetDouble(num) >= INT32_MIN) {
+        return jsNumberToInt32(num);
+    } else {
+        // Handle the error or limit the maximum value
+        return 0; // or any other appropriate error handling
     }
-
-    ret = fwnet_broadcast_start(dev);
-    if (ret)
-        return ret;
-
-    netif_start_queue(net);
-
-    spin_lock_irq(&dev->lock);
-    set_carrier_state(dev);
-    spin_unlock_irq(&dev->lock);
-
-    return 0;
 }

@@ -1,12 +1,9 @@
-xfs_vn_mknod(
-    struct inode	*dir,
-    struct dentry	*dentry,
-    umode_t		mode,
-    dev_t		rdev)
+Sure, here's the fixed version of the code that checks the return value of `b43_dma_tx_resume_ring()` before proceeding with the next call:
+
+void b43_dma_tx_resume(struct b43_wldev *dev)
 {
-    int fd = xfs_generic_create(dir, dentry, mode, rdev, false);
-    if (fd >= 0) {
-        close(fd);
-    }
-    return 0;
-}
+	if (!b43_dma_tx_resume_ring(dev->dma.tx_ring_mcast))
+		return;
+	if (!b43_dma_tx_resume_ring(dev->dma.tx_ring_AC_VO))
+		return;
+	if (!b43_dma_tx_resume_ring(dev->dma.tx_ring_AC_VI))

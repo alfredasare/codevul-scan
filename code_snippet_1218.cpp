@@ -1,18 +1,32 @@
-struct dst_entry *ip6_dst_lookup_flow(const struct sock *sk, struct flowi6 *fl6,
-				       const struct in6_addr *final_dst)
+static SRP_gN_cache *SRP_gN_new_init(const char *ch)
 {
-	struct dst_entry *dst = NULL;
-	int err;
+    unsigned char tmp[MAX_LEN];
+    int len;
 
-	err = ip6_dst_lookup_tail(sock_net(sk), sk, &dst, fl6);
-	if (err)
-		return ERR_PTR(err);
+    SRP_gN_cache *newgN =
+        (SRP_gN_cache *)OPENSSL_malloc(sizeof(SRP_gN_cache));
+    if (newgN == NULL)
+        return NULL;
 
-	if (!final_dst ||!is_valid_in6_addr(final_dst)) {
-		return xfrm_lookup_route(sock_net(sk), dst, flowi6_to_flowi(fl6), sk, 0);
-	}
+    if ((newgN->b64_bn = BUF_strdup(ch)) == NULL)
+        goto err;
 
-	memcpy(&fl6->daddr, final_dst, sizeof(struct in6_addr));
+    len = strlen(ch);
+    if (len >= MAX_LEN) {
+        // Handle error condition, input string is too long
+        goto err;
+    }
 
-	return xfrm_lookup_route(sock_net(sk), dst, flowi6_to_flowi(fl6), sk, 0);
+    if (t_fromb64(tmp, ch, len) < 0) {
+        // Handle error condition, t_fromb64 failed
+        goto err;
+    }
+
+    if ((newgN->bn = BN_bin2bn(tmp, len, NULL)))
+        return newgN;
+
+err:
+    OPENSSL_free(newgN->b64_bn);
+    OPENSSL_free(newgN);
+    return NULL;
 }

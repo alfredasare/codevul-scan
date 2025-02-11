@@ -1,32 +1,21 @@
-void __init zone_sizes_init(void)
-{
-	unsigned long max_zone_pfns[MAX_NR_ZONES];
-	int rc;
+void ChildProcessLauncherHelper::SetProcessPriorityOnLauncherThread(
+    base::Process process,
+    const ChildProcessLauncherPriority& priority) {
+  JNIEnv* env = AttachCurrentThread();
+  DCHECK(env);
 
-	memset(max_zone_pfns, 0, sizeof(max_zone_pfns));
+  // Validate and constrain the input.
+  constexpr int32_t min_importance = 0;
+  constexpr int32_t max_importance = std::numeric_limits<jint>::max();
+  if (priority.importance < min_importance || priority.importance > max_importance) {
+    LOG(ERROR) << "Importance value is out of bounds: " << priority.importance;
+    return;
+  }
 
-#ifdef CONFIG_ZONE_DMA
-	if (!capable(CAP_MAC_ADMIN)) {
-		pr_err("Permission denied for ZONE_DMA\n");
-		return;
-	}
-	max_zone_pfns[ZONE_DMA]		= min(MAX_DMA_PFN, max_low_pfn);
-#endif
-#ifdef CONFIG_ZONE_DMA32
-	if (!capable(CAP_MAC_ADMIN)) {
-		pr_err("Permission denied for ZONE_DMA32\n");
-		return;
-	}
-	max_zone_pfns[ZONE_DMA32]	= min(MAX_DMA32_PFN, max_low_pfn);
-#endif
-	max_zone_pfns[ZONE_NORMAL]	= max_low_pfn;
-#ifdef CONFIG_HIGHMEM
-	if (!capable(CAP_MAC_ADMIN)) {
-		pr_err("Permission denied for HIGHMEM\n");
-		return;
-	}
-	max_zone_pfns[ZONE_HIGHMEM]	= max_pfn;
-#endif
-
-	free_area_init_nodes(max_zone_pfns);
+  jint jimportance = static_cast<jint>(priority.importance);
+  return Java_ChildProcessLauncherHelperImpl_setPriority(
+      env, java_peer_, process.Handle(), priority.visible,
+      priority.has_media_stream, priority.has_foreground_service_worker,
+      priority.frame_depth, priority.intersects_viewport,
+      priority.boost_for_pending_views, jimportance);
 }

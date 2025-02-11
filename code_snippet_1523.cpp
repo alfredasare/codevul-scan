@@ -1,18 +1,14 @@
-static void ssh_queue_incoming_data(Ssh ssh,
-				    const unsigned char **data, int *datalen)
-{
-    size_t len = *datalen;
-    unsigned char *temp = malloc(len + 1); // +1 for null-termination
-    if (!temp) {
-        return; // handle error
-    }
-
-    memcpy(temp, *data, len < sizeof(temp)? len : sizeof(temp)); // restrict the copy to the valid buffer range
-    temp[len] = '\0'; // null-terminate the temporary buffer
-
-    bufchain_add(&ssh->queued_incoming_data, temp, len);
-    free(temp);
-
-    *data += len;
-    *datalen = 0;
+void TreeView::SetSelectedNode(TreeModelNode* node) {
+> DCHECK(tree\_view_);
+if (!node) {
+TreeView\_SelectItem(tree\_view_, nullptr); // corrected
+return;
+}
+if (node != model-\>GetRoot())
+Expand(model-\>GetParent(node));
+if (!root\_shown\_ && node == model-\>GetRoot()) {
+TreeView\_SelectItem(tree\_view_, NULL);
+} else {
+TreeView\_SelectItem(tree\_view_, GetNodeDetails(node)-\>tree\_item);
+}
 }

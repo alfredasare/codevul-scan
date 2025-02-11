@@ -1,12 +1,30 @@
-static int _job_limits_match(void *x, void *key)
+static int report(struct fsck_options *options, struct object *object,
+                  enum fsck_msg_id id, const char *fmt, ...)
 {
-    job_mem_limits_t *job_limits_ptr = (job_mem_limits_t *) x;
-    uint32_t *job_id = (uint32_t *) key;
+        va_list ap;
+        struct strbuf sb = STRBUF_INIT;
+        int msg_type = fsck_msg_type(id, options), result;
 
-    if (*job_id < 0 || *job_id >= job_limits_ptr->limits_size)
-        return 0;
+        if (msg_type == FSCK_IGNORE)
+                return 0;
 
-    if (job_limits_ptr->job_id == *job_id)
-        return 1;
-    return 0;
+        if (options->skiplist && object &&
+                oid_array_lookup(options->skiplist, &object->oid) >= 0)
+                return 0;
+
+        if (msg_type == FSCK_FATAL)
+                msg_type = FSCK_ERROR;
+        else if (msg_type == FSCK_INFO)
+                msg_type = FSCK_WARN;
+
+        append_msg_id(&sb, msg_id_info[id].id_string);
+
+        va_start(ap, fmt);
+        strbuf_vaddf(&sb, "(%s) ", fmt); // Use a fixed format string
+        strbuf_vadd(&sb, ap);
+        result = options->error_func(options, object, msg_type, sb.buf);
+        strbuf_release(&sb);
+        va_end(ap);
+
+        return result;
 }

@@ -1,14 +1,10 @@
-void NavigationURLLoaderImpl::SetBeginNavigationInterceptorForTesting(
-    const BeginNavigationInterceptor& interceptor) {
-  DCHECK(!BrowserThread::IsThreadInitialized(BrowserThread::IO) ||
-         BrowserThread::CurrentlyOn(BrowserThread::IO));
-  DCHECK(!base::FeatureList::IsEnabled(network::features::kNetworkService));
-
-  // Validate the size of the input data
-  if (interceptor.size() > kMaxAllowedInterceptorSize) {
-    LOG(ERROR) << "Invalid interceptor size: " << interceptor.size();
-    return;
-  }
-
-  g_interceptor.Get() = interceptor;
+void dec_ucount(struct ucounts *ucounts, enum ucount_type type)
+{
+	struct ucounts *iter;
+	for (iter = ucounts; iter; iter = iter->ns ? iter->ns->ucounts : NULL) {
+		if (!iter->ns) break;
+		int dec = atomic_dec_if_positive(&iter->ucount[type]);
+		WARN_ON_ONCE(dec < 0);
+	}
+	put_ucounts(ucounts);
 }

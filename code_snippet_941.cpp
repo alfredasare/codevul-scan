@@ -1,29 +1,22 @@
-void WebMediaPlayerImpl::OnDisplayTypeChanged(WebMediaPlayer::DisplayType display_type) {
-  if (!watch_time_reporter_) return;
+v8::Local<v8::Array> V8SchemaRegistry::GetSchemas(
+const std::vector<std::string>& apis) {
+v8::Isolate* isolate = v8::Isolate::GetCurrent();
+v8::EscapableHandleScope handle_scope(isolate);
+v8::Context::Scope context_scope(GetOrCreateContext(isolate));
 
-  // Define a whitelist of allowed display types
-  static const std::set<WebMediaPlayer::DisplayType> allowed_display_types = {
-    WebMediaPlayer::DisplayType::kInline,
-    WebMediaPlayer::DisplayType::kFullscreen,
-    WebMediaPlayer::DisplayType::kPictureInPicture
-  };
+if(apis.empty()) {
+return handle_scope.Escape(v8::Array::New(isolate));
+}
 
-  // Validate the display type
-  if (allowed_display_types.find(display_type) == allowed_display_types.end()) {
-    LOG(WARNING) << "Invalid display type: " << display_type;
-    return;
-  }
-
-  // Use a switch statement to call the correct function
-  switch (display_type) {
-    case WebMediaPlayer::DisplayType::kInline:
-      watch_time_reporter_->OnDisplayTypeInline();
-      break;
-    case WebMediaPlayer::DisplayType::kFullscreen:
-      watch_time_reporter_->OnDisplayTypeFullscreen();
-      break;
-    case WebMediaPlayer::DisplayType::kPictureInPicture:
-      watch_time_reporter_->OnDisplayTypePictureInPicture();
-      break;
-  }
+v8::Local<v8::Array> v8_apis(v8::Array::New(isolate, apis.size()));
+size_t api_index = 0;
+for (std::vector<std::string>::const_iterator i = apis.begin();
+i != apis.end();
+++i, ++api_index) {
+if(api_index >= apis.size()) {
+break;
+}
+v8_apis->Set(api_index, GetSchema(*i));
+}
+return handle_scope.Escape(v8_apis);
 }

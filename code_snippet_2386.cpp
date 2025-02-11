@@ -1,23 +1,38 @@
-ext4_xattr_delete_inode(handle_t *handle, struct inode *inode)
+#include <stdint.h>
+
+long ASN1_INTEGER_get(const ASN1_INTEGER *a)
 {
-    struct buffer_head *bh = NULL;
-    uint64_t file_acl = EXT4_I(inode)->i_file_acl; // Use a 64-bit integer to avoid overflow
+    int neg = 0, i;
+    uint64_t r = 0;
+    long result;
 
-    if (!file_acl)
-        goto cleanup;
-    bh = sb_bread(inode->i_sb, file_acl);
-    if (!bh) {
-        EXT4_ERROR_INODE(inode, "block %llu read error", file_acl);
-        goto cleanup;
-    }
-    if (BHDR(bh)->h_magic!= cpu_to_le32(EXT4_XATTR_MAGIC) ||
-        BHDR(bh)->h_blocks!= cpu_to_le32(1)) {
-        EXT4_ERROR_INODE(inode, "bad block %llu", file_acl);
-        goto cleanup;
-    }
-    ext4_xattr_release_block(handle, inode, bh);
-    EXT4_I(inode)->i_file_acl = 0;
+    if (a == NULL)
+        return (0L);
+    i = a->type;
+    if (i == V_ASN1_NEG_INTEGER)
+        neg = 1;
+    else if (i != V_ASN1_INTEGER)
+        return -1;
 
-cleanup:
-    brelse(bh);
+    if (a->length > (int)sizeof(long)) {
+        /* hmm... a bit ugly, return all ones */
+        return -1;
+    }
+    if (a->data == NULL)
+        return 0;
+
+    for (i = 0; i < a->length; i++) {
+        r <<= 8;
+        r |= (unsigned char)a->data[i];
+    }
+
+    // Check for integer overflow
+    if ((result = (long)r) != r) {
+        // Handle error or return an appropriate value based on your use case
+        return LONG_MAX; // or LONG_MIN for signed integers
+    }
+
+    if (neg)
+        result = -result;
+    return (result);
 }

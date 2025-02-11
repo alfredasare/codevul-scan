@@ -1,14 +1,20 @@
-void BasePrefsChange::Observe(int type,
-                             const content::NotificationSource& source,
-                             const content::NotificationDetails& details) {
-  DCHECK(type == chrome::NOTIFICATION_PREF_CHANGED);
-  const std::string* pref_name = content::Details<std::string>(details).ptr();
-  if (!pref_name) {
-    LOG(ERROR) << "Invalid preference name";
-    return;
-  }
-  if (!pref_observer_->IsObserved(*pref_name)) {
-    return;
-  }
-  ProtectorServiceFactory::GetForProfile(profile())->DismissChange(this);
+static void fm10k_free_q_vector(struct fm10k_intfc *interface, int v_idx)
+{
+    struct fm10k_q_vector *q_vector = interface->q_vector[v_idx];
+
+    if (!q_vector) {
+        return;
+    }
+
+    fm10k_dbg_q_vector_exit(q_vector);
+
+    fm10k_for_each_ring(ring, q_vector->tx)
+        interface->tx_ring[ring->queue_index] = NULL;
+
+    fm10k_for_each_ring(ring, q_vector->rx)
+        interface->rx_ring[ring->queue_index] = NULL;
+
+    interface->q_vector[v_idx] = NULL;
+    netif_napi_del(&q_vector->napi);
+    kfree(q_vector);
 }

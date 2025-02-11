@@ -1,25 +1,25 @@
-static int catc_ctrl_async(struct catc *catc, u8 dir, u8 request, u16 value,
-			   u16 index, void *buf, int len, void (*callback)(struct catc *catc, struct ctrl_queue *q))
+#include <pthread.h>
+
+pthread_mutex_t g_runner_handlers_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+int tcmur_register_handler(struct tcmur_handler *handler)
 {
-    struct ctrl_queue *q;
-    int retval = 0;
-    unsigned long flags;
-    char local_buf[1024]; // define a local buffer with sufficient size
+	struct tcmur_handler *h;
+	int i;
 
-    spin_lock_irqsave(&catc->ctrl_lock, flags);
+	pthread_mutex_lock(&g_runner_handlers_mutex);
 
-    q = catc->ctrl_queue + catc->ctrl_head;
+	for (i = 0; i < darray_size(g_runner_handlers); i++) {
+		h = darray_item(g_runner_handlers, i);
+		if (!strcmp(h->subtype, handler->subtype)) {
+			tcmu_err("Handler %s has already been registered\n",
+				 handler->subtype);
+			pthread_mutex_unlock(&g_runner_handlers_mutex);
+			return -1;
+		}
+	}
 
-    // Copy buf data into local_buf to prevent buffer overflows
-    if (len > sizeof(local_buf)) {
-        dev_err(&catc->usbdev->dev, "Buffer overflow detected\n");
-        retval = -1;
-    } else {
-        memcpy(local_buf, buf, len);
-        q->buf = local_buf;
-    }
-
-    // Rest of the function remains the same...
-
-    return retval;
+	darray_append(g_runner_handlers, handler);
+	pthread_mutex_unlock(&g_runner_handlers_mutex);
+	return 0;
 }

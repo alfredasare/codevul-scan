@@ -1,25 +1,14 @@
-bool Layer::FilterIsAnimating() const {
-    if (!CheckAuthenticationAndAuthorization()) {
-        return false;
-    }
+static unsigned mounts\_poll(struct file \*file, poll\_table \*wait)
+{
+struct proc\_mounts \*p = file->private\_data;
+unsigned res = POLLIN | POLLRDNORM;
 
-    if (!ValidateAnimationFilter(Animation::Filter)) {
-        return false;
-    }
+poll\_wait(file, &p->ns->poll, wait);
 
-    return layer_animation_controller_->IsAnimatingProperty(Animation::Filter);
-}
+if (mnt\_had\_events(p) == 0)
+return res;
 
-bool ValidateAnimationFilter(Animation::Filter filter) {
-    // Implement validation logic here
-    // For example, check if the filter is within a valid range or matches a specific pattern
-    //...
-    return true; // If the filter is valid
-}
+res |= POLLERR | POLLPRI;
 
-bool CheckAuthenticationAndAuthorization() {
-    // Implement authentication and authorization checks here
-    // For example, check if the user is logged in and has the necessary permissions
-    //...
-    return true; // If authentication and authorization succeed
+return res;
 }

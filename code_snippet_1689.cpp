@@ -1,37 +1,15 @@
-const sp<IMediaPlayerService>& MediaMetadataRetriever::getService()
+#define MAX_BUFFER_SIZE 1024
+
+static void ssh_queue_incoming_data(Ssh ssh,
+				    const unsigned char **data, int *datalen)
 {
-    Mutex::Autolock lock(sServiceLock);
-    const std::set<String16> allowedServices = {"media.player",...}; // add other allowed services here
-    String16 serviceName = "media.player"; // input from user
-    if (allowedServices.find(serviceName) == allowedServices.end()) {
-        ALOGE("Invalid service name: %s", serviceName.c_str());
-        return nullptr;
+    // Check if the new datalen value exceeds the maximum buffer size
+    if (*datalen > MAX_BUFFER_SIZE - bufchain_get_length(&ssh->queued_incoming_data)) {
+        // Return an error, log the event, or handle it appropriately
+        return;
     }
 
-    serviceName = PathSanitizer::sanitize(serviceName);
-    if (serviceName.empty()) {
-        ALOGE("Invalid service name: %s", serviceName.c_str());
-        return nullptr;
-    }
-
-    Mutex::Autolock lock(sServiceLock);
-    if (sService == 0) {
-        sp<IServiceManager> sm = defaultServiceManager();
-        sp<IBinder> binder;
-        do {
-            binder = sm->getService(serviceName);
-            if (binder!= 0) {
-                break;
-            }
-            ALOGW("MediaPlayerService not published, waiting...");
-            usleep(500000); // 0.5 s
-        } while (true);
-        if (sDeathNotifier == NULL) {
-            sDeathNotifier = new DeathNotifier();
-        }
-        binder->linkToDeath(sDeathNotifier);
-        sService = interface_cast<IMediaPlayerService>(binder);
-    }
-    ALOGE_IF(sService == 0, "no MediaPlayerService!?");
-    return sService;
+    bufchain_add(&ssh->queued_incoming_data, *data, *datalen);
+    *data += *datalen;
+    *datalen = 0;
 }

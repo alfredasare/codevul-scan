@@ -1,23 +1,12 @@
-static int __release_reference_state(struct bpf_func_state *state, int ptr_id)
+#include <linux/mmzone.h>
+#include <linux/hugetlb.h>
+
+void hugetlb_good_size(void)
 {
-    int i, last_idx;
+	if (huge_page_order > MAX_ORDER || huge_page_order < 0) {
+		pr_err("Invalid hugepage order: %d\n", huge_page_order);
+		return;
+	}
 
-    if (!ptr_id)
-        return -EFAULT;
-
-    last_idx = state->acquired_refs - 1;
-    for (i = 0; i < state->acquired_refs; i++) {
-        if (state->refs[i].id == ptr_id) {
-            if (i!= last_idx) {
-                if (i < state->acquired_refs - 1) {
-                    memcpy(&state->refs[i], &state->refs[last_idx], 
-                           sizeof(*state->refs));
-                }
-            }
-            memset(&state->refs[last_idx], 0, sizeof(*state->refs));
-            state->acquired_refs--;
-            return 0;
-        }
-    }
-    return -EFAULT;
+	parsed_valid_hugepagesz = true;
 }

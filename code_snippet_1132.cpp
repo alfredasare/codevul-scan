@@ -1,16 +1,12 @@
-xps_end_opacity(xps_document *doc, char *base_uri, xps_resource *dict, char *opacity_att, fz_xml *opacity_mask_tag)
+gs\_currentlabicc(const gs\_gstate \* pgs, gs\_param\_string \* pval)
 {
-    if (!opacity_att ||!opacity_mask_tag) {
-        return;
-    }
+    static const char \*const rfs = LAB\_ICC;
 
-    if (doc->opacity_top > 0) {
-        doc->opacity_top--;
+    if (pgs->icc\_manager->lab\_profile == NULL) {
+        pval->data = (const byte \*)rfs;
+    } else {
+        pval->data = (const byte \*)(pgs->icc\_manager->lab\_profile->name);
     }
-
-    if (opacity_mask_tag) {
-        if (strcmp(fz_xml_tag(opacity_mask_tag), "SolidColorBrush") == 0) {
-            fz_pop_clip(doc->dev);
-        }
-    }
+    pval->size = strlen((const char \*)pval->data);
+    pval->persistent = true;
 }

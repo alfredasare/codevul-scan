@@ -1,21 +1,36 @@
-void TopSitesCacheTest::BuildTopSites(const char** spec, size_t size) {
-  std::set<std::string> urls_seen;
-  for (size_t i = 0; i < size; ++i) {
-    const char* spec_item = spec[i];
-    if (spec_item == nullptr) {  // Check if spec_item is null
-      continue;  // Skip this iteration if spec_item is null
-    }
-    while (*spec_item && *spec_item =='')  // Eat indent.
-      ++spec_item;
-    if (urls_seen.find(spec_item)!= urls_seen.end())
-      NOTREACHED() << "Duplicate URL found: " << spec_item;
-    urls_seen.insert(spec_item);
-    if (spec_item == spec[i]) {  // No indent: add new MostVisitedURL.
-      base::string16 title(base::ASCIIToUTF16("Title ") +
-                         base::Uint64ToString16(top_sites_.size() + 1));
-      top_sites_.push_back(MostVisitedURL(GURL(spec_item), title));
-    }
-    ASSERT_TRUE(!top_sites_.empty());
-    top_sites_.back().redirects.push_back(GURL(spec_item));
-  }
+int kvm\_arch\_prepare\_memory\_region(struct kvm *kvm,
+ struct kvm\_memory\_slot \*memslot,
+ struct kvm\_memory\_slot old,
+ struct kvm\_userspace\_memory\_region \*mem,
+ int user\_alloc)
+{
+ unsigned long i;
+ unsigned long pfn;
+ int npages = memslot->npages;
+ unsigned long base\_gfn = memslot->base\_gfn;
+
+ if (base\_gfn + npages > (KVM\_MAX\_MEM\_SIZE >> PAGE\_SHIFT))
+ return -ENOMEM;
+
+ if (npages > (KVM\_MAX\_MEM\_SIZE >> PAGE\_SHIFT) - base\_gfn) {
+ /* Integer overflow protection */
+ return -ENOMEM;
+ }
+
+ for (i = 0; i < npages; i++) {
+ pfn = gfn\_to\_pfn(kvm, base\_gfn + i);
+ if (!kvm\_is\_mmio\_pfn(pfn)) {
+ kvm\_set\_pmt\_entry(kvm, base\_gfn + i,
+ pfn << PAGE\_SHIFT,
+ \_PAGE\_AR\_RWX | \_PAGE\_MA\_WB);
+ memslot->rmap[i] = (unsigned long)pfn\_to\_page(pfn);
+ } else {
+ kvm\_set\_pmt\_entry(kvm, base\_gfn + i,
+ GPFN\_PHYS\_MMIO | (pfn << PAGE\_SHIFT),
+ \_PAGE\_MA\_UC);
+ memslot->rmap[i] = 0;
+ }
+ }
+
+ return 0;
 }

@@ -1,8 +1,4 @@
-base::FilePath WallpaperManager::GetDeviceWallpaperFilePath() {
-  try {
-    return GetDeviceWallpaperDir().Append(kDeviceWallpaperFile);
-  } catch (const std::exception& e) {
-    LOG(ERROR) << "Error getting device wallpaper file: " << e.what();
-    return base::FilePath();
-  }
+const URLPatternSet PermissionsData::policy\_blocked\_hosts() const {
+base::AutoLock auto\_lock(runtime\_lock_);
+return URLPatternSet(PolicyBlockedHostsUnsafe().Clone()).Sanitize();
 }

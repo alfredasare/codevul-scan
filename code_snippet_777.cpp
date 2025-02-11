@@ -1,25 +1,16 @@
-int may_umount_tree(struct vfsmount *m)
+#include <mutex>
+
+std::mutex mtx;
+
+void IPCThreadState::decStrongHandle(int32_t handle)
 {
-    struct mount *mnt = real_mount(m);
-    int actual_refs = 0;
-    int minimum_refs = 0;
-    struct mount *p;
-    BUG_ON(!m);
+    std::unique_lock<std::mutex> lock(mtx);
 
-    /* write lock needed for mnt_get_count */
-    br_write_lock(&vfsmount_lock);
-    for (p = mnt; p; p = next_mnt(p, mnt)) {
-        int count;
-        if ((count = mnt_get_count(p)) < 0) {
-            return -EFAULT;
-        }
-        actual_refs += count;
-        minimum_refs += 2;
-    }
-    br_write_unlock(&vfsmount_lock);
+    LOG_REMOTEREFS("IPCThreadState::decStrongHandle(%d)\n", handle);
 
-    if (actual_refs > minimum_refs)
-        return 0;
+    mOut.writeInt32(BC_RELEASE);
+    mOut.writeInt32(handle);
 
-    return 1;
+    // Release the handle and ensure it's not used afterward
+    // Perform cleanup or other operations here if necessary
 }

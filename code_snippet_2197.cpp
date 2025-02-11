@@ -1,12 +1,4 @@
-static av_cold int decode_close(AVCodecContext *avctx)
+static __init int init_posix_timers(void)
 {
-    SCPRContext *s = avctx->priv_data;
-
-    if (sizeof(*s) > 0) {
-        av_freep(&s->blocks);
-        av_frame_free(&s->last_frame);
-        av_frame_free(&s->current_frame);
-    }
-
-    return 0;
-}
+	posix_timers_cache = kmem_cache_create("posix_timers_cache",
+					sizeof (struct k_itimer), sizeof(size_t), SLAB_PANIC,

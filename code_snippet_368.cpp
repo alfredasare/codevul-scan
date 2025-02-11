@@ -1,37 +1,18 @@
-virtual status_t createInputSurface(
-    node_id node, OMX_U32 port_index,
-    sp<IGraphicBufferProducer> *bufferProducer, MetadataBufferType *type) {
-    Parcel data, reply;
-    status_t err;
+static int ftrace_function_check_pred(struct filter_pred *pred)
+{
+	struct ftrace_event_field *field = pred->field;
+	size_t name_len;
 
-    // Verify and sanitize input values
-    if (node > std::numeric_limits<OMX_U32>::max()) {
-        ALOGE("Invalid node ID: %d", node);
-        return BAD_VALUE;
-    }
-    if (port_index > std::numeric_limits<OMX_U32>::max()) {
-        ALOGE("Invalid port index: %d", port_index);
-        return BAD_VALUE;
-    }
+	if ((pred->op != OP_EQ) && (pred->op != OP_NE))
+		return -EINVAL;
 
-    data.writeInterfaceToken(IOMX::getInterfaceDescriptor());
-    data.writeInt32((int32_t)node);
-    err = remote()->transact(CREATE_INPUT_SURFACE, data, &reply);
-    if (err!= OK) {
-        ALOGW("binder transaction failed: %d", err);
-        return err;
-    }
+	name_len = strnlen(field->name, MAX_FIELD_NAME_LEN);
+	if (name_len >= MAX_FIELD_NAME_LEN || name_len == 0 ||
+	    strpbrk(field->name, "\\\"'"))
+		return -EINVAL;
 
-    int negotiatedType = reply.readInt32();
-    if (type!= NULL) {
-        *type = (MetadataBufferType)negotiatedType;
-    }
+	if (strcmp(field->name, "ip"))
+		return -EINVAL;
 
-    err = reply.readInt32();
-    if (err!= OK) {
-        return err;
-    }
-
-    *bufferProducer = IGraphicBufferProducer::asInterface(reply.readStrongBinder());
-    return err;
+	return 0;
 }

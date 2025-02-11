@@ -1,10 +1,21 @@
-static void __dma_remap(struct page *page, size_t size, pgprot_t prot)
+static void aio_free_ring(struct kioctx *ctx)
 {
-    unsigned long start = (unsigned long) page_address(page);
-    unsigned long end = start + size;
+	int i;
 
-    if (start >= (unsigned long)page->index * PAGE_SIZE && start + size <= (unsigned long)(page->index + 1) * PAGE_SIZE)
-        apply_to_page_range(&init_mm, start, size, __dma_update_pte, &prot);
+	if (!ctx)
+		return;
 
-    flush_tlb_kernel_range(start, end);
+	for (i = 0; i < ctx->nr_pages; i++) {
+		pr_debug("pid(%d) [%d] page->count=%d\n", current->pid, i,
+				page_count(ctx->ring_pages[i]));
+		if (ctx->ring_pages[i])
+			put_page(ctx->ring_pages[i]);
+	}
+
+	put_aio_ring_file(ctx);
+
+	if (ctx->ring_pages && ctx->ring_pages != ctx->internal_pages)
+		kfree(ctx->ring_pages);
+
+	ctx = NULL;
 }

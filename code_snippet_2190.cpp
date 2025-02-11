@@ -1,36 +1,41 @@
-static MagickBooleanType IsITUFaxImage(const Image *image)
+static void tsc2102_audio_output_update(TSC210xState *s)
 {
-  const StringInfo *profile;
-  const unsigned char *datum;
+    int enable;
+    struct audsettings fmt;
 
-  profile = GetImageProfile(image, "8bim");
-  if (profile == (const StringInfo *) NULL)
-    return (MagickFalse);
-
-  // Validate input profile string
-  if (GetStringInfoLength(profile) > MAX_PROFILE_LENGTH || !isValidProfileChars(profile)) {
-    return (MagickFalse);
-  }
-
-  datum = GetStringInfoDatum(profile);
-  // Validate magic number using a regular expression or whitelist
-  if (!isValidMagicNumber(datum)) {
-    return (MagickFalse);
-  }
-
-  return (MagickTrue);
-}
-
-bool isValidProfileChars(const StringInfo *profile) {
-  const char *str = GetStringInfoString(profile);
-  for (int i = 0; i < GetStringInfoLength(profile); i++) {
-    if (str[i] < 0x20 || str[i] > 0x7E) { // Only allow printable ASCII characters
-      return false;
+    if (s->dac_voice[0]) {
+        tsc210x_out_flush(s, s->codec.out.len);
+        s->codec.out.size = 0;
+        AUD_set_active_out(s->dac_voice[0], 0);
+        AUD_close_out(&s->card, s->dac_voice[0]);
+        s->dac_voice[0] = NULL;
     }
-  }
-  return true;
-}
+    s->codec.cts = 0;
 
-bool isValidMagicNumber(const unsigned char *datum) {
-  return memcmp(datum, "\x47\x33\x46\x41\x58", 5) == 0; // Compare magic number securely
+    enable =
+            (~s->dac_power & (1 << 15)) &&			/* PWDNC */
+            (~s->dac_power & (1 << 10));			/* DAPWDN */
+    if (!enable || !s->codec.tx_rate)
+        return;
+
+    if (s->dac_voice[0] == NULL) {
+        s->dac_voice[0] = malloc(sizeof(struct aud_voice));
+        if (s->dac_voice[0] == NULL) {
+            // Error handling for out-of-memory situation
+            return;
+        }
+        memset(s->dac_voice[0], 0, sizeof(struct aud_voice));
+    }
+
+    fmt.endianness = 0;
+    fmt.nchannels = 2;
+    fmt.freq = s->codec.tx_rate;
+    fmt.fmt = AUD_FMT_S16;
+
+    s->dac_voice[0] = AUD_open_out(&s->card, s->dac_voice[0],
+                    "tsc2102.sink", s, (void *) tsc210x_audio_out_cb, &fmt);
+    if (s->dac_voice[0]) {
+        s->codec.cts = 1;
+        AUD_set_active_out(s->dac_voice[0], 1);
+    }
 }

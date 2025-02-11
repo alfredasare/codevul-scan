@@ -1,30 +1,16 @@
-static FilterEncodingNode* FLTGetTopBBOX(FilterEncodingNode *psNode)
+static int ptype_seq_open(struct inode *inode, struct file *file)
 {
-  int nCount = 0;
-  FilterEncodingNode* psTopBBOX = NULL;
-  const char* allowedDirectories[] = {"/path/to/allowed/directory1", "/path/to/allowed/directory2"};
-  const int allowedDirectoriesCount = sizeof(allowedDirectories) / sizeof(allowedDirectories[0]);
+	struct seq_net_private *snp;
+	struct dentry * dent = file->f_path.dentry;
 
-  if (psNode && psNode->directory!= NULL) {
-    char* directory = strdup(psNode->directory);
-    char* token = strtok(directory, "/");
-    while (token!= NULL) {
-      bool found = false;
-      for (int i = 0; i < allowedDirectoriesCount; i++) {
-        if (strcmp(token, allowedDirectories[i]) == 0) {
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        free(directory);
-        return NULL; // or handle the error as needed
-      }
-      token = strtok(NULL, "/");
-    }
-    free(directory);
-  }
+	if (!dent || !dent->d_parent || !dent->d_parent->d_inode)
+		return -EINVAL;
 
-  FLTGetTopBBOXInternal(psNode, &psTopBBOX, &nCount);
-  return psTopBBOX;
+	snp = kzalloc(sizeof(*snp), GFP_KERNEL);
+	if (!snp)
+		return -ENOMEM;
+
+	file->private_data = snp;
+
+	return single_open(file, ptype_seq_show, snp);
 }

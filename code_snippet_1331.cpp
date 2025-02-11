@@ -1,10 +1,33 @@
-static int sctp_error(struct sock *sk, int flags, int err)
+void XMLHttpRequest::send(DOMFormData* body, ExceptionState& es)
 {
-    if (err < 0 && err!= -ECONNREFUSED && err!= -ENOTCONN) {
-        err = sock_error(sk)? : -EPIPE;
+    if (!initSend(es))
+        return;
+
+    if (areMethodAndURLValidForSend()) {
+        m_requestEntityBody = FormData::createMultiPart(*(static_cast<FormDataList*>(body)), body->encoding(), document());
+
+        String contentType = getRequestHeader("Content-Type");
+        if (contentType.isEmpty()) {
+            contentType = sanitizeContentType("multipart/form-data; boundary=") + m_requestEntityBody->boundary().data();
+            setRequestHeaderInternal("Content-Type", contentType);
+        }
     }
-    if (err == -EPIPE &&!(flags & MSG_NOSIGNAL)) {
-        send_sig(SIGPIPE, current, 0);
+
+    createRequest(es);
+}
+
+String XMLHttpRequest::sanitizeContentType(const String& contentType)
+{
+    // Define a whitelist of allowed content types
+    const char* allowedContentTypes[] = {"application/x-www-form-urlencoded", "multipart/form-data"};
+
+    // Check if the provided contentType matches any of the allowed content types
+    for (const char* allowedContentType : allowedContentTypes) {
+        if (contentType.startsWithIgnoreCase(allowedContentType)) {
+            return contentType;
+        }
     }
-    return err;
+
+    // Return an error or use a default value if the contentType is not allowed
+    return "application/x-www-form-urlencoded";
 }

@@ -1,19 +1,15 @@
-static inline void dump_stacktrace(void)
+static void charstring\_start(void)
 {
-    void *array[MAX_STACKDEPTH];
-    size_t size;
-    char buffer[1024]; // Fixed-size buffer
-    size_t i;
-    FILE *fp = fopen("/dev/stderr", "w"); // Use a file descriptor
+int i;
 
-    size = backtrace(array, MAX_STACKDEPTH);
-    char **strings = backtrace_symbols_fd(array, size, fp);
+if (!charstring\_buf) {
+charstring\_bufsiz = 65536;
+if (!(charstring\_buf = (byte *) malloc(charstring\_bufsiz)))
+fatal\_error("out of memory");
+}
 
-    fprintf(fp, "\tObtained %zd stack frames.\n", size);
-
-    for (i = 0; i < size; i++)
-        fprintf(fp, "\t\t%s\n", strings[i]);
-
-    free(strings);
-    fclose(fp);
+charstring\_bp = charstring\_buf;
+cr = 4330;
+for (i = 0; i < lenIV && charstring\_bp < charstring\_buf + charstring\_bufsiz; i++)
+\*charstring\_bp++ = cencrypt((byte) 0);
 }

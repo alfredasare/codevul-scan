@@ -1,13 +1,9 @@
-checkStringLen(size_t len)
-{
-    if (len > (size_t)-1 / sizeof(jsonb_value))
-    {
-        ereport(ERROR,
-                (errcode(ERRCODE_PROGRAM_LIMIT_EXCEEDED),
-                 errmsg("string too long to represent as jsonb string"),
-                 errdetail("Due to an implementation restriction, jsonb strings cannot exceed %zu bytes.",
-                           (size_t)-1 / sizeof(jsonb_value))));
-    }
-
-    return len;
+RenderWidgetHostView* RenderFrameHostManager::GetRenderWidgetHostView() const {
+  if (delegate_ && delegate_->GetInterstitialForRenderManager()) {
+    return delegate_->GetInterstitialForRenderManager()->GetView();
+  }
+  if (render_frame_host_) {
+    return render_frame_host_->GetView();
+  }
+  return nullptr;
 }

@@ -1,18 +1,24 @@
-static int blkcg_reset_stats(struct cgroup_subsys_state *css,
-			     struct cftype *cftype, u64 val)
-{
-	struct blkcg *blkcg = css_to_blkcg(css);
-	struct blkcg_gq *blkg;
-	int i;
+bool switch_to_ns(pid_t pid, const char *ns) {
+	int fd, ret;
+	char nspath[MAXPATHLEN];
 
-	mutex_lock(&blkcg_pol_mutex);
-	spin_lock_irq(&blkcg->lock);
+	/* Check if ns is an absolute path */
+	if (ns[0] != '/') {
+		return false;
+	}
 
-	/*
-	 *... (rest of the code remains the same)
-	 */
+	ret = snprintf(nspath, MAXPATHLEN, "/proc/%d/ns/%s", pid, ns);
+	if (ret < 0 || ret >= MAXPATHLEN)
+		return false;
 
-	spin_unlock_irq(&blkcg->lock);
-	mutex_unlock(&blkcg_pol_mutex); 
-	return 0;
-}
+	fd = open(nspath, O_RDONLY);
+	if (fd < 0) {
+		SYSERROR("failed to open %s", nspath);
+		return false;
+	}
+
+	ret = setns(fd, 0);
+	if (ret) {
+		SYSERROR("failed to set process %d to %s of %d.", pid, ns, fd);
+		close(fd);
+		return false;

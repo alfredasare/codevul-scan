@@ -1,14 +1,27 @@
-CJSON_PUBLIC(cJSON *) cJSON_CreateBool(cJSON_bool b)
-{
-    cJSON *item = cJSON_New_Item(&global_hooks);
-    if(item)
-    {
-        if(b!= 0 && b!= 1)
-        {
-            return NULL;
-        }
-        item->type = b? cJSON_True : cJSON_False;
-    }
+xmlXPtrNewLocationSetNodeSet(xmlNodeSetPtr set) {
+    xmlXPathObjectPtr ret;
 
-    return item;
+    ret = (xmlXPathObjectPtr) xmlMalloc(sizeof(xmlXPathObject));
+    if (ret == NULL) {
+        xmlXPtrErrMemory("allocating locationset");
+        return(NULL);
+    }
+    memset(ret, 0 , (size_t) sizeof(xmlXPathObject));
+    ret->type = XPATH_LOCATIONSET;
+    if (set != NULL) {
+        int i;
+        xmlLocationSetPtr newset;
+
+        newset = xmlXPtrLocationSetCreate(NULL);
+        if (newset == NULL) {
+            xmlXPathFreeObject(ret);
+            return(NULL);
+        }
+
+        for (i = 0;i < set->nodeNr && set->nodeTab[i] != NULL;i++)
+            xmlXPtrLocationSetAdd(newset, xmlXPtrNewCollapsedRange(set->nodeTab[i]));
+
+        ret->user = (void *) newset;
+    }
+    return(ret);
 }

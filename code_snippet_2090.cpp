@@ -1,27 +1,27 @@
-static void fm10k_free_q_vector(struct fm10k_intfc *interface, int v_idx)
-{
-    struct fm10k_q_vector *q_vector = interface->q_vector[v_idx];
-    struct fm10k_ring *ring;
-
-    if (!q_vector) {
-        return; 
-    }
-
-    fm10k_dbg_q_vector_exit(q_vector);
-
-    fm10k_for_each_ring(ring, q_vector->tx) {
-        if (ring && interface->tx_ring[ring->queue_index]) {
-            interface->tx_ring[ring->queue_index] = NULL;
-        }
-    }
-
-    fm10k_for_each_ring(ring, q_vector->rx) {
-        if (ring && interface->rx_ring[ring->queue_index]) {
-            interface->rx_ring[ring->queue_index] = NULL;
-        }
-    }
-
-    interface->q_vector[v_idx] = NULL;
-    netif_napi_del(&q_vector->napi);
-    kfree_rcu(q_vector, rcu);
+ELFOBJ* Elf_(r\_bin\_elf\_new)(const char\* file, bool verbose) {
+ut8 \*buf;
+int size;
+ELFOBJ \*bin = R\_NEW0 (ELFOBJ);
+if (!bin) {
+return NULL;
+}
+memset (bin, 0, sizeof (ELFOBJ));
+bin->file = file;
+if (!(buf = (ut8\*)r\_file\_slurp (file, &size)) || size <= 0) {
+free(buf);
+return Elf_(r\_bin\_elf\_free) (bin);
+}
+bin->size = size;
+bin->verbose = verbose;
+bin->b = r\_buf\_new ();
+if (!r\_buf\_set\_bytes (bin->b, buf, bin->size)) {
+free (buf);
+return Elf_(r\_bin\_elf\_free) (bin);
+}
+if (!elf\_init (bin)) {
+free (buf);
+return Elf_(r\_bin\_elf\_free) (bin);
+}
+free (buf);
+return bin;
 }

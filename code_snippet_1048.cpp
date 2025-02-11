@@ -1,15 +1,26 @@
-float TextAutosizer::computeAutosizedFontSize(float specifiedSize, float multiplier)
+static ssize_t ucma_resolve_ip(struct ucma_file *file,
+			       const char __user *inbuf,
+			       int in_len, int out_len)
 {
-    const float pleasantSize = 16.0f;
-    const float gradientAfterPleasantSize = 0.5f;
+	struct rdma_ucm_resolve_ip cmd;
+	struct ucma_context *ctx;
+	int ret;
 
-    float computedSize;
-    if (specifiedSize <= pleasantSize)
-        computedSize = multiplier * specifiedSize;
-    else {
-        computedSize = multiplier * pleasantSize + gradientAfterPleasantSize * (specifiedSize - pleasantSize);
-        if (computedSize > FLT_MAX || computedSize < specifiedSize)
-            computedSize = specifiedSize;
-    }
-    return computedSize;
+	if (copy_from_user(&cmd, inbuf, sizeof(cmd)))
+		return -EFAULT;
+
+	ctx = ucma_get_ctx(file, cmd.id);
+	if (IS_ERR(ctx))
+		return PTR_ERR(ctx);
+
+	ret = rdma_resolve_addr(ctx->cm_id, (struct sockaddr *) &cmd.src_addr,
+				(struct sockaddr *) &cmd.dst_addr,
+				cmd.timeout_ms);
+
+	/* Perform the copy_from_user after the context is released to avoid TOCTOU race condition */
+	if (copy_from_user(&cmd, inbuf, sizeof(cmd)))
+		ret = -EFAULT;
+
+	ucma_put_ctx(ctx);
+	return ret;
 }

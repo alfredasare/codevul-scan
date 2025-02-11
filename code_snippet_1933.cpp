@@ -1,31 +1,17 @@
-static int recv_pkt(git_pkt **out, gitno_buffer *buf)
+static u64 dccp_ack_seq(const struct dccp_hdr *dh)
 {
-    const char *ptr = buf->data, *line_end = ptr;
-    git_pkt *pkt = NULL;
-    int pkt_type, error = 0, ret;
+	const struct dccp_hdr_ack_bits *dhack;
+	u64 high, low, result;
 
-    do {
-        if (buf->offset > 0)
-            error = git_pkt_parse_line(&pkt, ptr, &line_end, buf->offset);
-        else
-            error = GIT_EBUFS;
+	dhack = (void *)dh + __dccp_basic_hdr_len(dh);
+	high = ntohs(dhack->dccph_ack_nr_high);
+	low = ntohl(dhack->dccph_ack_nr_low);
 
-        if (error == 0)
-            break; /* return the pkt */
+	if (high > UINT32_MAX || low > UINT32_MAX) {
+		// Handle error
+		return 0;
+	}
 
-        if (error < 0 && error!= GIT_EBUFS)
-            return error;
-
-        if ((ret = gitno_recv(buf, fortuna_prng_generate(16))) < 0)
-            return ret;
-    } while (error);
-
-    gitno_consume(buf, line_end);
-    pkt_type = pkt->type;
-    if (out!= NULL)
-        *out = pkt;
-    else
-        git__free(pkt);
-
-    return pkt_type;
+	result = ((u64)high << 32) + low;
+	return result;
 }

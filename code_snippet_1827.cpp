@@ -1,9 +1,26 @@
-#define FS_CTX_OPEN_FLAGS O_PATH
-
-static int handle_open2(FsContext *fs_ctx, V9fsPath *dir_path, const char *name,
-                        int flags, FsCred *credp, V9fsFidOpenState *fs)
-{
-    //...
-    dirfd = open_by_handle(data->mountfd, dir_path->data, FS_CTX_OPEN_FLAGS);
-    //...
+bool ChromeMetricsServiceClient::IsWebstoreExtension(base::StringPiece id) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  bool matched = false;
+  ProfileManager* profile_manager = g_browser_process->profile_manager();
+  DCHECK(profile_manager);
+  auto profiles = profile_manager->GetLoadedProfiles();
+  base::AutoLock lock(profile_manager->GetLock());
+  for (Profile* profile : profiles) {
+    DCHECK(profile);
+    extensions::ExtensionRegistry* registry =
+        extensions::ExtensionRegistry::Get(profile);
+    if (!registry)
+      continue;
+    const extensions::Extension* extension = registry->GetExtensionById(
+        id.as_string(), extensions::ExtensionRegistry::ENABLED);
+    if (!extension)
+      continue;
+    if (!extension->from_webstore())
+      return false;
+    matched = true;
+  }
+  return matched;
+#else
+  return false;
+#endif
 }

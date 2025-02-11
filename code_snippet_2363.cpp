@@ -1,21 +1,7 @@
-void DevToolsWindow::OpenExternalFrontend(
-    Profile* profile,
-    const std::string& frontend_url,
-    const scoped_refptr<content::DevToolsAgentHost>& agent_host,
-    FrontendType frontend_type) {
-  DevToolsWindow* window = FindDevToolsWindow(agent_host.get());
-  if (!window) {
-    window = Create(profile, nullptr, frontend_type, GURL(), false, std::string(), std::string());
-    if (!window)
-      return;
-    window->bindings_->AttachTo(agent_host);
-    window->close_on_detach_ = false;
-  }
+pv_api_ip;
+ps\_mem\_q\_op = (impeg2d\_fill\_mem\_rec\_op\_t *)pv\_api\_op;
 
-  GURL sanitized_frontend_url = GURL(frontend_url);
-  if (!sanitized_frontend_url.is_valid()) {
-    return;
-  }
+impeg2d\_fill\_mem\_rec(ps\_mem\_q\_ip, ps\_mem\_q\_op);
 
-  window->ScheduleShow(DevToolsToggleAction::Show());
+return(IV\_SUCCESS);
 }

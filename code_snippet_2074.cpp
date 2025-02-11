@@ -1,19 +1,14 @@
-static void jpg_unescape(const uint8_t *src, int src_size, uint8_t *dst, int *dst_size) {
-    const uint8_t *src_end = src + src_size;
-    uint8_t *dst_start = dst;
-    const char *allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~"; // Whitelist of allowed characters
+c++
+#define MAX_NAME_LENGTH 128
 
-    while (src < src_end) {
-        uint8_t x = *src++;
-
-        if (strchr(allowed_chars, x)) {
-            *dst++ = x;
-        } else {
-            *dst++ = '%';
-            *dst++ = 'x';
-            sprintf((char*)dst, "%02x", x);
-            dst += strlen((char*)dst);
-        }
+android::SoftOMXComponent *createSoftOMXComponent(
+        const char *name, const OMX_CALLBACKTYPE *callbacks,
+        OMX_PTR appData, OMX_COMPONENTTYPE **component) {
+    // Check if the name string is within the maximum length
+    if (std::strlen(name) > MAX_NAME_LENGTH) {
+        // Return an error or throw an exception
+        return nullptr;
     }
-    *dst_size = dst - dst_start;
+
+    return new android::SoftMP3(name, callbacks, appData, component);
 }

@@ -1,35 +1,22 @@
-void LayerTreeHostImpl::SetManagedMemoryPolicy(
-    const ManagedMemoryPolicy& policy) {
-  if (cached_managed_memory_policy_ == policy)
-    return;
+static void udf_find_vat_block(struct super_block *sb, int p_index,
+			       int type1_index, sector_t start_block)
+{
+	struct udf_sb_info *sbi = UDF_SB(sb);
+	struct udf_part_map *map = &sbi->s_partmaps[p_index];
+	sector_t vat_block;
+	struct kernel_lb_addr ino;
+	sector_t max_blocks = map->s_partition_size / sb->s_blocksize; // Maximum valid block number
 
-  // Secure implementation of ActualManagedMemoryPolicy()
-  ManagedMemoryPolicy actual_policy = CalculateActualManagedMemoryPolicy();
-
-  // Validate input parameters
-  if (!ValidatePolicy(policy)) {
-    LOG(ERROR) << "Invalid managed memory policy";
-    return;
-  }
-
-  // Rest of the function remains the same
-  ManagedMemoryPolicy old_policy = actual_policy;
-  cached_managed_memory_policy_ = policy;
-  actual_policy = CalculateActualManagedMemoryPolicy();
-
-  if (old_policy == actual_policy)
-    return;
-
-  UpdateTileManagerMemoryPolicy(actual_policy);
-
-  bool needs_commit = true;
-  if (visible() &&
-      actual_policy.bytes_limit_when_visible >= max_memory_needed_bytes_ &&
-      old_policy.bytes_limit_when_visible >= max_memory_needed_bytes_ &&
-      actual_policy.priority_cutoff_when_visible == old_policy.priority_cutoff_when_visible) {
-    needs_commit = false;
-  }
-
-  if (needs_commit)
-    client_->SetNeedsCommitOnImplThread();
+	/*
+	 * VAT file entry is in the last recorded block. Some broken disks have
+	 * it a few blocks before so try a bit harder...
+	 */
+	ino.partitionReferenceNum = type1_index;
+	for (vat_block = start_block;
+	     vat_block >= map->s_partition_root &&
+	     vat_block >= start_block - 3 &&
+	     vat_block <= max_blocks; vat_block--) {
+		ino.logicalBlockNum = vat_block - map->s_partition_root;
+		sbi->s_vat_inode = udf_iget(sb, &ino);
+	}
 }

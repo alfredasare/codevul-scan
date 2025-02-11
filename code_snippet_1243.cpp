@@ -1,16 +1,17 @@
-static int rtl8150_suspend(struct usb_interface *intf, pm_message_t message)
-{
-    rtl8150_t *dev = usb_get_intfdata(intf);
-    if (!dev ||!dev->netdev) {
-        dev_err(&intf->dev, "Invalid or missing device data\n");
-        return -EINVAL;
-    }
+#include <regex>
 
-    netif_device_detach(dev->netdev);
+// Add a helper function to sanitize the input
+base::string16 SanitizeInput(const std::string& input) {
+  std::string sanitized_input = input;
+  // Replace any non-alphanumeric characters with an empty string
+  std::regex sanitize_regex("\\W");
+  sanitized_input = std::regex_replace(sanitized_input, sanitize_regex, "");
+  return base::string16(sanitized_input.begin(), sanitized_input.end());
+}
 
-    if (netif_running(dev->netdev)) {
-        usb_kill_urb(dev->rx_urb);
-        usb_kill_urb(dev->intr_urb);
-    }
-    return 0;
+base::string16 GetSecondPageTitle() {
+  // Assume kSecondPageTitle is user-supplied data
+  std::string raw_input = kSecondPageTitle;
+  // Validate and sanitize the input
+  return ASCIIToUTF16(SanitizeInput(raw_input));
 }

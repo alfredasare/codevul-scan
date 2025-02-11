@@ -1,22 +1,8 @@
-SYSCALL_DEFINE2(munlock, unsigned long, start, size_t, len)
-{
-    int ret;
+size_t IndexOf(const std::vector<string16>& warnings, const std::string& warning) {
+  for (size_t i = 0; i < warnings.size(); ++i) {
+    if (warnings[i] == ASCIIToUTF16(warning))
+      return i;
+  }
 
-    len = PAGE_ALIGN(len + (offset_in_page(start)));
-    start &= PAGE_MASK;
-
-    if (!is_vm_hva_start_range(start, start + len)) {
-        return -EINVAL;
-    }
-
-    if (len > PAGE_SIZE) {
-        return -EINVAL;
-    }
-
-    if (down_write_killable(&current->mm->mmap_sem))
-        return -EINTR;
-    ret = apply_vma_lock_flags(start, len, 0);
-    up_write(&current->mm->mmap_sem);
-
-    return ret;
+  return warnings.size()-1;
 }

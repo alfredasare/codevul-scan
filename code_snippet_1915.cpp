@@ -1,26 +1,23 @@
-static int nl80211_testmode_do(struct sk_buff *skb, struct genl_info *info)
+void xen\_pcibk\_config\_free\_dev(struct pci\_dev *dev)
 {
-    struct cfg80211_registered_device *rdev = info->user_ptr[0];
-    int err;
-    size_t len;
+struct xen\_pcibk\_dev\_data *dev\_data = pci\_get\_drvdata(dev);
+struct config\_field\_entry *cfg\_entry, *t;
+const struct config\_field \*field;
 
-    if (!info->attrs[NL80211_ATTR_TESTDATA])
-        return -EINVAL;
+dev\_dbg(&dev->dev, "free-ing virtual configuration space fields\n");
+if (!dev\_data)
+return;
 
-    len = nla_len(info->attrs[NL80211_ATTR_TESTDATA]);
-    if (len > MAX_TESTDATA_SIZE) {
-        err = -E2BIG;
-        goto out;
-    }
+spin\_lock(&dev\_data->config\_fields\_lock);
+list\_for\_each\_entry\_safe(cfg\_entry, t, &dev\_data->config\_fields, list) {
+list\_del(&cfg\_entry->list);
 
-    err = -EOPNOTSUPP;
-    if (rdev->ops->testmode_cmd) {
-        rdev->testmode_info = info;
-        err = rdev->ops->testmode_cmd(&rdev->wiphy,
-                nla_data(info->attrs[NL80211_ATTR_TESTDATA]), len);
-        rdev->testmode_info = NULL;
-    }
+field = cfg\_entry->field;
 
-out:
-    return err;
+if (field->release)
+field->release(dev, OFFSET(cfg\_entry), cfg\_entry->data);
+
+kfree(cfg\_entry);
+}
+spin\_unlock(&dev\_data->config\_fields\_lock);
 }

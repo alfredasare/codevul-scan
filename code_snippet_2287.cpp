@@ -1,11 +1,17 @@
-create_backup_copy (char const *from, char const *to, struct stat *st,
-                    bool to_dir_known_to_exist, bool remember_backup)
+static int pndisc_is_router(const void *pkey, struct net_device *dev)
 {
-  struct stat backup_st;
-  const char *copy_file_path = get_config_value("COPY_FILE_PATH");
-  copy_file (from, to, remember_backup ? &backup_st : NULL, 0, st->st_mode,
-             to_dir_known_to_exist, copy_file_path);
-  if (remember_backup)
-    insert_file (&backup_st);
-  set_file_attributes (to, FA_TIMES | FA_IDS | FA_MODE, from, st, st->st_mode, NULL);
+	struct pneigh_entry *n;
+	int ret = -1;
+
+	if (!pkey || !dev) {
+		return ret;
+	}
+
+	read_lock_bh(&nd_tbl.lock);
+	n = __pneigh_lookup(&nd_tbl, dev_net(dev), pkey, dev);
+	if (n)
+		ret = !!(n->flags & NTF_ROUTER);
+	read_unlock_bh(&nd_tbl.lock);
+
+	return ret;
 }

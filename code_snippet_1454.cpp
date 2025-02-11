@@ -1,29 +1,21 @@
-views::View* TrayPower::CreateDefaultView(user::LoginStatus status) {
-  try {
-    date_.reset(new tray::DateView(tray::DateView::DATE));
-    if (status!= user::LOGGED_IN_NONE && status!= user::LOGGED_IN_LOCKED)
-      date_->set_actionable(true);
+void free\_xenballooned\_pages(int nr\_pages, struct page **pages)
+{
+ int i;
 
-    views::View* container = new views::View;
-    views::BoxLayout* layout = new views::BoxLayout(views::BoxLayout::kHorizontal,
-        kTrayPopupPaddingHorizontal, 10, 0);
-    layout->set_spread_blank_space(true);
-    container->SetLayoutManager(layout);
-    container->set_background(views::Background::CreateSolidBackground(
-        SkColorSetRGB(0xf1, 0xf1, 0xf1)));
-    container->AddChildView(date_.get());
+ mutex\_lock(&balloon\_mutex);
 
-    PowerSupplyStatus power_status =
-        ash::Shell::GetInstance()->tray_delegate()->GetPowerSupplyStatus();
-    if (power_status.battery_is_present) {
-      power_.reset(new tray::PowerPopupView());
-      power_->UpdatePowerStatus(power_status);
-      container->AddChildView(power_.get());
-    }
-  } catch (const std::exception& e) {
-    LOG(ERROR) << "Error creating default view: " << e.what();
-  } catch (...) {
-    LOG(ERROR) << "Unknown error creating default view";
-  }
-  return container;
+ for (i = 0; i < nr\_pages; i++) {
+ if (pages[i] != NULL) { // add null check
+ __SetPageOffline(pages[i]);
+ balloon\_append(pages[i]);
+ }
+ }
+
+ balloon\_stats.target\_unpopulated -= nr\_pages;
+
+ /* The balloon may be too large now. Shrink it if needed. */
+ if (current\_credit())
+ schedule\_delayed\_work(&balloon\_worker, 0);
+
+ mutex\_unlock(&balloon\_mutex);
 }

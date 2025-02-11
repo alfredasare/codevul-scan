@@ -1,11 +1,17 @@
-static uint32_t hpet_time_after64(uint64_t a, uint64_t b)
+void usb_disable_interface(struct usb_device *dev, struct usb_interface *intf,
+		bool reset_hardware)
 {
-    if (!is_valid_input(a) ||!is_valid_input(b)) {
-        return 0;
-    }
+	struct usb_host_interface *alt = intf->cur_altsetting;
+	int i;
 
-    int64_t a_signed = (int64_t)a;
-    int64_t b_signed = (int64_t)b;
-
-    return (b_signed - a_signed < 0);
+	for (i = 0; i < alt->desc.bNumEndpoints; ++i) {
+		int retval = usb_disable_endpoint(dev,
+				alt->endpoint[i].desc.bEndpointAddress,
+				reset_hardware);
+		if (retval < 0) {
+			dev_err(&intf->dev, "Failed to disable endpoint %d\n",
+				alt->endpoint[i].desc.bEndpointAddress);
+			// Handle the error here, e.g., retry, log, or propagate the error
+		}
+	}
 }

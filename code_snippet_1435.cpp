@@ -1,24 +1,24 @@
-bool DownloadController::HasFileAccessPermission(ui::WindowAndroid* window_android) {
-  ScopedJavaLocalRef<jobject> jwindow_android = window_android->GetJavaObject();
+pidfile(pid\_file))
+return;
 
-  DCHECK_CURRENTLY_ON(BrowserThread::UI);
-  DCHECK(!jwindow_android.is_null());
-
-  JNIEnv* env = base::android::AttachCurrentThread();
-
-  // Validate and sanitize the GetJavaObject()->Controller(env) variable
-  const std::string controllerStr = GetJavaObject()->Controller(env).toString();
-  std::string sanitizedController = SanitizePath(controllerStr);
-
-  // Validate and sanitize the jwindow_android variable
-  const std::string jwindow_android_str = jwindow_android.toString();
-  std::string sanitizedJwindowAndroid = SanitizePath(jwindow_android_str);
-
-  return Java_DownloadController_hasFileAccess(env, sanitizedController.c_str(), sanitizedJwindowAndroid.c_str());
+char resolved\_path[4096];
+if (realpath(pid\_file, resolved\_path) == NULL) {
+fprintf(stderr, "Error resolving path: %s\n", strerror(errno));
+return;
 }
 
-std::string SanitizePath(const std::string& path) {
-  std::string sanitizedPath = path;
-  sanitizedPath.erase(std::remove(sanitizedPath.begin(), sanitizedPath.end(), '/'), sanitizedPath.end());
-  return sanitizedPath;
+int fd = open(resolved\_path, O\_WRONLY|O\_EXCL);
+if (fd == -1) {
+fprintf(stderr, "Could not open or create the pid file %s: %s\n", resolved\_path, strerror(errno));
+return;
+}
+
+if (close(fd) != 0) {
+fprintf(stderr, "Error closing the pid file %s: %s\n", resolved\_path, strerror(errno));
+}
+
+if (unlink(resolved\_path) != 0) {
+fprintf(stderr, "Could not remove the pid file %s.\n", resolved\_path);
+}
+
 }

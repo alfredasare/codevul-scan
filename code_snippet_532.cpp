@@ -1,28 +1,10 @@
-static ZIPARCHIVE_METHOD(getCommentIndex)
+static inline int skb_alloc_rx_flag(const struct sk_buff *skb)
 {
-    struct zip *intern;
-    zval *self = getThis();
-    zend_long index, flags = 0;
-    const char * comment;
-    size_t comment_len = 0; 
-    struct zip_stat sb;
-
-    if (!self) {
-        RETURN_FALSE;
-    }
-
-    ZIP_FROM_OBJECT(intern, self);
-
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "l|l",
-            &index, &flags) == FAILURE) {
-        return;
-    }
-
-    PHP_ZIP_STAT_INDEX(intern, index, 0, sb);
-    comment = zip_get_file_comment(intern, index, (size_t*)&comment_len, (int)flags);
-    if (comment && comment_len > 0) {
-        RETURN_STRINGL((char *)comment, (size_t)comment_len);
-    } else {
-        RETURN_FALSE;
-    }
+	if (skb_pfmemalloc(skb)) {
+		size_t copy_len = min(skb->data_len, sizeof(skb->head));
+		memcpy(skb->head, skb->data, copy_len);
+		skb_put(skb, copy_len);
+		return SKB_ALLOC_RX;
+	}
+	return 0;
 }

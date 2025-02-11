@@ -1,12 +1,18 @@
-size_t mptsas_config_manufacturing_9(MPTSASState *s, uint8_t **data, int address)
+void StyleResolver::matchUARules(ElementRuleCollector& collector, RuleSet* rules)
 {
-    if (address < 0 || address > MPTSAS_STATE_MAX_SIZE) {
-        return 0;
+    if (collector.get() == nullptr) {
+        return;
     }
 
-    if (!data || strlen(*data) > MPTSAS_STATE_MAX_DATA_SIZE) {
-        return 0;
+    collector.clearMatchedRules();
+    if (!collector->matchedResult()) {
+        return;
     }
 
-    return MPTSAS_CONFIG_PACK(9, MPI_CONFIG_PAGETYPE_MANUFACTURING, 0x00, memcpy_s(&s->data[address], MPTSAS_STATE_MAX_DATA_SIZE, *data, strlen(*data)));
+    collector->matchedResult()->ranges.lastUARule = collector->matchedResult()->matchedProperties.size() - 1;
+
+    RuleRange ruleRange = collector->matchedResult()->ranges.UARuleRange();
+    collector->collectMatchingRules(MatchRequest(rules), ruleRange);
+
+    collector->sortAndTransferMatchedRules();
 }

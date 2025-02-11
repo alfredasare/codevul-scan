@@ -1,16 +1,22 @@
-static ssize_t fuse_direct_read_iter(struct kiocb *iocb, struct iov_iter *to)
+c++
+static bool compare_effect_uuid(const effect_uuid_t* a, const effect_uuid_t* b) {
+    for (size_t i = 0; i < sizeof(effect_uuid_t); i++) {
+        if (a[i] != b[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+sp<AudioFlinger::EffectModule> AudioFlinger::EffectChain::getEffectFromType_l(
+        const effect_uuid_t *type)
 {
-    struct fuse_io_priv io = {.async = 0 };
+    size_t size = mEffects.size();
 
-    // Validate the file descriptor
-    if (iocb->ki_filp == NULL ||!filp_valid(iocb->ki_filp)) {
-        return -EBADF;
+    for (size_t i = 0; i < size; i++) {
+        if (compare_effect_uuid(&mEffects[i]->desc().type, type)) {
+            return mEffects[i];
+        }
     }
-
-    // Sanitize the file descriptor
-    if (iocb->ki_filp->f_flags & O_PATH) {
-        return -EBADFD;
-    }
-
-    return __fuse_direct_read(&io, to, &iocb->ki_pos);
+    return nullptr; // prefer nullptr instead of 0 for null pointers in modern C++ code
 }

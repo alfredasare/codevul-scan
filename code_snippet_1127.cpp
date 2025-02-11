@@ -1,13 +1,4 @@
-BOOLEAN btm_sec_are_all_trusted(UINT32 p_mask[])
+static int kvm_read_hva(void *data, const void __user *hva, size_t len)
 {
-    UINT32 trusted_inx;
-    UINT32 mask_size = sizeof(p_mask) / sizeof(p_mask[0]);
-
-    for (trusted_inx = 0; trusted_inx < mask_size; trusted_inx++)
-    {
-        if (p_mask[trusted_inx]!= BTM_SEC_TRUST_ALL)
-            return FALSE;
-    }
-
-    return TRUE;
+	return copy_from_user(data, hva, len < PAGE_SIZE ? len : PAGE_SIZE);
 }

@@ -1,26 +1,26 @@
-void Location::assign(LocalDOMWindow* current_window,
-                      LocalDOMWindow* entered_window,
-                      const USVStringOrTrustedURL& stringOrUrl,
-                      ExceptionState& exception_state) {
-  if (!BindingSecurity::ShouldAllowAccessTo(current_window, this, exception_state)) {
-    return;
-  }
+#include <linux/fs.h>
+#include <linux/mm.h>
+#include <linux/slab.h>
+#include <linux/uaccess.h>
+#include <linux/sched.h>
+#include <linux/types.h>
+#include <asm/page.h>
+#include <asm/pgtable.h>
 
-  // Validate the input URL
-  std::string url_string = stringOrUrl.ToString();
-  if (!IsValidUrl(url_string)) {
-    exception_state.ThrowException("Invalid URL");
-    return;
-  }
+SYSCALL_DEFINE2(munlock, unsigned long, start, size_t, len)
+{
+	int ret;
+	unsigned long end;
 
-  String url = GetStringFromTrustedURL(stringOrUrl, current_window->document(), exception_state);
-  if (!exception_state.HadException()) {
-    SetLocation(url, current_window, entered_window, &exception_state);
-  }
-}
+	if (!start || !len || (start & ~PAGE_MASK) || (end = PAGE_ALIGN(start + len)) > TASK_SIZE) {
+		/* Invalid input parameters */
+		return -EINVAL;
+	}
 
-bool IsValidUrl(const std::string& url) {
-  // Use a reputable URL parsing library or implementation
-  // For example, using the Chromium URL parsing library:
-  return url.ParseUrl()!= nullptr;
+	if (down_write_killable(&current->mm->mmap_sem))
+		return -EINTR;
+	ret = apply_vma_lock_flags(start, len, 0);
+	up_write(&current->mm->mmap_sem);
+
+	return ret;
 }

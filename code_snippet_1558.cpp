@@ -1,15 +1,8 @@
-static struct oz_hcd *oz_hcd_claim(void)
+int lh_char_equal(const void *k1, const void *k2)
 {
-    struct oz_hcd *ozhcd;
-
-    spin_lock_bh(&g_hcdlock);
-    ozhcd = g_ozhcd;
-    if (ozhcd) {
-        usb_get_hcd(ozhcd->hcd);
-        if (ozhcd->size > 0 && ozhcd->size <= sizeof(ozhcd->buffer)) {
-            memcpy(ozhcd->buffer, ozhcd->data, ozhcd->size);
-        }
+    size_t length = strlen((const char*)k1);
+    if (length != strlen((const char*)k2)) {
+        return 0;
     }
-    spin_unlock_bh(&g_hcdlock);
-    return ozhcd;
+    return !memcmp(k1, k2, length + 1);
 }

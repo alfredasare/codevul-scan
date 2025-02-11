@@ -1,30 +1,15 @@
-void limit_string(char *name)
+static int posix_get_monotonic_coarse(clockid_t which_clock, struct timespec64 *tp)
 {
-    char buffer[NAME_LENGTH_LIMIT + 1]; 
-    int len;
-
-    if (!name)
-        return;
-
-    len = strlen(name);
-    if (len > NAME_LENGTH_LIMIT) {
-        strncpy(buffer, name, NAME_LENGTH_LIMIT);
-        buffer[NAME_LENGTH_LIMIT] = '\0';
-        name = buffer;
+#ifdef CLOCK_MONOTONIC_COARSE
+    if (which_clock != CLOCK_MONOTONIC_COARSE) {
+        return -EINVAL;
     }
+#else
+    if (which_clock != 0) {
+        return -EINVAL;
+    }
+#endif
 
-    int i;
-
-    if (!name)
-        return;
-
-    if (strlen(name) < NAME_LENGTH_LIMIT)
-        return;
-
-    i = NAME_LENGTH_LIMIT-4;
-    name[i++] = '.';
-    name[i++] = '.';
-    name[i++] = '.';
-    name[i] = '\0';
-    return;
+    *tp = get_monotonic_coarse64();
+    return 0;
 }

@@ -1,20 +1,37 @@
-hostname_map(char* hostname) {
-    int len, n;
-    static char* list[] = { SERVER_NAME_LIST }; // assume SERVER_NAME_LIST is a list of valid directory paths
+int btrfs_create_subvol_root(struct btrfs_trans_handle *trans,
+			     struct btrfs_root *new_root,
+			     struct btrfs_root *parent_root,
+			     u64 new_dirid)
+{
+	struct inode *inode;
+	int err;
+	u64 index = 0;
+	uid_t uid = current_uid();		// add this line
+	gid_t gid = current_gid();		// add this line
 
-    len = strlen(hostname);
-    for (n = 0; n < sizeof(list) / sizeof(*list); ++n) {
-        if (strncasecmp(hostname, list[n], len) == 0) {
-            if (path_is_within_expected_dir(list[n])) {
-                return &list[n][len];
-            }
-        }
-    }
-    return (char*) 0;
-}
+	inode = btrfs_new_inode(trans, new_root, NULL, "..", 2,
+				new_dirid, new_dirid,
+				S_IFDIR | (~current_umask() & S_IRWXUGO),
+				&index);
+	if (IS_ERR(inode))
+		return PTR_ERR(inode);
+	inode->i_op = &btrfs_dir_inode_operations;
+	inode->i_fop = &btrfs_dir_file_operations;
 
-bool path_is_within_expected_dir(char* path) {
-    // Implement your own logic to check if the path is within the expected directory structure
-    // For example, you can use a whitelist of allowed directories or check if the path starts with a certain prefix
-    // Return true if the path is valid, false otherwise
+	set_nlink(inode, 1);
+	btrfs_i_size_write(inode, 0);
+	inode->i_uid = uid;			// add these lines
+	inode->i_gid = gid;			// add these lines
+	unlock_new_inode(inode);
+
+	err = btrfs_subvol_inherit_props(trans, new_root, parent_root);
+	if (err)
+		btrfs_err(new_root->fs_info,
+			  "error inheriting subvolume %llu properties: %d",
+			  new_root->root_key.objectid, err);
+
+	err = btrfs_update_inode(trans, new_root, inode);
+
+	iput(inode);
+	return err;
 }

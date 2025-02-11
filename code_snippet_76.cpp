@@ -1,52 +1,46 @@
-void CL_PacketEvent( netadr_t from, msg_t *msg ) {
-    int headerBytes;
+void CL\_PacketEvent( netadr\_t from, msg\_t \*msg ) {
+	int	headerBytes;
 
-    clc.lastPacketTime = cls.realtime;
+	clc.lastPacketTime = cls.realtime;
 
-    if ( msg->cursize >= 4 && *(int *)msg->data == -1 ) {
-        CL_ConnectionlessPacket( from, msg );
-        return;
-    }
+	if ( msg->cursize >= 4 && *(int *)msg->data == -1 ) {
+		CL\_ConnectionlessPacket( from, msg );
+		return;
+	}
 
-    // Validate msg->cursize
-    if ( msg->cursize < 0 || msg->cursize > MAX_PACKET_SIZE ) {
-        Com_Printf ("%s: Invalid packet size\n", NET_AdrToStringwPort( from ));
-        return;
-    }
+	if ( clc.state < CA\_CONNECTED ) {
+		return;	// can't be a valid sequenced packet
+	}
 
-    // Validate msg->data
-    if (!msg->data || msg->cursize > strlen(msg->data) ) {
-        Com_Printf ("%s: Invalid packet data\n", NET_AdrToStringwPort( from ));
-        return;
-    }
+	if ( msg->cursize < 4 ) {
+		Com\_Printf ("%s: Runt packet\n", NET\_AdrToStringwPort( from ));
+		return;
+	}
 
-    if ( clc.state < CA_CONNECTED ) {
-        return;	// can't be a valid sequenced packet
-    }
+	if ( !NET\_CompareAdr( from, clc.netchan.remoteAddress ) ) {
+		Com\_DPrintf( "%s:sequenced packet without connection\n"
+			, NET\_AdrToStringwPort( from ) );
+		return;
+	}
 
-    if ( msg->cursize < 4 ) {
-        Com_Printf ("%s: Runt packet\n", NET_AdrToStringwPort( from ));
-        return;
-    }
+	if ( !CL\_Netchan\_Process( &clc.netchan, msg ) ) {
+		return;	// out of order, duplicated, etc
+	}
 
-    if (!NET_CompareAdr( from, clc.netchan.remoteAddress ) ) {
-        Com_DPrintf( "%s:sequenced packet without connection\n"
-           , NET_AdrToStringwPort( from ) );
-        return;
-    }
+	// Fix: Check for integer overflow before using the value
+	if (msg->cursize - headerBytes > INT\_MAX || msg->cursize - headerBytes < 0) {
+		Com_Printf("Error: Integer overflow detected in message data\n");
+		return;
+	}
 
-    if (!CL_Netchan_Process( &clc.netchan, msg ) ) {
-        return;	// out of order, duplicated, etc
-    }
+	headerBytes = msg->readcount;
 
-    headerBytes = msg->readcount;
+	clc.serverMessageSequence = LittleLong( *(int \*)msg->data );
 
-    clc.serverMessageSequence = LittleLong( *(int *)msg->data );
+	clc.lastPacketTime = cls.realtime;
+	CL\_ParseServerMessage( msg );
 
-    clc.lastPacketTime = cls.realtime;
-    CL_ParseServerMessage( msg );
-
-    if ( clc.demorecording &&!clc.demowaiting ) {
-        CL_WriteDemoMessage( msg, headerBytes );
-    }
+	if ( clc.demorecording && !clc.demowaiting ) {
+		CL\_WriteDemoMessage( msg, headerBytes );
+	}
 }

@@ -1,28 +1,36 @@
-#include <linux/drm.h>
-#include <linux/mutex.h>
+free_share(sa_share_impl_t impl_share) {
+    sa_fstype_t *fstype;
 
-void vc4_drm_mode_crtc_helper_funcs(struct drm_crtc *crtc)
-{
-    struct vc4_dev *vc4 = to_vc4_dev(crtc->dev);
-    mutex_init(&vc4->job_lock, &vc4->power_lock, 0, NULL);
-}
+    if (impl_share == NULL) {
+        return;
+    }
 
-void vc4_gem_init(struct drm_device *dev)
-{
-    struct vc4_dev *vc4 = to_vc4_dev(dev);
+    fstype = fstypes;
+    while (fstype != NULL) {
+        if (impl_share->fsinfo && impl_share->fsinfo->resource && impl_share->fsinfo->resource->shareopts && impl_share->fsinfo->resource->shareopts->clear_shareopts) {
+            impl_share->fsinfo->resource->shareopts->clear_shareopts(impl_share);
+        }
 
-    INIT_LIST_HEAD(&vc4->bin_job_list);
-    INIT_LIST_HEAD(&vc4->render_job_list);
-    INIT_LIST_HEAD(&vc4->job_done_list);
-    INIT_LIST_HEAD(&vc4->seqno_cb_list);
+        free(FSINFO(impl_share, fstype)->resource);
 
-    spin_lock_init(&vc4->job_lock);
+        if (FSINFO(impl_share, fstype)->dataset != NULL) {
+            free(FSINFO(impl_share, fstype)->dataset);
+        }
 
-    INIT_WORK(&vc4->hangcheck.reset_work, vc4_reset_work);
-    setup_timer(&vc4->hangcheck.timer, vc4_hangcheck_elapsed, (unsigned long)dev);
+        fstype = fstype->next;
+    }
 
-    INIT_WORK(&vc4->job_done_work, vc4_job_done_work);
+    if (impl_share->sharepath != NULL) {
+        free(impl_share->sharepath);
+    }
 
-    vc4_drm_mode_crtc_helper_funcs(dev->crtc);
-    mutex_init(&vc4->power_lock, &vc4->power_lock, 0, NULL);
+    if (impl_share->dataset != NULL) {
+        free(impl_share->dataset);
+    }
+
+    if (impl_share->fsinfo != NULL) {
+        free(impl_share->fsinfo);
+    }
+
+    free(impl_share);
 }

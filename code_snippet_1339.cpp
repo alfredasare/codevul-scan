@@ -1,10 +1,5 @@
-void MediaControlCastButtonElement::recordMetrics(CastOverlayMetrics metric) {
-  DCHECK(m_isOverlayButton);
-  using MetricEnum = CastOverlayMetrics;
-  if (metric!= MetricEnum::Count && metric!= MetricEnum::Pause && metric!= MetricEnum::Play) {
-    LOG(ERROR) << "Invalid metric value: " << metric;
-    return;
-  }
-  DEFINE_STATIC_LOCAL(EnumerationHistogram, overlayHistogram, ("Cast.Sender.Overlay", static_cast<int>(MetricEnum::Count)));
-  overlayHistogram.count(static_cast<int>(MetricEnum::static_cast(metric)));
+bool IsTransportSocketPoolStalled(net::HttpNetworkSession* session) {
+  std::unique_ptr<net::TransportSocketPool, net::TransportSocketPoolDeleter>
+      normal_socket_pool(session->GetTransportSocketPool(net::HttpNetworkSession::NORMAL_SOCKET_POOL));
+  return normal_socket_pool && normal_socket_pool->IsStalled();
 }

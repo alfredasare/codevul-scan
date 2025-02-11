@@ -1,8 +1,46 @@
-void rds_ib_dev_put(struct rds_ib_device *rds_ibdev)
+xfs_da_get_buf(
+	struct xfs_trans	*trans,
+	struct xfs_inode	*dp,
+	xfs_dablk_t		bno,
+	xfs_daddr_t		mappedbno,
+	struct xfs_buf		**bpp,
+	int			whichfork)
 {
-    BUG_ON(atomic_read(&rds_ibdev->refcount) <= 0);
-    if (atomic_dec_and_test(&rds_ibdev->refcount)) {
-        kfree(rds_ibdev);
-        queue_work(rds_wq, &rds_ibdev->free_work);
-    }
+	struct xfs_buf		*bp;
+	struct xfs_buf_map	map;
+	struct xfs_buf_map	*mapp;
+	int			nmap;
+	int			error;
+
+	*bpp = NULL;
+	mapp = &map;
+	nmap = 1;
+	error = xfs_dabuf_map(trans, dp, bno, mappedbno, whichfork,
+				&mapp, &nmap);
+	if (error) {
+		/* mapping a hole is not an error, but we don't continue */
+		if (error == -1)
+			error = 0;
+		goto out_free;
+	}
+
+	bp = xfs_trans_get_buf_map(trans, dp->i_mount->m_ddev_targp,
+				    mapp, nmap, 0);
+	if (!bp) {
+		error = XFS_ERROR(EIO);
+		goto out_free;
+	}
+
+	*bpp = bp;
+
+out_free:
+	if (mapp != &map) {
+		int ret = kmem_free(mapp);
+		if (ret) {
+			xfs_trans_brelse(trans, bp);
+			return XFS_ERROR(ENOMEM);
+		}
+	}
+
+	return error;
 }

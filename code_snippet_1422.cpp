@@ -1,26 +1,9 @@
-static void rxrpc_rxk5_free(struct rxk5_key *rxk5)
-{
-    int loop;
-
-    rxrpc_free_krb5_principal(&rxk5->client);
-    rxrpc_free_krb5_principal(&rxk5->server);
-    rxrpc_free_krb5_tagged(&rxk5->session);
-
-    if (rxk5->addresses && rxk5->n_addresses > 0) {
-        for (loop = rxk5->n_addresses - 1; loop >= 0; loop--) {
-            rxrpc_free_krb5_tagged(&rxk5->addresses[loop]);
-        }
-        kfree(rxk5->addresses);
-    }
-
-    if (rxk5->authdata && rxk5->n_authdata > 0) {
-        for (loop = rxk5->n_authdata - 1; loop >= 0; loop--) {
-            rxrpc_free_krb5_tagged(&rxk5->authdata[loop]);
-        }
-        kfree(rxk5->authdata);
-    }
-
-    kfree(rxk5->ticket);
-    kfree(rxk5->ticket2);
-    kfree(rxk5);
+IEEE80211_HT_MCS_TX_MAX_STREAMS_MASK) >> IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT) + 1, IEEE80211_MAX_STREAMS);
 }
+
+Necessary import:
+#include <linux/ieee80211.h> // for IEEE80211_MAX_STREAMS
+#include <linux/minmax.h> // for min()
+
+Explanation:
+To resolve the issue of out-of-bounds access, bounds checking is added to ensure that the return value does not exceed the maximum allowed value. The constant IEEE80211_MAX_STREAMS represents the maximum number of streams, and the min() function is used to get the minimum of the calculated value and the maximum number of streams.

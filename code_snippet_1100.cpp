@@ -1,13 +1,7 @@
-c++
-ssize_t InputDispatcher::InputState::findKeyMemento(const KeyEntry* entry) const {
-    for (size_t i = 0; i < mKeyMementos.size() && i < SIZE_MAX; i++) {
-        const KeyMemento& memento = mementoList.at(i);
-        if (memento.deviceId == entry->deviceId
-            && memento.source == entry->source
-            && memento.keyCode == entry->keyCode
-            && memento.scanCode == entry->scanCode) {
-            return i;
-        }
-    }
-    return -1;
+static void do_one_tree(struct dentry *dentry)
+{
+	shrink_dcache_parent(dentry);
+	d_walk(dentry, dentry, umount_check, NULL);
+	d_drop(dentry);
+	// Removed dput(dentry); to prevent double freeing the dentry object.
 }

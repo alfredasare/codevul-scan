@@ -1,18 +1,26 @@
-#include <chrono>
+static int hci_sock_getname(struct socket *sock, struct sockaddr *addr,
+			    int *addr_len, int peer)
+{
+	struct sockaddr_hci *haddr = (struct sockaddr_hci *) addr;
+	struct sock *sk = sock->sk;
+	struct hci_dev *hdev = hci_pi(sk)->hdev;
 
-bool GesturePoint::IsInSecondClickTimeWindow() const {
-    auto last_touch_time = std::chrono::milliseconds(last_touch_time_);
-    auto last_tap_time = std::chrono::milliseconds(last_tap_time_);
+	BT_DBG("sock %p sk %p", sock, sk);
 
-    if (last_touch_time <= 0 || last_tap_time <= 0) {
-        return false;
-    }
+	if (!hdev)
+		return -EBADFD;
 
-    double duration = std::chrono::duration_cast<std::chrono::seconds>(last_touch_time - last_tap_time).count();
+	lock_sock(sk);
 
-    if (duration < kMinimumSecondsBetweenClicks) {
-        return false;
-    }
+	if (*addr_len >= sizeof(*haddr)) {
+		*addr_len = sizeof(*haddr);
+		haddr->hci_family = AF_BLUETOOTH;
+		haddr->hci_dev    = hdev->id;
+	} else {
+		release_sock(sk);
+		return -EINVAL;
+	}
 
-    return duration < kMaximumSecondsBetweenDoubleClick;
+	release_sock(sk);
+	return 0;
 }

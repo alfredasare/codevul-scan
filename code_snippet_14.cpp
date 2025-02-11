@@ -1,8 +1,9 @@
+c++
 int64_t Parcel::readInt64() const
 {
-    size_t remainingBytes = getRemainingBytes();
-    if (remainingBytes < sizeof(int64_t)) {
-        throw std::runtime_error("Insufficient data to read int64");
+    int64_t result;
+    if (!readAligned(&result, sizeof(int64_t))) {
+        return 0; // or throw an exception, depending on your use case
     }
-    return readAligned<int64_t>();
+    return result;
 }

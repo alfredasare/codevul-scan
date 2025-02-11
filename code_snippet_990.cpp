@@ -1,22 +1,21 @@
-ScriptPromise BluetoothRemoteGATTServer::getPrimaryServices(
-    ScriptState* scriptState,
-    const StringOrUnsignedLong& service,
-    ExceptionState& exceptionState) {
-  std::string serviceUUID;
-  if (!validateServiceUUID(service, exceptionState)) {
-    return exceptionState.reject(scriptState);
-  }
+bool asn1_read_BOOLEAN_context(struct asn1_data *data, bool *v, int context)
+{
+ uint8_t tmp = 0;
+ asn1_start_tag(data, ASN1_CONTEXT_SIMPLE(context));
 
-  serviceUUID = boost::lexical_cast<std::string>(service);
-  if (serviceUUID.length() > MAX_SERVICE_UUID_LENGTH) {
-    exceptionState.reject(scriptState, "Invalid service UUID length");
-    return;
-  }
+ if (data->length > 1) { // Add length check
+ asn1_read_uint8(data, &tmp);
+ } else {
+ // Handle error case for incorrect length
+ data->has_error = true;
+ return data->has_error;
+ }
 
-  return getPrimaryServicesImpl(scriptState, mojom::blink::WebBluetoothGATTQueryQuantity::MULTIPLE, serviceUUID);
-}
-
-bool validateServiceUUID(const StringOrUnsignedLong& service, ExceptionState& exceptionState) {
-  // Implement a validation function to check the format and length of the service UUID
-  // Return false if the input is invalid
+ if (tmp == 0xFF) {
+ *v = true;
+ } else {
+ *v = false;
+ }
+ asn1_end_tag(data);
+ return !data->has_error;
 }

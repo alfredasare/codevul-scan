@@ -1,7 +1,10 @@
-send_cancel(struct TCP_Server_Info *server, void *buf, struct mid_q_entry *mid)
+void S\_AL\_ClearLoopingSounds(qboolean killall)
 {
-    if (!server ||!server->ops ||!server->ops->send_cancel) {
-        return 0; // or handle the error as appropriate
-    }
-    return server->ops->send_cancel(server, buf, mid);
+	if (srcCount < MAX\_SrcList) {
+		int i;
+		for (i = 0; i < srcCount; i++) {
+			if ((srcList[i].isLooping) && (srcList[i].entity != -1) && (i < MAX\_SrcList))
+				entityList[srcList[i].entity].loopAddedThisFrame = qfalse;
+		}
+	}
 }

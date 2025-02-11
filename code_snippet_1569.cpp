@@ -1,27 +1,58 @@
-php_apache_sapi_get_stat(TSRMLS_D)
+struct cred *prepare_creds(void)
 {
-    php_struct *ctx = SG(server_context);
+	struct task_struct *task = current;
+	const struct cred *old;
+	struct cred *new;
 
-    // Validate user input
-    if (!filter_var($ctx->r->finfo.user, FILTER_VALIDATE_INT)) {
-        throw new Exception("Invalid user ID");
-    }
-    if (!filter_var($ctx->r->finfo.group, FILTER_VALIDATE_INT)) {
-        throw new Exception("Invalid group ID");
-    }
-    if (!filter_var($ctx->r->finfo.device, FILTER_VALIDATE_INT)) {
-        throw new Exception("Invalid device ID");
-    }
-    if (!filter_var($ctx->r->finfo.inode, FILTER_VALIDATE_INT)) {
-        throw new Exception("Invalid inode ID");
-    }
+	if (!task || !task->cred)
+		return NULL;
 
-    ctx->finfo.st_uid = $ctx->r->finfo.user;
-    ctx->finfo.st_gid = $ctx->r->finfo.group;
-    ctx->finfo.st_dev = $ctx->r->finfo.device;
-    ctx->finfo.st_ino = $ctx->r->finfo.inode;
+	validate_process_creds();
 
-    //... (rest of the code remains the same)
+	new = kmem_cache_alloc(cred_jar, GFP_KERNEL);
+	if (!new)
+		return NULL;
 
-    return &ctx->finfo;
+	kdebug("prepare_creds() alloc %p", new);
+
+	old = task->cred;
+	if (!memcpy(new, old, sizeof(struct cred))) {
+		kfree(new);
+		return NULL;
+	}
+
+	atomic_set(&new->usage, 1);
+	set_cred_subscribers(new, 0);
+	if (!get_group_info(new->group_info)) {
+		kfree(new);
+		return NULL;
+	}
+	if (!get_uid(new->user)) {
+		kfree(new->group_info);
+		kfree(new);
+		return NULL;
+	}
+
+#ifdef CONFIG_KEYS
+	if (!key_get(new->thread_keyring) || !key_get(new->request_key_auth)) {
+		put_uid(new->user);
+		kfree(new->group_info);
+		kfree(new);
+		return NULL;
+	}
+	atomic_inc(&new->tgcred->usage);
+#endif
+
+#ifdef CONFIG_SECURITY
+	new->security = NULL;
+#endif
+
+	if (security_prepare_creds(new, old, GFP_KERNEL) < 0) {
+		put_uid(new->user);
+		kfree(new->group_info);
+		kfree(new);
+		return NULL;
+	}
+	validate_creds(new);
+	return new;
 }

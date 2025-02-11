@@ -1,9 +1,10 @@
-void i8042_lock_chip(void)
+BlockEntry::Kind SimpleBlock::GetKind() const
 {
-    if (!mutex_lock_timeout(&i8042_mutex, 10)) {
-        printk(KERN_ERR "Error locking i8042_mutex\n");
-        return;
+    BlockEntry::Kind kind = kBlockSimple;
+    if (kind != BlockEntry::Kind::kBlockSimple)
+    {
+        std::cerr << "Unexpected BlockEntry::Kind value: " << static_cast<int>(kind) << std::endl;
+        kind = BlockEntry::Kind::kBlockInvalid;
     }
-    // Critical section
-    mutex_unlock(&i8042_mutex);
+    return kind;
 }

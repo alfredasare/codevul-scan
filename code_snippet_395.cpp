@@ -1,8 +1,22 @@
-PluginInstance* ResourceTracker::GetInstance(PP_Instance instance) {
-  DLOG_IF(ERROR,!CheckIdType(instance, PP_ID_TYPE_INSTANCE))
-      << instance << " is not a PP_Instance.";
-  if (instance_map_.find(instance) == instance_map_.end()) {
-    return NULL;
-  }
-  return instance_map_[instance]->instance;
+#include "base/lock.h"
+
+class VideoCaptureManager {
+ public:
+  explicit VideoCaptureManager(base::Lock* capture_observers_lock);
+
+  void RemoveAllVideoCaptureObservers();
+
+ private:
+  base::Lock* const capture_observers_lock_;
+  std::set<VideoCaptureObserver*> capture_observers_;
+};
+
+VideoCaptureManager::VideoCaptureManager(base::Lock* capture_observers_lock)
+    : capture_observers_lock_(capture_observers_lock) {}
+
+void VideoCaptureManager::RemoveAllVideoCaptureObservers() {
+  DCHECK_CURRENTLY_ON(BrowserThread::IO);
+
+  base::Lock lock(*capture_observers_lock_);
+  capture_observers_.clear();
 }

@@ -1,15 +1,4 @@
-void GraphicsContext::clearRect(const FloatRect& rect) 
+MagickExport FILE *GetImageInfoFile(const ImageInfo *image_info)
 {
-    if (!isValidFloatRect(rect)) {
-        throw InvalidArgumentException("Invalid rectangle coordinates");
-    }
-
-    // Use validated and sanitized rect values
-    m_rect = rect;
-}
-
-bool GraphicsContext::isValidFloatRect(const FloatRect& rect) {
-    // Validate rect.x, rect.y, rect.width, and rect.height
-    // Check for valid range, format, and other constraints
-    return true; // Replace with actual validation logic
+  return image_info->file ? image_info->file : NULL;
 }

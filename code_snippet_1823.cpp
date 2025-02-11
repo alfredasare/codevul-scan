@@ -1,15 +1,21 @@
-void DocumentLoader::AppendRedirect(const KURL& url) {
-  // Validate the input URL
-  if (!IsTrustedDomain(url)) {
-    return;
+class RTCPeerConnectionHandler {
+ public:
+  // ...
+
+  void ReportICEState(webrtc::PeerConnectionInterface::IceConnectionState new_state) {
+    std::unique_lock<std::mutex> lock(ice_state_seen_mutex_);
+    DCHECK(task_runner_->RunsTasksInCurrentSequence());
+    if (ice_state_seen_[new_state]) {
+      lock.unlock();
+      return;
+    }
+    ice_state_seen_[new_state] = true;
+    UMA_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.ConnectionState", new_state,
+                              webrtc::PeerConnectionInterface::kIceConnectionMax);
   }
 
-  // Whitelist approach to validate the URL
-  if (!url.protocolIsInList({"http", "https"}) ||
-    !url.domainIsInList({"trusteddomain1.com", "trusteddomain2.com"}) ||
-    !url.pathMatchesPattern("/allowed/path/*")) {
-    return;
-  }
-
-  redirect_chain_.push_back(url);
-}
+ private:
+  std::map<webrtc::PeerConnectionInterface::IceConnectionState, bool> ice_state_seen_;
+  std::mutex ice_state_seen_mutex_;
+  // ...
+};

@@ -1,10 +1,13 @@
-static int atl2_get_eeprom_len(struct net_device *netdev)
+__imlib_FreeUpdates(ImlibUpdate * u)
 {
-    struct atl2_adapter *adapter = netdev_priv(netdev);
+   ImlibUpdate        *uu;
 
-    if (!atl2_check_eeprom_exist(&adapter->hw)) {
-        dev_err(&adapter->pdev->dev, "EEPROM does not exist\n");
-        return -ENODEV;
-    }
-    return 0;
+   uu = u;
+   while (uu)
+     {
+        u = uu;
+        uu = uu->next;
+        free(u);
+        u = NULL; // Add this line to prevent double free vulnerability
+     }
 }

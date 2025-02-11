@@ -1,19 +1,22 @@
-static void sync_lockstate_on_connect(btif_hh_device_t *p_dev)
+static int __cpuinit msr\_class\_cpu\_callback(struct notifier\_block \*nfb,
+				unsigned long action, void \*hcpu)
 {
-    uint32_t keylockstates;
+	unsigned int cpu = (unsigned long)hcpu;
+	int err = 0;
 
-    BTIF_TRACE_EVENT("%s: Syncing keyboard lock states after reconnect...", __FUNCTION__);
-    /*If the device is connected, update keyboard state */
-    update_keyboard_lockstates(p_dev);
-
-    /*Check if the lockstate of caps,scroll,num is set. 
-     * If so, send a report to the kernel so the lockstate is in sync */
-    keylockstates = get_keylockstates();
-    if (keylockstates < sizeof(uint32_t)) { // Add bounds checking
-        BTIF_TRACE_DEBUG("%s: Sending hid report to kernel indicating lock key state 0x%x", __FUNCTION__, keylockstates);
-        timeout_timer(p_dev, keylockstates); // Replace usleep with a safer alternative
-        toggle_os_keylockstates(p_dev->fd, keylockstates);
-    } else {
-        BTIF_TRACE_DEBUG("%s: NOT sending hid report to kernel indicating lock key state 0x%x", __FUNCTION__, keylockstates);
-    }
+	switch (action) {
+	case CPU\_UP\_PREPARE:
+		err = msr\_device\_create(cpu);
+		if (err != 0) {
+			pr\_err("Failed to create MSR device on CPU%u\n", cpu);
+			break;
+		}
+		break;
+	case CPU\_UP\_CANCELED:
+	case CPU\_UP\_CANCELED\_FROZEN:
+	case CPU\_DEAD:
+		msr\_device\_destroy(cpu);
+		break;
+	}
+	return notifier\_from\_errno(err);
 }

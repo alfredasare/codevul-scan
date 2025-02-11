@@ -1,23 +1,13 @@
-static u64 muldiv64(u64 a, u32 b, u32 c)
+METHODDEF(JDIMENSION)
+get\_raw\_row(j\_compress\_ptr cinfo, cjpeg\_source\_ptr sinfo)
 {
-    union {
-        u64 ll;
-        struct {
-            u32 low, high;
-        } l;
-    } u, res;
-    u64 rl, rh;
+ppm\_source\_ptr source = (ppm\_source\_ptr<span>)sinfo;</span>
 
-    u.ll = a;
-    rl = (u64)u.l.low * (u64)b;
-    rh = (u64)u.l.high * (u64)b;
-    rh += (rl >> 32);
+if (source->buffer\_width <= 0 || source->buffer\_width > sizeof(source->iobuffer)) {
+ERREXIT(cinfo, JERR\_INVALID\_BUFFER\_SIZE);
+}
 
-    if (c == 0) {
-        return 0; // or throw an exception
-    }
-
-    res.l.high = div64_u64(rh, c);
-    res.l.low = div64_u64(((mod_64(rh, c) << 32) + (rl & 0xffffffff)), c);
-    return res.ll;
+if (!ReadOK(source->pub.input\_file, source->iobuffer, source->buffer\_width))
+ERREXIT(cinfo, JERR\_INPUT\_EOF);
+return 1;
 }

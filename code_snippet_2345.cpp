@@ -1,21 +1,32 @@
-void syscall_log(const void *buf __maybe_unused, size_t len __maybe_unused)
+int dup_fd_cloexec(int oldfd, int lowfd)
 {
-#ifdef CFG_TEE_CORE_TA_TRACE
-    char *kbuf;
-    size_t max_len = 1024; 
+	int fd, flags, errno_save;
 
-    if (len > max_len ||!buf || (size_t)buf < (size_t)__USER_SPACE_START)
-        return;
+#ifdef F_DUPFD_CLOEXEC
+	fd = fcntl(oldfd, F_DUPFD_CLOEXEC, lowfd);
+	if (fd >= 0)
+		return fd;
+#else
+	fd = dup(oldfd);
+	if (fd < 0)
+		return fd;
 
-    kbuf = malloc(len + 1);
-    if (kbuf == NULL)
-        return;
+	flags = fcntl(fd, F_GETFD);
+	if (flags < 0)
+		goto unwind;
 
-    if (tee_svc_copy_from_user(kbuf, buf, len) == TEE_SUCCESS) {
-        kbuf[len] = '\0';
-        trace_ext_puts(kbuf);
-    }
-
-    free(kbuf);
+	/* Set the close-on-exec flag */
+	flags |= FD_CLOEXEC;
+	if (fcntl(fd, F_SETFD, flags) < 0)
+		goto unwind;
 #endif
+
+	return fd;
+
+unwind:
+	errno_save = errno;
+	close(fd);
+	errno = errno_save;
+
+	return -1;
 }

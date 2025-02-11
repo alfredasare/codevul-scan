@@ -1,5 +1,9 @@
-static inline int red_channel_client_urgent_marshaller_is_active(RedChannelClient *rcc)
+PHPAPI int php_hash_environment(void)
 {
-    const char *expected_marshaller = "urgent";
-    return (strcmp(rcc->send_data.marshaller, expected_marshaller) == 0);
+	memset(PG(http_globals), 0, sizeof(PG(http_globals)));
+	zend_activate_auto_globals();
+	if (PG(register_argc_argv)) {
+		php_build_argv_separate_input(\\, SG(request_info).query_string, &PG(http_globals)[TRACK_VARS_SERVER]);
+	}
+	return SUCCESS;
 }

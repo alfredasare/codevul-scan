@@ -1,19 +1,24 @@
-void ServerStartedOnUI(base::WeakPtr<DevToolsHttpHandler> handler,
-                       base::Thread* thread,
-                       ServerWrapper* server_wrapper,
-                       DevToolsSocketFactory* socket_factory,
-                       std::unique_ptr<net::IPEndPoint> ip_address) {
-  DCHECK_CURRENTLY_ON(BrowserThread::UI);
+void DatabaseImpl::Get(
+    int64_t transaction_id,
+    int64_t object_store_id,
+    int64_t index_id,
+    const IndexedDBKeyRange& key_range,
+    bool key_only,
+    ::indexed_db::mojom::CallbacksAssociatedPtrInfo callbacks_info) {
+  scoped_refptr<IndexedDBCallbacks> callbacks(
+      new IndexedDBCallbacks(dispatcher_host_->AsWeakPtr(), origin_,
+                             std::move(callbacks_info), idb_runner_));
+  idb_runner_->PostTask(
+      FROM_HERE, base::Bind(&IDBThreadHelper::Get, base::Unretained(helper_),
+                            transaction_id, object_store_id, index_id,
+                            key_range, key_only,
+                            base::Bind(&DatabaseImpl::OnGetComplete,
+                                       weak_ptr_factory_.GetWeakPtr(),
+                                       base::RetainedRef(callbacks))));
+}
 
-  if (!handler ||!thread ||!server_wrapper) {
-    LOG(ERROR) << "Invalid input parameters";
-    return;
-  }
-
-  if (!ip_address ||!ip_address->IsValid()) {
-    LOG(ERROR) << "Invalid IP address";
-    return;
-  }
-
-  handler->ServerStarted(std::move(thread), std::move(server_wrapper), std::move(socket_factory), std::move(ip_address));
+void DatabaseImpl::OnGetComplete(
+    scoped_refptr<IndexedDBCallbacks> callbacks,
+    const std::vector<scoped_refptr<IDBObjectStore>>& object_stores) {
+  // Use the captured 'callbacks' object here.
 }

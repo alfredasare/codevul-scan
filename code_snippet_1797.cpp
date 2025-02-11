@@ -1,24 +1,14 @@
-void qemu_spice_cursor_refresh_unlocked(SimpleSpiceDisplay *ssd)
+tt_cmap6_get_info(TT_CMap       cmap,
+                 TT_CMapInfo  *cmap_info)
 {
-    int error = 0;
+  FT_Byte*  p = cmap->data + 4;
 
-    if (ssd->cursor) {
-        error = dpy_cursor_define(ssd->dcl.con, ssd->cursor);
-        if (error) {
-            log_error("Error defining cursor: %d", error);
-        } else {
-            cursor_put(ssd->cursor);
-            ssd->cursor = NULL;
-        }
-    }
+  if (p + 2 > cmap->data + cmap->length) {
+    return FT_THROW(Invalid_Table);
+  }
 
-    if (ssd->mouse_x!= -1 && ssd->mouse_y!= -1) {
-        error = dpy_mouse_set(ssd->dcl.con, ssd->mouse_x, ssd->mouse_y, 1);
-        if (error) {
-            log_error("Error setting mouse position: %d", error);
-        } else {
-            ssd->mouse_x = -1;
-            ssd->mouse_y = -1;
-        }
-    }
+  cmap_info->format   = 6;
+  cmap_info->language = (FT_ULong)(p[0] << 8 | p[1]);
+
+  return FT_Err_Ok;
 }

@@ -1,13 +1,26 @@
-bool is_default_salt_p(const krb5_salt *default_salt, const Key *key)
+sn\_object\_end(void \*state)
 {
-    if (key == NULL) {
-        return FALSE;
-    }
-    if (key->salt == NULL)
-        return TRUE;
-    if (default_salt->salttype!= key->salt->type)
-        return FALSE;
-    if (krb5_data_cmp(&default_salt->saltvalue, &key->salt->salt))
-        return FALSE;
-    return TRUE;
+StripnullState \*\_state = (StripnullState \*) state;
+
+size\_t new\_len = strlen(\_state->strval);
+
+// Check for potential overflow before increasing the buffer size
+if (new\_len + 1 >= SIZE\_MAX - sizeof(char))
+{
+handleError();
 }
+
+new\_len++; // Add 1 for the '}' character
+
+// Reallocate the buffer with the new length
+\_state->strval = (char \*) realloc(\_state->strval, new\_len);
+
+if (!\_state->strval)
+{
+handleError();
+}
+
+appendStringInfoCharMacro(\_state->strval, '}');
+}
+
+Here's the fixed version of the code that handles integer overflow when calculating the size of the output buffer, preventing a buffer overflow.

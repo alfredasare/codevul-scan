@@ -1,15 +1,9 @@
-long kvmppc_alloc_lpid(void)
+void hash_save_key(char *key, void *value, GSList **list)
 {
-    long lpid;
-    unsigned int nr_lpids = KVMPPC_NR_LPIDS; 
+        *list = g_slist_append(*list, strdup(key));
+}
 
-    do {
-        lpid = find_first_zero_bit(lpid_inuse, nr_lpids);
-        if (lpid >= nr_lpids) {
-            pr_err("%s: No LPIDs free\n", __func__);
-            return -ENOMEM;
-        }
-    } while (test_and_set_bit((unsigned long)lpid, lpid_inuse)); 
-
-    return lpid;
+void free_key_value(gpointer data)
+{
+        g_free(data);
 }

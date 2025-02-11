@@ -1,42 +1,38 @@
-static int cifs_readpage_worker(struct file *file, struct page *page, loff_t *poffset) {
-    char *read_data;
-    int rc;
+int ismode(const char *start, const char *end, int *permset)
+{
+	const char *p;
+	size_t len = end - start;
 
-    char *file_path = file_inode(file)->i_path;
-    if (!allowed_path_characters(file_path)) {
-        return -EINVAL;
-    }
-
-    file_path = normalize_path(file_path);
-
-    read_data = kmap(page);
-    //... rest of the code remains the same...
-}
-
-bool allowed_path_characters(const char *path) {
-    while (*path) {
-        if (!isalnum(*path) && *path != '.' && *path != '/') {
-            return false;
-        }
-        path++;
-    }
-    return true;
-}
-
-char *normalize_path(char *path) {
-    char *new_path = malloc(strlen(path) + 1);
-    if (!new_path) {
-        return NULL;
-    }
-
-    char *ptr = new_path;
-    while (*path) {
-        if (*path == '/' || *path == '.') {
-            *ptr++ = *path;
-        }
-        path++;
-    }
-    *ptr = '\0';
-
-    return new_path;
+	if (len > ARCHIVE_ENTRY_acl_perm_MAX || start >= end)
+		return (0);
+	p = start;
+	*permset = 0;
+	while (p < end) {
+		switch (*p++) {
+		case 'r': case 'R':
+			if (strncmp(p, "read", 4) != 0)
+				return (0);
+			*permset |= ARCHIVE_ENTRY_ACL_READ;
+			p += 4;
+			break;
+		case 'w': case 'W':
+			if (strncmp(p, "write", 5) != 0)
+				return (0);
+			*permset |= ARCHIVE_ENTRY_ACL_WRITE;
+			p += 5;
+			break;
+		case 'x': case 'X':
+			if (strncmp(p, "exec", 4) != 0)
+				return (0);
+			*permset |= ARCHIVE_ENTRY_ACL_EXECUTE;
+			p += 4;
+			break;
+		case '-':
+			p++;
+			break;
+		default:
+			return (0);
+		}
+	}
+	return (1);
 }

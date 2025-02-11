@@ -1,27 +1,10 @@
-vips_foreign_load_generate( VipsRegion *or, 
-void *seq, void *a, void *b, gboolean *stop )
+void AppLayerProtoDetectUnittestCtxRestore(void)
 {
-    VipsRegion *ir = (VipsRegion *) seq;
-
-    VipsRect *r = &or->valid;
-
-    /* Ask for input we need.
-     */
-    int prepare_error = vips_region_prepare( ir, r );
-    if( prepare_error!= 0 )
-    {
-        printf("Error preparing region: %d\n");
-        return -1;
-    }
-
-    /* Attach output region to that.
-     */
-    int region_error = vips_region_region( or, ir, r, r->left, r->top );
-    if( region_error!= 0 )
-    {
-        printf("Error attaching region: %d\n");
-        return -1;
-    }
-
-    return 0;
+SCEnter();
+if (alpd\_ctx_ut == NULL) {
+return;
+}
+alpd\_ctx = alpd\_ctx\_ut;
+memset(&alpd\_ctx\_ut, 0, sizeof(alpd\_ctx\_ut));
+SCReturn;
 }

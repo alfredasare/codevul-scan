@@ -1,19 +1,18 @@
-void kvm_free_physmem(struct kvm *kvm)
+void ScriptLoader::execute(ScriptResource* resource)
 {
-    int i;
-    struct kvm_memslots *slots = kvm->memslots;
-
-    for (i = 0; i < slots->nmemslots; ++i) {
-        kvm_free_physmem_slot_safe(&slots->memslots[i], NULL);
+    ASSERT(!m_willBeParserExecuted);
+    ASSERT(resource);
+    if (resource->errorOccurred()) {
+        dispatchErrorEvent();
+    } else if (!resource->wasCanceled() && isValidScriptResource(resource)) {
+        executeScript(ScriptSourceCode(resource));
+        dispatchLoadEvent();
     }
-
-    kfree(kvm->memslots);
+    resource->removeClient(this);
 }
 
-void kvm_free_physmem_slot_safe(struct kvm_memslots *slot, void *data)
+bool ScriptLoader::isValidScriptResource(ScriptResource* resource)
 {
-    if (slot->size > MAX_SLOT_SIZE) {
-        // Handle error or panic
-    }
-    // Rest of the function remains the same
+    // Implement validation logic here
+    // For example, check the source of the script and ensure it's from a trusted origin, sanitize the input, etc.
 }

@@ -1,13 +1,19 @@
-int rosecmpm(rose_address *addr1, rose_address *addr2, unsigned short mask)
-{
-    static const unsigned short MAX_MASK = USHRT_MAX;
+static int libz_initialized = 0;
 
-    if (mask > MAX_MASK)
-        return 1;
-
-    for (unsigned short i = 0; i < mask; i++) {
-        //...
+static void _initialize_libz(void) {
+    if (!libz_initialized && gdImageLibraryInit() == 0) {
+        gd_error("GD2 support is not available - no libz\n");
+        return;
     }
+    libz_initialized = 1;
+}
 
-    return 0;
+static void _noLibzError(void) {
+    _initialize_libz();
+
+    // Other initialization code here
+
+    if (libz_initialized && gdImageLibraryTerm() == 0) {
+        gd_error("Failed to release GD2 resources\n");
+    }
 }

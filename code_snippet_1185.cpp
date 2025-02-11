@@ -1,14 +1,15 @@
-static int get_wcr(struct kvm_vcpu *vcpu, const struct sys_reg_desc *rd,
-	const struct kvm_one_reg *reg, void __user *uaddr)
+void tmx_pretran_link_safe(int slotid)
 {
-	__u64 *r = &vcpu->arch.vcpu_debug_state.dbg_wcr[rd->reg];
+ if(_tmx_proc_ptran==NULL || slotid < 0 || slotid >= MAX_SLOTID ||
+ _tmx_ptran_table == NULL || _tmx_ptran_table[slotid].plist == NULL)
+ return;
 
-	if (!access_ok(VERIFY_WRITE, uaddr, KVM_REG_SIZE(reg->id)))
-		return -EFAULT;
+ if(_tmx_ptran_table[slotid].plist == _tmx_proc_ptran)
+ return;
 
-	kmap(uaddr, KVM_REG_SIZE(reg->id));
-	memcpy((void *)uaddr, (void *)r, KVM_REG_SIZE(reg->id));
-	unmap(uaddr, KVM_REG_SIZE(reg->id));
-
-	return 0;
+ _tmx_proc_ptran->next = _tmx_ptran_table[slotid].plist;
+ _tmx_ptran_table[slotid].plist->prev = _tmx_proc_ptran;
+ _tmx_ptran_table[slotid].plist = _tmx_proc_ptran;
+ _tmx_proc_ptran->linked = 1;
+ return;
 }

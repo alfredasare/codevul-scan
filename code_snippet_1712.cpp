@@ -1,22 +1,11 @@
-static int hidp_sock_release(struct socket *sock)
+static int asf_read_close(AVFormatContext *s)
 {
-    struct sock *sk = sock->sk;
-
-    BT_DBG("sock %p sk %p", sock, sk);
-
-    if (!sk ||!is_allowed_sk_value(sk)) {
-        return -EINVAL;
+    if (!s) {
+        av_log(NULL, AV_LOG_ERROR, "asf_read_close: Invalid format context\n");
+        return AVERROR(EINVAL);
     }
 
-    bt_sock_unlink(&hidp_sk_list, sk);
-
-    sock_orphan(sk);
-    sock_put(sk);
+    asf_reset_header(s);
 
     return 0;
-}
-
-int is_allowed_sk_value(struct sock *sk)
-{
-    return (sk >= &hidp_sk_min && sk <= &hidp_sk_max);
 }

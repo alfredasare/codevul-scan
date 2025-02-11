@@ -1,12 +1,17 @@
-void PrintWebViewHelper::OnPrintNodeUnderContextMenu() {
-  try {
-    const WebNode& context_menu_node = render_view()->GetContextMenuNode();
-    PrintNode(context_menu_node);
-  } catch (const std::exception& e) {
-    Logger::instance()->logException(e);
-    std::cout << "An error occurred. Please try again." << std::endl;
-  } catch (...) {
-    Logger::instance()->logUnknownException();
-    std::cout << "An unexpected error occurred. Please try again." << std::endl;
-  }
+#include <string.h> /* for strnlen() */
+
+#define MAX_LEN 64 /* Define the maximum allowed length for the string */
+
+void cJSON_AddItemToObject(cJSON *object, const char *string, cJSON *item) {
+    if (!item) return;
+
+    // Validate input length
+    if (strnlen(string, MAX_LEN) >= MAX_LEN) {
+        // Handle error or return error code
+        return;
+    }
+
+    if (item->string) cJSON_free(item->string);
+    item->string = cJSON_strdup(string);
+    cJSON_AddItemToArray(object, item);
 }

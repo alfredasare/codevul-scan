@@ -1,23 +1,28 @@
-unsigned long copy_fpr_from_user(struct task_struct *task, void __user *from)
+#include <assert.h>
+
+static bool dl_param_changed(struct task_struct *p, const struct sched_attr *attr)
 {
-    u64 buf[ELF_NFPREG];
-    int i;
-    size_t from_len = ELF_NFPREG * sizeof(double);
+	assert(p != NULL);
+	assert(attr != NULL);
 
-    if (from_len > PAGE_SIZE) {
-        return -EINVAL;
-    }
+	struct sched_dl_entity *dl_se = &p->dl;
 
-    if (__copy_from_user_kuser(buf, from, from_len)) {
-        return 1;
-    }
+	if (dl_se == NULL || attr == NULL) {
+		return false;
+	}
 
-    memset(buf, 0, sizeof(buf));
+	if (dl_se->dl_runtime < 0 || attr->sched_runtime < 0 ||
+		dl_se->dl_deadline < 0 || attr->sched_deadline < 0 ||
+		dl_se->dl_period < 0 || attr->sched_period < 0) {
+		return false;
+	}
 
-    for (i = 0; i < (ELF_NFPREG - 1); i++) {
-        task->thread.TS_FPR(i) = buf[i];
-    }
-    task->thread.fp_state.fpscr = buf[i];
+	if (dl_se->dl_runtime != attr->sched_runtime ||
+		dl_se->dl_deadline != attr->sched_deadline ||
+		dl_se->dl_period != attr->sched_period ||
+		dl_se->flags != attr->sched_flags) {
+		return true;
+	}
 
-    return 0;
+	return false;
 }

@@ -1,10 +1,18 @@
-char line[COSINE_LINE_LENGTH + 1]; 
+static void virtio_gpu_class_init(ObjectClass *klass, void *data)
+{
+    DeviceClass *dc = DEVICE_CLASS(klass);
+    VirtioDeviceClass *vdc = VIRTIO_DEVICE_CLASS(klass);
 
-if (file_gets(line, COSINE_LINE_LENGTH, wth->random_fh) == NULL) {
-    *err = file_error(wth->random_fh, err_info);
-    if (*err == 0) {
-        *err = WTAP_ERR_SHORT_READ;
-    }
-    line[COSINE_LINE_LENGTH] = '\0'; 
-    return FALSE;
+    vdc->realize = virtio_gpu_device_realize;
+    vdc->unrealize = virtio_gpu_device_unrealize;
+    vdc->get_config = virtio_gpu_get_config;
+    vdc->set_config = virtio_gpu_set_config;
+    vdc->get_features = virtio_gpu_get_features;
+    vdc->set_features = virtio_gpu_set_features;
+
+    vdc->reset = virtio_gpu_reset;
+    vdc->hotpluggable = FALSE; /* Initialize vdc->hotpluggable */
+
+    dc->props = virtio_gpu_properties;
+    dc->vmsd = &vmstate_virtio_gpu;
 }

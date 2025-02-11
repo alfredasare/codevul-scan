@@ -1,25 +1,40 @@
-void do_break(struct pt_regs *regs, size_t address, unsigned long error_code)
+NTSTATUS smb1cli\_session\_set\_session\_key(struct smbXcli\_session \*session,
+const DATA\_BLOB \_session\_key)
 {
-    siginfo_t info;
+ struct smbXcli\_conn \*conn = session->conn;
+ uint8\_t session\_key[16];
 
-    if (address > SIZE_MAX / 2) {
-        return;
-    }
+ if (conn == NULL) {
+ return NT\_STATUS\_INVALID\_PARAMETER\_MIX;
+ }
 
-    current->thread.trap_nr = TRAP_HWBKPT;
-    if (notify_die(DIE_DABR_MATCH, "dabr_match", regs, error_code, 11, SIGSEGV) == NOTIFY_STOP)
-        return;
+ if (session->smb1.application\_key.length != 0) {
+ // Validate input properly
+ if (\_session\_key.length != 16) {
+ return NT\_STATUS\_INVALID\_PARAMETER;
+ }
 
-    if (debugger_break_match(regs))
-        return;
+ data\_blob\_clear\_free(&session->smb1.application\_key);
+ session->smb1.protected\_key = false;
+ }
 
-    /* Clear the breakpoint */
-    hw_breakpoint_disable();
+ if (\_session\_key.length == 0) {
+ return NT\_STATUS\_OK;
+ }
 
-    /* Deliver the signal to userspace */
-    info.si_signo = SIGTRAP;
-    info.si_errno = 0;
-    info.si_code = TRAP_HWBKPT;
-    info.si_addr = (void __user *)address;
-    force_sig_info(SIGTRAP, &info, current);
+ ZERO\_STRUCT(session\_key);
+ memcpy(session\_key, \_session\_key.data,
+ MIN(\_session\_key.length, sizeof(session\_key)));
+
+ session->smb1.application\_key = data\_blob\_talloc(session,
+ session\_key,
+ sizeof(session\_key));
+ ZERO\_STRUCT(session\_key);
+ if (session->smb1.application\_key.data == NULL) {
+ return NT\_STATUS\_NO\_MEMORY;
+ }
+
+ session->smb1.protected\_key = false;
+
+ return NT\_STATUS\_OK;
 }

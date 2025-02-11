@@ -1,36 +1,37 @@
-IW_IMPL(void) iw_set_option(struct iw_context *ctx, const char *name, const char *val)
-{
-#define IW_MAX_OPTIONS 32
-	int i;
+static BOOLEAN btif_hl_get_bta_channel_type(bthl_channel_type_t channel_type, tBTA_HL_DCH_CFG *p){
+    BOOLEAN status = TRUE;
+    switch (channel_type) {
+        case BTHL_CHANNEL_TYPE_RELIABLE:
+            *p = BTA_HL_DCH_CFG_RELIABLE;
+            break;
+        case BTHL_CHANNEL_TYPE_STREAMING:
+            *p = BTA_HL_DCH_CFG_STREAMING;
+            break;
+        case BTHL_CHANNEL_TYPE_ANY:
+            *p = BTA_HL_DCH_CFG_NO_PREF;
+            break;
+        default:
+            status = FALSE;
+            break;
+    }
 
-	if(val==NULL || val[0]=='\0') {
-		val = "1";
-	}
+    BTIF_TRACE_DEBUG("%s status = %d BTA DCH CFG=%s",
+                      __FUNCTION__, status,
+                      (channel_type == BTHL_CHANNEL_TYPE_RELIABLE) ? "Reliable" :
+                      (channel_type == BTHL_CHANNEL_TYPE_STREAMING) ? "Streaming" :
+                      (channel_type == BTHL_CHANNEL_TYPE_ANY) ? "Any" : "Unknown");
 
-	if(!ctx->req.options) {
-		ctx->req.options = iw_mallocz(ctx, IW_MAX_OPTIONS*sizeof(struct iw_option_struct));
-		if(!ctx->req.options) {
-			return; // Handle error
-		}
-		ctx->req.options_numalloc = 0; // Initialize to 0
-		ctx->req.options_count = 0;
-	}
-
-	for(i=0; i<ctx->req.options_count; i++) {
-		if(ctx->req.options[i].name &&!strcmp(ctx->req.options[i].name, name)) {
-			iw_free(ctx, ctx->req.options[i].val);
-			ctx->req.options[i].val = iw_strdup(ctx, val);
-			return;
-		}
-	}
-
-	if(ctx->req.options_count>=IW_MAX_OPTIONS) return;
-	ctx->req.options[ctx->req.options_count].name = iw_strdup(ctx, name);
-	ctx->req.options[ctx->req.options_count].val = iw_strdup(ctx, val);
-	ctx->req.options_count++;
-
-	for(i=0; i<ctx->req.options_count; i++) {
-		iw_free(ctx, ctx->req.options[i].name);
-		iw_free(ctx, ctx->req.options[i].val);
-	}
+    return status;
 }
+
+#define BTIF_TRACE_BUFFER_SIZE 512
+void btif_trace_write(const char *str) {
+    // Implementation to write the trace safely without causing a buffer overflow.
+}
+
+#define BTIF_TRACE_DEBUG(format, ...)  \
+    do { if (btif_trace_level & BTIF_TRACE_DEBUG) {\
+    char buf[BTIF_TRACE_BUFFER_SIZE];\
+    snprintf(buf, sizeof(buf), format, ##__VA_ARGS__);\
+    btif_trace_write(buf);\
+    }} while(0)

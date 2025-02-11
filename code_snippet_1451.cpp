@@ -1,24 +1,21 @@
-#include <linux/memcontrol.h>
-#include <linux/mm.h>
+#include <regex>
 
-#define MB_AS_USUAL (1024*1024)
-#define KB_AS_USUAL (1024)
-#define PAGE_SIZE (4096)
+bool IsApprovedProtocol(const base::string16& url) {
+  std::wregex protocol_regex(L"^(http|https)://");
+  return std::regex_match(url.begin(), url.end(), protocol_regex);
+}
 
-void xacct_add_tsk(struct taskstats *stats, struct task_struct *p)
-{
-    /* convert pages-jiffies to Mbyte-usec */
-    stats->coremem = jiffies_to_usecs(p->acct_rss_mem1) * PAGE_SIZE / MB_AS_USUAL;
-    stats->virtmem = jiffies_to_usecs(p->acct_vm_mem1) * PAGE_SIZE / MB_AS_USUAL;
+bool NavigateToUrlWithEdge(const base::string16& url) {
+  if (!IsApprovedProtocol(url)) return false;
 
-    if (p->mm) {
-        /* adjust to KB unit */
-        stats->hiwater_rss   = p->mm->hiwater_rss * PAGE_SIZE / KB_AS_USUAL;
-        stats->hiwater_vm    = p->mm->hiwater_vm * PAGE_SIZE / KB_AS_USUAL;
-    }
-
-    stats->read_char	= p->rchar;
-    stats->write_char	= p->wchar;
-    stats->read_syscalls	= p->syscr;
-    stats->write_syscalls	= p->syscw;
+  base::string16 approved_url = L"microsoft-edge://" + url;
+  SHELLEXECUTEINFO info = { sizeof(info) };
+  info.fMask = SEE_MASK_NOASYNC | SEE_MASK_FLAG_NO_UI;
+  info.lpVerb = L"open";
+  info.lpFile = approved_url.c_str();
+  info.nShow = SW_SHOWNORMAL;
+  if (::ShellExecuteEx(&info))
+    return true;
+  PLOG(ERROR) << "Failed to launch Edge for uninstall survey";
+  return false;
 }

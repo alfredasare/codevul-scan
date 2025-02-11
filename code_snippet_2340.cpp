@@ -1,23 +1,37 @@
-XRecordUnregisterClients(Display *dpy, XRecordContext context,
-                         XRecordClientSpec *clients, int nclients)
+vbf_stp_retry(struct worker *wrk, struct busyobj *bo)
 {
-    XExtDisplayInfo *info = find_display (dpy);
-    register xRecordUnregisterClientsReq 	*req;
-    int			clen = 4 * (nclients > MAX_NCLIENTS ? MAX_NCLIENTS : nclients);
+	struct vfp_ctx *vfc;
 
-    XRecordCheckExtension (dpy, info, 0);
-    LockDisplay(dpy);
-    GetReq(RecordUnregisterClients, req);
+	CHECK_OBJ_NOTNULL(wrk, WORKER_MAGIC);
+	if (bo == NULL || bo->magic != BUSYOBJ_MAGIC) {
+		return F_STP_NULL;
+	}
+	vfc = bo->vfc;
+	if (vfc == NULL || vfc->magic != VFP_CTX_MAGIC) {
+		return F_STP_NULL;
+	}
 
-    req->reqType = info->codes->major_opcode;
-    req->recordReqType = X_RecordUnregisterClients;
-    req->context = context;
-    req->length += (nclients > MAX_NCLIENTS ? MAX_NCLIENTS : nclients);
-    req->nClients = (nclients > MAX_NCLIENTS ? MAX_NCLIENTS : nclients);
+	assert(bo->fetch_objcore->boc->state <= BOS_REQ_DONE);
 
-    Data32(dpy, (long *)clients, clen);
+	VSLb_ts_busyobj(bo, "Retry", W_TIM_real(wrk));
 
-    UnlockDisplay(dpy);
-    SyncHandle();
-    return 1;
+	/* VDI_Finish must have been called before */
+	if (bo->director_state != DIR_S_NULL) {
+		return F_STP_DIR_STATE;
+	}
+
+	/* reset other bo attributes - See VBO_GetBusyObj */
+	bo->storage = NULL;
+	bo->storage_hint = NULL;
+	bo->do_esi = 0;
+	bo->do_stream = 1;
+
+	/* reset fetch processors */
+	VFP_Setup(vfc);
+
+	VSL_ChgId(bo->vsl, "bereq", "retry", VXID_Get(wrk, VSL_BACKENDMARKER));
+	VSLb_ts_busyobj(bo, "Start", bo->t_prev);
+	http_VSL_log(bo->bereq);
+
+	return (F_STP_STARTFETCH);
 }

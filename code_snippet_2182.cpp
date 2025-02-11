@@ -1,14 +1,23 @@
-static int pndisc_is_router(const void *pkey, struct net_device *dev)
+static int jpg_unescape(const uint8_t *src, int src_size,
+                         uint8_t *dst, int dst_size)
 {
-    struct pneigh_entry *n;
-    int ret = -1;
+    const uint8_t *src_end = src + src_size;
+    uint8_t *dst_start = dst;
+    uint8_t *dst_end = dst + dst_size;
 
-    read_lock_bh(&nd_tbl.lock);
-    n = __pneigh_lookup_len(&nd_tbl, dev_net(dev), pkey, dev, sizeof(struct pneigh_entry));
-    if (n) {
-        ret = !! (n->flags & NTF_ROUTER);
+    while (src < src_end && dst < dst_end) {
+        uint8_t x = *src++;
+
+        *dst++ = x;
+
+        if (x == 0xFF && !*src)
+            src++;
     }
-    read_unlock_bh(&nd_tbl.lock);
 
-    return ret;
+    *dst_size = dst - dst_start;
+
+    if (dst >= dst_end)
+        return -1;
+    else
+        return 0;
 }

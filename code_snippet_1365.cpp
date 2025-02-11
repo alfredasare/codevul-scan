@@ -1,16 +1,13 @@
-static int btrfs_writepage_end_io_hook(struct page *page, u64 start, u64 end,
-				       struct extent_state *state, int uptodate)
-{
-    //... (rest of the code remains the same)
+static void set_current_time(void) {
+    struct timeval timer;
 
-    if (!btrfs_dec_test_ordered_pending(inode, &ordered_extent, start,
-					    end - start + 1, uptodate))
-        return 0;
-
-    if (ordered_extent == NULL) {
-        printk(KERN_ERR "ordered_extent is NULL\n");
-        return -EINVAL;
+    if (gettimeofday(&timer, NULL) != 0) {
+        // Handle error
     }
 
-    //... (rest of the code remains the same)
+    if (timer.tv_sec < 0 || timer.tv_usec < 0 || timer.tv_usec >= 1000000) {
+        // Handle invalid input
+    } else {
+        current_time = (rel_time_t) (timer.tv_sec - process_started);
+    }
 }

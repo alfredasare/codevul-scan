@@ -1,47 +1,30 @@
-static void *tcp_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+#include <linux/kernel_locking.h>
+#include <linux/fs.h>
+
+void md_kick_rdev_from_array(struct md_rdev *rdev)
 {
-    struct tcp_iter_state *st = seq->private;
-    void *rc = NULL;
+	struct file *file;
+	int ret;
 
-    if (v == SEQ_START_TOKEN) {
-        rc = tcp_get_idx(seq, 0);
-        goto out;
-    }
+	file = filp_open("/sys/block/mdX/md/rdev/rXX/state", O_WRONLY, 0);
+	if (IS_ERR(file)) {
+		pr_err("Failed to open rdev state file\n");
+		return;
+	}
 
-    switch (st->state) {
-        case TCP_SEQ_STATE_LISTENING:
-            if (v >= 0 && v < seq->bucket_size) {
-                rc = listening_get_next(seq, v);
-            } else {
-                rc = NULL;
-            }
-            break;
-        case TCP_SEQ_STATE_ESTABLISHED:
-            if (v >= 0 && v < seq->bucket_size) {
-                rc = established_get_next(seq, v);
-            } else {
-                rc = NULL;
-            }
-            break;
-    }
-out:
-    ++*pos;
-    st->last_pos = *pos;
-    return rc;
-}
+	ret = kernel_lock(file->f_dentry->d_inode, 0, NULL);
+	if (ret) {
+		filp_close(file, NULL);
+		pr_err("Failed to acquire lock\n");
+		return;
+	}
 
-void *listening_get_next(struct seq_file *seq, int idx)
-{
-    if (idx < 0 || idx >= seq->bucket_size) {
-        return NULL;
-    }
-    // Rest of the function remains the same
-}
+	unbind_rdev_from_array(rdev);
+	export_rdev(rdev);
 
-void *established_get_next(struct seq_file *seq, int idx)
-{
-    if (idx < 0 || idx >= seq->bucket_size) {
-        return NULL;
-    }
-    // Rest of the function remains the same
+	ret = kernel_unlock(file->f_dentry->d_inode, 0, NULL);
+	if (ret)
+		pr_err("Failed to release lock\n");
+
+	filp_close(file, NULL);
 }

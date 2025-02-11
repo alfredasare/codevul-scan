@@ -1,24 +1,15 @@
-removedirs (char const *name)
+int nfsd_get_nrthreads(int n, int *nthreads, struct net *net)
 {
-  char *filename = xstrdup (name);
-  size_t i;
+	if (n <= 0 || n >= NFS_MAX_SERVERS) {
+		return -EINVAL;
+	}
 
-  for (i = 0; i < strlen (filename); i++) {
-    if (!isalnum(filename[i]) && !isdot(filename[i])) {
-      error("Invalid character '%c' in directory name", filename[i]);
-      free(filename);
-      return;
-    }
-  }
+	struct nfsd_net *nn = net_generic(net, nfsd_net_id);
 
-  char *resolved_path = realpath(filename, NULL);
-  if (resolved_path == NULL) {
-    error("Failed to resolve directory path");
-    free(filename);
-    return;
-  }
-  filename = resolved_path;
+	if (nn->nfsd_serv != NULL) {
+		for (int i = 0; i < n && i < nn->nfsd_serv->sv_nrpools; i++)
+			nthreads[i] = nn->nfsd_serv->sv_pools[i].sp_nrthreads;
+	}
 
-  // Rest of the original code remains the same
-  ...
+	return 0;
 }

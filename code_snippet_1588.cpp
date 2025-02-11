@@ -1,21 +1,23 @@
-static int x509_get_key_usage( unsigned char **p, 
-                              const unsigned char *end, 
-                              unsigned int *key_usage) {
-    int ret;
-    size_t i;
-    mbedtls_x509_bitstring bs = { 0, 0, NULL };
+long hugetlb_unreserve_pages(struct inode *inode, long start, long end,
+							long freed)
+{
+	struct hstate *h = hstate_inode(inode);
+	struct resv_map *resv_map = inode_resv_map(inode);
+	long chg = 0;
+	struct hugepage_subpool *spool = subpool_inode(inode);
+	long gbl_reserve;
 
-    if( ( ret = mbedtls_asn1_get_bitstring( p, end, &bs ) )!= 0 )
-        return( MBEDTLS_ERR_X509_INVALID_EXTENSIONS + ret );
+	if (resv_map)
+		chg = region_del(resv_map, start, end);
+	else
+		return -EINVAL; /* Invalid argument */
 
-    if( bs.len < 1 )
-        return( MBEDTLS_ERR_X509_INVALID_EXTENSIONS + MBEDTLS_ERR_ASN1_INVALID_LENGTH );
+	spin_lock(&inode->i_lock);
+	inode->i_blocks -= (blocks_per_huge_page(h) * freed);
+	spin_unlock(&inode->i_lock);
 
-    /* Get actual bitstring */
-    *key_usage = 0;
-    for( i = 0; i < MIN(bs.len, sizeof(unsigned int)); i++ ) {
-        *key_usage |= (unsigned int) bs.p[i] << (8 * i);
-    }
+	gbl_reserve = hugepage_subpool_put_pages(spool, (chg - freed));
+	hugetlb_acct_memory(h, -gbl_reserve);
 
-    return( 0 );
+	return 0;
 }

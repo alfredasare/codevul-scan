@@ -1,10 +1,18 @@
-static void port_outb(const struct si_sm_io *io, unsigned int offset, unsigned char b) {
-    unsigned int addr = io->addr_data;
-    unsigned int calculated_addr = addr + (offset * io->regspacing);
+void irq\_enter(void)
+{
+ rcu\_irq\_enter();
+ struct task\_struct *current\_task;
+ current\_task = read\_once(&current, task\_lock());
 
-    if ((offset > io->max_offset) || (offset < io->min_offset)) {
-        // Handle invalid offset
-    }
+ if (is\_idle\_task(current\_task) && !in\_interrupt()) {
+ /*
+ * Prevent raise\_softirq from needlessly waking up ksoftirqd
+ * here, as softirq will be serviced on return from interrupt.
+ */
+ local\_bh\_disable();
+ tick\_irq\_enter();
+ _local\_bh\_enable();
+ }
 
-    outb(b, calculated_addr);
+ __irq\_enter();
 }

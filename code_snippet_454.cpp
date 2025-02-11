@@ -1,4 +1,6 @@
-media_status_t AMediaCodec_flush(AMediaCodec *mData) {
-    media_status_t status = mData->mCodec->flush();
-    return translate_error(status);
-}
+acpi_map_lookup(acpi_physical_address phys, acpi_size size)
+{
+	struct acpi_ioremap *map;
+	mutex_lock(&acpi_ioremap_mutex);
+	list_for_each_entry_rcu(map, &acpi_ioremaps, list)
+		if (map->phys <= phys &&

@@ -1,7 +1,7 @@
-static bool xfrm_is_alive(const struct km_event *c)
-{
-    if (!c ||!c->net) {
-        return false;
-    }
-    return (bool)xfrm_acquire_is_on(c->net);
-}
+if (!frame_trace_recorder_)
+  return;
+bool did_initiate_recording = false;
+for (auto* tracing : protocol::TracingHandler::ForAgentHost(this))
+  did_initiate_recording |= tracing->did_initiate_recording();
+if (did_initiate_recording)
+  frame_trace_recorder_->OnSwapCompositorFrame(frame_host_, metadata);

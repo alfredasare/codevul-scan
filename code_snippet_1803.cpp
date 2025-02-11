@@ -1,12 +1,10 @@
-int __sched ldsem_down_write(struct ld_semaphore *sem, long timeout)
+static int prefixmatch(const struct in6_addr *s, const struct in6_addr *d, int prefix_len)
 {
-    static struct mutex sem_mutex = MUTEX_INITIALIZER; // Declare and initialize mutex
+        if (prefix_len < 0 || prefix_len > 128) {
+                return -1;
+        }
 
-    might_sleep();
-
-    mutex_lock(&sem_mutex); // Acquire mutex
-    int result = __ldsem_down_write_nested(sem, 0, timeout);
-    mutex_unlock(&sem_mutex); // Release mutex
-
-    return result;
+        unsigned i;
+        for (i=0; i<prefix_len && !((s->s6_addr[i/8]^d->s6_addr[i/8])&(128>>(i%8))); i++);
+        return i;
 }

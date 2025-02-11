@@ -1,20 +1,25 @@
-c++
-static Maybe<bool> CollectValuesOrEntriesImpl(
-    Isolate* isolate, Handle<JSObject> object,
-    Handle<FixedArray> values_or_entries, bool get_entries, int* nof_items,
-    PropertyFilter filter) {
-    Handle<BackingStore> elements(BackingStore::cast(object->elements()),
-                                  isolate);
-    int count = 0; // Initialize count to 0
-    uint32_t length = elements->length();
-    for (uint32_t index = 0; index < length; ++index) {
-        if (!HasEntryImpl(isolate, *elements, index)) continue;
-        Handle<Object> value = Subclass::GetImpl(isolate, *elements, index);
-        if (get_entries) {
-            value = MakeEntryPair(isolate, index, value);
-        }
-        values_or_entries->set(count++, *value); // Update count correctly
-    }
-    *nof_items = count;
-    return Just(true);
+PHP\_MINIT\_FUNCTION(phar) /* {{{ */
+{
+	REGISTER\_INI\_ENTRIES();
+
+	phar\_orig\_compile\_file = zend\_compile\_file;
+	zend\_compile\_file = phar\_compile\_file;
+
+	phar\_save\_resolve\_path = zend\_resolve\_path;
+	zend\_resolve\_path = function(...$args) {
+		// Fix: Sanitize the $path argument to prevent directory traversal
+		$path = realpath($args[0]);
+		if ($path === false || strpos($path, realpath(\_\_DIR__)) !== 0) {
+			user\_error('Invalid path provided', E\_USER\_ERROR);
+		}
+		return call\_user\_func\_array('phar\_save\_resolve\_path', $args);
+	};
+
+	phar\_object\_init(TSRMLS\_C);
+
+	phar\_intercept\_functions\_init(TSRMLS\_C);
+	phar\_save\_orig\_functions(TSRMLS\_C);
+
+	return php\_register\_url\_stream\_wrapper("phar", &php\_stream\_phar\_wrapper TSRMLS\_CC);
 }
+/* }}} */

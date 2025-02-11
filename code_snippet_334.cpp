@@ -1,11 +1,11 @@
-static int mov_write_tfrf_tags(AVIOContext *pb, MOVMuxContext *mov, MOVTrack *track)
+compile\_length\_string\_raw\_node(StrNode* sn, regex\_t* reg)
 {
-    int64_t pos = avio_tell(pb);
-    int i;
-    for (i = 0; i < mov->ism_lookahead; i++) {
-        int idx = MIN(track->nb_frag_info - 1, i);
-        mov_write_tfrf_tag(pb, mov, track, idx);
-    }
-    avio_seek(pb, pos, SEEK_SET);
-    return 0;
+if (sn == NULL)
+return 0;
+
+if (sn->end <= sn->s)
+return 0;
+
+return add\_compile\_string\_length(sn->s, 1 /* sb */, (int )(sn->end - sn->s),
+reg, 0);
 }

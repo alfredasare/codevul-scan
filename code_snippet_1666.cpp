@@ -1,14 +1,17 @@
-static int __f2fs_commit_super(struct buffer_head *bh, struct f2fs_super_block *super)
+static void rose_kill_by_device(struct net_device *dev)
 {
-    lock_buffer(bh);
-    if (super) {
-        size_t offset = offsetof(struct f2fs_super_block, super_block_magic);
-        memcpy(bh->b_data + offset, super, sizeof(*super));
-    }
-    set_buffer_uptodate(bh);
-    set_buffer_dirty(bh);
-    unlock_buffer(bh);
+	struct sock *s;
 
-    /* it's rare case, we can do fua all the time */
-    return __sync_dirty_buffer(bh, REQ_SYNC | REQ_PREFLUSH | REQ_FUA);
-}
+	if (!dev) {
+		pr_err("Invalid device pointer\n");
+		return;
+	}
+
+	spin_lock_bh(&rose_list_lock);
+	sk_for_each(s, &rose_list) {
+		struct rose_sock *rose = rose_sk(s);
+
+		if (!rose || rose->device != dev)
+			continue;
+
+		rose_disconnect(s, ENETUNREACH, ROSE_OUT_OF_ORDER, 0);

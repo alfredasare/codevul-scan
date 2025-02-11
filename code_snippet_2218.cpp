@@ -1,12 +1,8 @@
-ext4_xattr_ibody_list(struct dentry *dentry, char *buffer, int32_t buffer_size)
+ScriptPromise ImageBitmapFactories::createImageBitmap(EventTarget& eventTarget, CanvasRenderingContext2D* context, ExceptionState& exceptionState)
 {
-    //...
-    int error = ext4_xattr_list_entries(dentry, IFIRST(header),
-                                         buffer, buffer_size);
-    //...
-    if (buffer_size > INT_MAX) {
-        error = -EOVERFLOW;
-        goto cleanup;
+    if (!context) {
+        exceptionState.throwTypeError("CanvasRenderingContext2D context is null");
+        return ScriptPromise();
     }
-    //...
+    return createImageBitmap(eventTarget, context->canvas(), exceptionState);
 }

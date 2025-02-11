@@ -1,26 +1,17 @@
-cdf_dump_summary_info(const cdf_header_t *h, const cdf_stream_t *sst)
+static int rb_check_bpage(struct ring_buffer_per_cpu *cpu_buffer,
+			  struct buffer_page *bpage)
 {
-    char buf[128];
-    cdf_summary_info_header_t ssi;
-    cdf_property_info_t *info;
-    size_t count;
+#ifdef CONFIG_DEBUG_RB
+	if (!bpage || !buffer_page_vaddr(bpage)) {
+		pr_err("Invalid bpage pointer!\n");
+		return -EINVAL;
+	}
+#endif
 
-    (void)&h;
-    if (cdf_unpack_summary_info(sst, h, &ssi, &info, &count) == -1)
-        return;
+	unsigned long val = (unsigned long)bpage;
 
-    if (ssi.si_os_version & 0xff > 255 || (ssi.si_os_version >> 8 > 255)) {
-        // Handle invalid OS version
-        //...
-    }
+	if (RB_WARN_ON(cpu_buffer, val & RB_FLAG_MASK))
+		return 1;
 
-    (void)fprintf(stderr, "Endian: %x\n", ssi.si_byte_order);
-    (void)fprintf(stderr, "Os Version %d.%d\n", (ssi.si_os_version & 0xff), (ssi.si_os_version >> 8) & 0xff);
-    (void)fprintf(stderr, "Os %d\n", ssi.si_os);
-
-    cdf_print_classid(buf, sizeof(buf), &ssi.si_class);
-    (void)fprintf(stderr, "Class %s\n", buf);
-    (void)fprintf(stderr, "Count %d\n", ssi.si_count);
-    cdf_dump_property_info(info, count);
-    free(info);
+	return 0;
 }

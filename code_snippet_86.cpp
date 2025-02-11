@@ -1,9 +1,8 @@
 void TestRenderWidgetHostView::DidCreateNewRendererCompositorFrameSink(
-    cc::mojom::MojoCompositorFrameSinkClient* renderer_compositor_frame_sink) {
-  static bool did_change_compositor_frame_sink_called = false;
-  if (did_change_compositor_frame_sink_called) {
-    return; // Avoid infinite recursion
-  }
-  did_change_compositor_frame_sink_called = true;
-  did_change_compositor_frame_sink_ = true;
+cc::mojom::MojoCompositorFrameSinkClient* renderer_compositor_frame_sink) {
+if (renderer_compositor_frame_sink == nullptr || !renderer_compositor_frame_sink->is\_valid()) {
+// Handle error case, e.g., logging or returning an error status.
+return;
+}
+did_change_compositor_frame_sink_ = true;
 }

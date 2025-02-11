@@ -1,8 +1,15 @@
-user_local_unregister (User *user)
-{
-    GError *error = NULL;
-    if (!g_dbus_interface_skeleton_unexport(G_DBUS_INTERFACE_SKELETON (user), &error)) {
-        g_error_free(error);
-        // Log the error or perform other necessary actions
+sp<MediaSource> ATSParser::Program::getSource(SourceType type) {
+    size_t index = (type == AUDIO) ? 0 : 0;
+
+    for (size_t i = 0; i < mStreams.size(); ++i) {
+        sp<MediaSource> source = mStreams.editValueAt(i)->getSource(type);
+        if (source) { // Add null check here
+            if (index == 0) {
+                return source;
+            }
+            --index;
+        }
     }
+
+    return nullptr; // Return an appropriate error value or throw an exception instead of returning NULL
 }

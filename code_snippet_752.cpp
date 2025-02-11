@@ -1,16 +1,18 @@
-int hns_rcb_set_coalesce_usecs(
-	struct rcb_common_cb *rcb_common, u32 port_idx, u32 timeout)
-{
-	u32 old_timeout = hns_rcb_get_coalesce_usecs(rcb_common, port_idx);
-	u32 validated_timeout = timeout;
+c++
+base::string16 AuthenticatorNotRegisteredErrorModel::GetStepDescription() const {
+  constexpr size_t kMaxBufferSize = 256;  // Adjust the buffer size as needed
+  base::string16 description(kMaxBufferSize);
 
-	if (timeout > HNS_RCB_MAX_COALESCED_USECS) {
-		validated_timeout = HNS_RCB_MAX_COALESCED_USECS;
-	} else if (timeout < 1) {
-		validated_timeout = 1; // Set to the minimum allowed value
-	}
+  int32_t required_length =
+      l10n_util::QueryStringResourceSafe(IDS_WEBAUTHN_ERROR_WRONG_KEY_SIGN_DESCRIPTION, &description);
 
-	if (timeout!= validated_timeout)
-		return -EINVAL;
+  if (required_length > 0 && static_cast<size_t>(required_length) < kMaxBufferSize) {
+    description.resize(required_length);
+  } else {
+    // Handle the error case, e.g., return an error code or throw an exception
+    // For this example, we return an empty string.
+    description.clear();
+  }
 
-	//... (rest of the code remains the same)
+  return description;
+}

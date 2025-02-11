@@ -1,30 +1,57 @@
+#include <string.h> // for memset()
+
 static int read_public_key(RSA *rsa)
 {
-    //...
+	int r;
+	sc_path_t path;
+	sc_file_t *file;
+	u8 buf[2048];
+	size_t bufsize, keysize;
 
-    sc_path_t path;
-    char *allowed_paths[] = {"/path/to/allowed/keys", NULL};
+	r = select_app_df();
+	if (r)
+		return 1;
 
-    r = select_app_df();
-    if (r)
-        return 1;
+	sc_format_path("I1012", &path);
+	r = sc_select_file(card, &path, &file);
+	if (r) {
+		fprintf(stderr, "Unable to select public key file: %s\n", sc_strerror(r));
+		return 2;
+	}
 
-    sc_format_path("I1012", &path);
-    if (strchr(path, '/') ||!validate_path(path, allowed_paths)) {
-        fprintf(stderr, "Invalid path: %s\n", path);
-        return 2;
-    }
+	bufsize = file->size;
+	sc_file_free(file);
 
-    char *normalized_path = basename(path);
-    if (!normalized_path ||!strcmp(normalized_path, "I1012")) {
-        fprintf(stderr, "Invalid normalized path: %s\n", normalized_path);
-        return 2;
-    }
+	// Clear the buffer before reading data into it
+	memset(buf, 0, sizeof(buf));
 
-    r = fread(buf, 1, bufsize, file);
-    if (r < 0) {
-        fprintf(stderr, "Unable to read public key file: %s\n", sc_strerror(r));
-        return 2;
-    }
-    //...
+	r = sc_read_binary(card, 0, buf, bufsize, 0);
+	if (r < 0) {
+		fprintf(stderr, "Unable to read public key file: %s\n", sc_strerror(r));
+		return 2;
+	}
+
+	bufsize = r;
+	u8 *p = buf;
+
+	do {
+		if (bufsize < 4)
+			return 3;
+		keysize = (p[0] << 8) | p[1];
+		if (keysize == 0)
+			break;
+		if (keysize < 3)
+			return 3;
+		if (p[2] == opt_key_num)
+			break;
+		p += keysize;
+		bufsize -= keysize;
+	} while (1);
+
+	if (keysize == 0) {
+		printf("Key number %d not found.\n", opt_key_num);
+		return 2;
+	}
+
+	return parse_public_key(p, keysize, rsa);
 }

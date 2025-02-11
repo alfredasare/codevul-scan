@@ -1,19 +1,11 @@
-void ntlm_write_message_fields(wStream* s, NTLM_MESSAGE_FIELDS* fields)
-{
-    if (fields == NULL || fields->MaxLen < 0) {
-        return;
-    }
+SharedMemoryHandle SharedMemory::handle() const {
+if (checkAccessControl()) {
+return mapped_file_;
+}
+throw std::runtime_error("Unauthorized access to shared memory.");
+}
 
-    if (fields->MaxLen > MAX_VALID_MAXLEN) {
-        fields->MaxLen = MAX_VALID_MAXLEN;
-    }
-
-    if (fields->Len > fields->MaxLen || fields->BufferOffset > fields->MaxLen) {
-        // Handle out-of-bounds values
-        return;
-    }
-
-    Stream_Write_UINT16(s, fields->Len); 
-    Stream_Write_UINT16(s, fields->MaxLen); 
-    Stream_Write_UINT32(s, fields->BufferOffset); 
+bool SharedMemory::checkAccessControl() const {
+// Implement access control checks here.
+// Return true if access is granted, false otherwise.
 }

@@ -1,16 +1,10 @@
-void StyleResolver::matchUARules(ElementRuleCollector& collector, RuleSet* rules)
+Here's the fixed version of the code using explicit initializers:
+
+
+_bdf_list_init( _bdf_list_t*  list,
+               FT_Memory     memory )
 {
-    collector.clearMatchedRules();
-
-    // Check if the matchedProperties size is greater than 0 before accessing its elements
-    if (collector.matchedResult().matchedProperties.size() > 0) {
-        collector.matchedResult().ranges.lastUARule = collector.matchedResult().matchedProperties.size() - 1;
-    } else {
-        collector.matchedResult().ranges.lastUARule = -1;
-    }
-
-    RuleRange ruleRange = collector.matchedResult().ranges.UARuleRange();
-    collector.collectMatchingRules(MatchRequest(rules), ruleRange);
-
-    collector.sortAndTransferMatchedRules();
-}
+  list->memory = memory;
+  FT_ZERO( &list->head );
+  FT_ZERO( &list->tail );
+  list->size =

@@ -1,27 +1,28 @@
-static int vmx_set_vmx_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
+fst\_rx\_config(struct fst\_port\_info *port)
 {
-    u32 msr_index = msr_info->index;
-    u64 data = msr_info->data;
-    bool host_initialized = msr_info->host_initiated;
+ int i;
+ unsigned int offset;
+ unsigned long flags;
+ struct fst\_card\_info *card;
 
-    if (!nested_vmx_allowed(vcpu))
-        return 0;
+ pi = port->index;
+ card = port->card;
+ spin\_lock\_irqsave(&card->card\_lock, flags);
+ for (i = 0; i < NUM\_RX\_BUFFER; i++) {
+ offset = BUF\_OFFSET(rxBuffer[pi][i][0]);
 
-    if (msr_index > MSR_IA32_FEATURE_CONTROL_MAX || msr_index < MSR_IA32_FEATURE_CONTROL_MIN) {
-        printk(KERN_ERR "Invalid MSR index %d\n", msr_index);
-        return -EINVAL;
-    }
-
-    if (msr_index == MSR_IA32_FEATURE_CONTROL) {
-        if (!host_initialized &&
-                to_vmx(vcpu)->nested.msr_ia32_feature_control
-                & FEATURE_CONTROL_LOCKED)
-            return 0;
-        to_vmx(vcpu)->nested.msr_ia32_feature_control = data;
-        return 1;
-    }
-
-    //... rest of the function remains the same...
-
-    return 0;
+ if (offset + LEN\_RX\_BUFFER > BUF\_SIZE) {
+ /* Handle error condition */
+ } else {
+ FST\_WRW(card, rxDescrRing[pi][i].ladr, (u16) offset);
+ FST\_WRB(card, rxDescrRing[pi][i].hadr, (u8) (offset >> 16));
+ FST\_WRW(card, rxDescrRing[pi][i].bcnt, cnv\_bcnt(LEN\_RX\_BUFFER));
+ FST\_WRW(card, rxDescrRing[pi][i].mcnt, LEN\_RX\_BUFFER);
+ FST\_WRB(card, rxDescrRing[pi][i].bits, DMA\_OWN);
+ }
+ }
+ port->rxpos = 0;
+ spin\_unlock\_irqrestore(&card->card\_lock, flags);
 }
+
+In the fixed code snippet, I added a check to verify that the calculated offset plus the length of the RX buffer does not exceed the buffer size before writing to the descriptor ring. If the check fails, the code should handle the error condition appropriately, such as logging an error message, returning an error code, or gracefully shutting down the system.

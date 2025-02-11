@@ -1,7 +1,11 @@
-struct usb_interface *usbhid_find_interface(int minor)
-{
-    if (minor < 0 || minor >= USB_MINORS) {
-        return NULL;
+#include <limits>
+
+const int kNonCharacter1 = std::numeric_limits<int>::min() + 1;
+const int kNonCharacter3 = std::numeric_limits<int>::min() + 4;
+
+bool IsNonCharacter(int character) {
+    if (character < kNonCharacter3 && character > kNonCharacter1) {
+        return true;
     }
-    return usb_find_interface(&hid_driver, minor);
+    return false;
 }

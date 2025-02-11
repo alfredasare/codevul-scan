@@ -1,37 +1,9 @@
-static void ib_ucm_release_dev(struct device *dev)
-{
-    struct ib_ucm_device *ucm_dev;
-
-    ucm_dev = container_of(dev, struct ib_ucm_device, dev);
-    cdev_del(&ucm_dev->cdev);
-
-    // Sanitize and validate devnum
-    int sanitized_devnum = sanitize_devnum(atoi(ucm_dev->devnum));
-    if (sanitized_devnum >= 0 && sanitized_devnum < IB_UCM_MAX_DEVICES) {
-        clear_bit(sanitized_devnum, dev_map);
-    } else {
-        clear_bit(sanitized_devnum - IB_UCM_MAX_DEVICES, overflow_map);
-    }
-
-    kfree(ucm_dev);
+void Pack<WebGLImageConversion::kDataFormatRG8, WebGLImageConversion::kAlphaDoUnmultiply, uint8_t, uint8_t>(const uint8_t* source, uint8_t* destination, unsigned pixels_per_row) {
+for (unsigned i = 0; i < pixels_per_row; ++i) {
+float scale\_factor = (source[3] != 0) ? kMaxUInt8Value / static\_cast<float>(source[3]) : 1.0f;
+destination[0] = static\_cast<uint8\_t>(static\_cast<float>(source[0]) \* scale\_factor);
+destination[1] = static\_cast<uint8\_t>(static\_cast<float>(source[1]) \* scale\_factor);
+source += 4;
+destination += 2;
 }
-
-int sanitize_devnum(int devnum)
-{
-    // Whitelist approach: only allow numbers and hyphens
-    char *allowed_chars = "0123456789-";
-    char *str_devnum = itoa(devnum);
-    char *ptr = str_devnum;
-    char sanitized_str[20];
-    int sanitized_devnum = 0;
-
-    for (; *ptr!= '\0'; ptr++) {
-        if (strchr(allowed_chars, *ptr)!= NULL) {
-            sanitized_str[ sanitized_devnum++ ] = *ptr;
-        }
-    }
-    sanitized_str[sanitized_devnum] = '\0';
-    sanitized_devnum = atoi(sanitized_str);
-
-    return sanitized_devnum;
 }

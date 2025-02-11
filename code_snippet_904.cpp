@@ -1,18 +1,12 @@
-void OMXNodeInstance::onMessages(std::list<omx_message> &messages) {
-  try {
-    for (std::list<omx_message>::iterator it = messages.begin(); it!= messages.end(); ) {
-      if (handleMessage(*it)) {
-        messages.erase(it++);
-      } else {
-        ++it;
-      }
-    }
-  } catch (...) {
-    // Log the error and handle it internally
-    LOG_ERROR("Error handling message");
-  }
+static void tcp_rearm_rto(struct sock *sk)
+{
+	const struct tcp_sock *tp = tcp_sk(sk);
+	unsigned int packets_out = tp->packets_out;
 
-  if (!messages.empty()) {
-    mObserver->onMessages(messages);
-  }
+	if (packets_out == 0) {
+		inet_csk_clear_xmit_timer(sk, ICSK_TIME_RETRANS);
+	} else {
+		inet_csk_reset_xmit_timer(sk, ICSK_TIME_RETRANS,
+					  inet_csk(sk)->icsk_rto, TCP_RTO_MAX);
+	}
 }

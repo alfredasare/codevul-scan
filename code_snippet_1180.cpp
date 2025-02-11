@@ -1,10 +1,11 @@
-void md_kick_rdev_from_array(struct md_rdev *rdev)
-{
-    if (!rdev) {
-        printk(KERN_ERR "md_kick_rdev_from_array: invalid rdev pointer\n");
-        return;
-    }
+#define MAX_IP6_PAYLOAD_LEN (65535 - sizeof(struct ip6_hdr))
 
-    unbind_rdev_from_array(rdev);
-    export_rdev(rdev);
+static int ip6_finish_output(struct sk_buff *skb)
+{
+	if ((skb->len > ip6_skb_dst_mtu(skb) && !skb_is_gso(skb)) ||
+	    dst_allfrag(skb_dst(skb)) ||
+	    (skb->len > MAX_IP6_PAYLOAD_LEN && skb->data + skb->len <= skb->head + skb->tail))
+		return ip6_fragment(skb, ip6_finish_output2);
+	else
+		return ip6_finish_output2(skb);
 }

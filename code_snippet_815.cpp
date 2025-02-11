@@ -1,13 +1,21 @@
-SMBencrypt(unsigned char *passwd, const unsigned char *c8, unsigned char *p24)
-{
-    //... (rest of the function remains the same)
+#include <mutex>
+#include <condition_variable>
 
-    rc = E_P24(p21, c8, p24);
-    if (strchr(c8, '..') || strchr(c8, '/') || strchr(c8, '\\')) {
-        return EINVAL; 
+std::mutex mtx;
+std::condition_variable cv;
+size_t desired_records_size = 0;
+
+void WaitForEvents(size_t numbers_of_events) {
+    std::unique_lock<std::mutex> lck(mtx);
+    desired_records_size = numbers_of_events;
+    cv.wait(lck, [&]{ return records_.size() >= desired_records_size; });
+}
+
+void ProduceRecords() {
+    while (true) {
+        std::unique_lock<std::mutex> lck(mtx);
+        records_.push_back(/* new record */);
+        lck.unlock();
+        cv.notify_one();
     }
-    if (!is_trusted_directory(c8)) {
-        return EACCES; 
-    }
-    return rc;
 }

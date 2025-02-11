@@ -1,18 +1,22 @@
-void receive_tcppacket(connection_t *c, const char *buffer, int len) {
-    vpn_packet_t outpkt;
-    size_t outpkt_size = sizeof(outpkt.data);
+int dexOptCreateEmptyHeader(int fd)
+{
+ DexOptHeader optHdr = {0};
+ ssize_t actual;
 
-    if (len > outpkt_size) {
-        // Handle error or truncate the buffer
-    }
+ assert(lseek(fd, 0, SEEK_CUR) == 0);
 
-    outpkt.len = len;
-    if (c->options & OPTION_TCPONLY)
-        outpkt.priority = 0;
-    else
-        outpkt.priority = -1;
+ /*
+ * The data is only expected to be readable on the current system, so
+ * we just write the structure. We do need the file offset to be 64-bit
+ * aligned to fulfill a DEX requirement.
+ */
+ assert((offsetof(DexOptHeader, dexOffset) & 0x07) == 0);
+ actual = write(fd, &optHdr, sizeof(optHdr));
+ if (actual != sizeof(optHdr)) {
+ int err = errno ? errno : -1;
+ ALOGE("opt header write failed: %s", strerror(errno));
+ return errno;
+ }
 
-    memcpy_s(outpkt.data, outpkt_size, buffer, len);
-
-    receive_packet(c->node, &outpkt);
+ return 0;
 }

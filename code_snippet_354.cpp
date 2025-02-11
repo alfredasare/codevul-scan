@@ -1,15 +1,33 @@
-static void f_midi_read_data(struct usb_ep *ep, int cable, uint8_t *data, int length)
-{
-    struct f_midi *midi = ep->driver_data;
-    struct snd_rawmidi_substream *substream = midi->out_substream[cable];
+c++
+#include "third_party/blink/renderer/platform/security/sanitizer.h"
 
-    if (!substream ||!test_bit(cable, &midi->out_triggered)) {
-        return;
+void FrameLoader::StopAllLoaders() {
+  if (frame_->GetDocument()->PageDismissalEventBeingDispatched() !=
+      Document::kNoDismissal)
+    return;
+
+  if (in_stop_all_loaders_)
+    return;
+
+  base::AutoReset<bool> in_stop_all_loaders(&in_stop_all_loaders_, true);
+
+  for (Frame* child = frame_->Tree().FirstChild(); child;
+       child = child->Tree().NextSibling()) {
+    if (child->IsLocalFrame()) {
+      KURL url = Sanitizer::SanitizeURL(ToLocalFrame(child)->Loader().GetDocumentLoader()->ProvisionalURL(),
+                                        blink::WebSanitizer::DisallowAll());
+
+      ToLocalFrame(child)->Loader().StopAllLoaders();
     }
+  }
 
-    if (length > substream->buffer_size) {
-        return;
-    }
+  frame_->GetDocument()->CancelParsing();
+  if (document_loader_)
+    document_loader_->StopLoading();
+  if (!protect_provisional_loader_)
+    DetachDocumentLoader(provisional_document_loader_);
+  frame_->GetNavigationScheduler().Cancel();
+  DidFinishNavigation();
 
-    snd_rawmidi_receive(substream, data, length);
+  TakeObjectSnapshot();
 }

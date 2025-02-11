@@ -1,17 +1,19 @@
-int __glXDisp_DestroyContext(__GLXclientState *cl, GLbyte *pc)
+Int rds\_get\_mr(struct rds\_sock \*rs, char __user \*optval, int optlen)
 {
-    xGLXDestroyContextReq *req = (xGLXDestroyContextReq *) pc;
-    __GLXcontext *glxc;
-    int err;
+	struct rds\_get\_mr\_args args;
+	int copied\_size;
 
-    if (!req ||!req->context) {
-        return InvalidArgument;
-    }
+	if (optlen < sizeof(struct rds\_get\_mr\_args))
+		return -EINVAL;
 
-    if (!validGlxContext(cl->client, req->context, DixDestroyAccess, &glxc, &err)) {
-        return err;
-    }
+	copied\_size = copy\_from\_user(&args, (struct rds\_get\_mr\_args \_\_user \*)optval,
+			   sizeof(struct rds\_get\_mr\_args));
 
-    FreeResourceByType(req->context, __glXContextRes, FALSE);
-    return Success;
+	if (copied\_size < 0)
+		return -EFAULT;
+
+	if (copied\_size != sizeof(struct rds\_get\_mr\_args))
+		return -EINVAL;
+
+	return __rds\_rdma\_map(rs, &args, NULL, NULL);
 }

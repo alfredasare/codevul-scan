@@ -1,21 +1,15 @@
-static struct nd_opt_hdr *ndisc_next_option(struct nd_opt_hdr *cur,
-					    struct nd_opt_hdr *end)
+#include <linux/mutex.h>
+
+static DEFINE_MUTEX(usbcons_mutex);
+
+void usb_serial_console_disconnect(struct usb_serial *serial)
 {
-	int type;
-	if (!cur ||!end || cur >= end)
-		return NULL;
-
-	type = cur->nd_opt_type;
-	do {
-		if (cur->nd_opt_len > sizeof(*cur) / sizeof(cur->nd_opt_hdr)) {
-			return NULL;
+	if (serial->port[0] == usbcons_info.port) {
+		mutex_lock(&usbcons_mutex);
+		if (serial->port[0] == usbcons_info.port) {
+			usb_serial_console_exit();
+			usb_serial_put(serial);
 		}
-
-		cur = (struct nd_opt_hdr *)((char *)cur + (cur->nd_opt_len << 3));
-		if (cur >= end || cur->nd_opt_type!= type) {
-			break;
-		}
-	} while (1);
-
-	return cur <= end && cur->nd_opt_type == type? cur : NULL;
+		mutex_unlock(&usbcons_mutex);
+	}
 }

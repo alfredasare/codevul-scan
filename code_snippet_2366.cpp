@@ -1,24 +1,13 @@
-static input_translation_t *GetTranslationTable(exporter_ipfix_domain_t *exporter, uint16_t id) {
-    input_translation_t *table;
+static bool ndisc_suppress_frag_ndisc(struct sk_buff *skb)
+{
+	struct inet6_dev *idev = __in6_dev_get(skb->dev);
 
-    if ( exporter->current_table && ( exporter->current_table->id == id ) )
-        return exporter->current_table;
-
-    table = exporter->input_translation_table;
-    while ( table ) {
-        if ( table->id == id ) {
-            exporter->current_table = table;
-            return table;
-        }
-
-        table = table->next;
-    }
-
-    if (table != NULL) {
-        exporter->current_table = NULL;
-    } else {
-        dbg_printf("[%u] Get translation table %u: %s\n", exporter->info.id, id, "not found");
-    }
-
-    return NULL;
+	if (!idev)
+		return true;
+	if (IP6CB(skb)->flags & IP6SKB_FRAGMENTED &&
+	    idev->cnf && idev->cnf.suppress_frag_ndisc) {
+		net_warn_ratelimited("Received fragmented ndisc packet. Carefully consider disabling suppress_frag_ndisc.\n");
+		return true;
+	}
+	return false;
 }

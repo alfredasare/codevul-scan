@@ -1,15 +1,12 @@
-bool WebGraphicsContext3DCommandBufferImpl::isContextLost() {
-  if (!validateContext(context_)) {
-    return true; // or throw an exception, depending on your requirements
+c++
+bool ParamTraits<gfx::SizeF>::Read(const Message* m, PickleIterator* iter, gfx::SizeF* p) {
+  float w = 0, h = 0;
+  if (iter->ReadFloat(&w) && iter->ReadFloat(&h)) {
+    if (w > 0 && h > 0) {
+      p->set_width(w);
+      p->set_height(h);
+      return true;
+    }
   }
-  return initialize_failed_ ||
-      (context_ && context_->IsCommandBufferContextLost()) ||
-      context_lost_reason_!= GL_NO_ERROR;
-}
-
-bool WebGraphicsContext3DCommandBufferImpl::validateContext(GraphicsContext* context) {
-  if (!context ||!context->isValid()) {
-    return false;
-  }
-  return true;
+  return false;
 }

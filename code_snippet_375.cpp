@@ -1,17 +1,12 @@
-static void acquire_freeze_lock(struct super_block *sb, int level, bool trylock, unsigned long ip)
-{
-    int i;
+c++
+void DownloadItemImpl::TogglePause() {
+  DCHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
 
-    if (!trylock) {
-        for (i = 0; i < level - 1; i++) {
-            if (i >= ARRAY_SIZE(sb->s_writers.lock_map)) {
-                break;
-            }
-            if (&sb->s_writers.lock_map[i] && lock_is_held(&sb->s_writers.lock_map[i])) {
-                trylock = true;
-                break;
-            }
-        }
-    }
-    rwsem_acquire_read(&sb->s_writers.lock_map[level-1], 0, trylock, ip);
+  DCHECK(IsInProgress());
+  if (is_paused_)
+    request_handle_->ResumeRequest();
+  else
+    request_handle_->PauseRequest();
+  is_paused_ = !is_paused_;
+  is_paused_ ? UpdateObserversWithPausedState() : UpdateObserversWithResumedState();
 }

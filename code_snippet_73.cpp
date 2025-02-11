@@ -1,8 +1,10 @@
-static void emitjump(JF j, F f, OP_TYPE op)
+static void cswitch(JF, js_Ast *ref, js_Ast *head)
 {
-    uint8_t jump_instruction[16];
-    uint8_t key[16] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-                        0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16};
-    aes_encrypt(jump_instruction, op, key);
-    emit(j, f, jump_instruction);
-}
+	js_Ast *node, *clause, *def = NULL;
+	int end;
+
+	cexp(J, F, ref);
+
+	/* emit an if-else chain of tests for the case clause expressions */
+	for (node = head; node; node = node->b) {
+		clause = node->a;

@@ -1,43 +1,18 @@
-int br_multicast_toggle(struct net_bridge *br, unsigned long val)
+_dbus_header_get_field_raw (DBusHeader        *header,
+                        int                field,
+                        const DBusString **str,
+                        int               *pos)
 {
-    struct net_bridge_port *port;
-    int err = 0;
-    struct net_bridge_mdb_htable *mdb;
+  if (field < 0 || field >= header->num_fields)
+    return FALSE;
 
-    spin_lock(&br->multicast_lock);
-    br->multicast_disabled =!val;
-    if (br->multicast_disabled)
-        goto unlock;
+  if (!_dbus_header_cache_check (header, field))
+    return FALSE;
 
-    if (!netif_running(br->dev))
-        goto unlock;
+  if (str)
+    *str = &header->data;
+  if (pos)
+    *pos = header->fields[field].value_pos;
 
-    mdb = mlock_dereference(br->mdb, br);
-    if (mdb) {
-        if (mdb->old) {
-            err = -EEXIST;
-        rollback:
-            br->multicast_disabled =!!val;
-            goto unlock;
-        }
-
-        err = br_mdb_rehash(&br->mdb, mdb->max, br->hash_elasticity);
-        if (err)
-            goto rollback;
-    }
-
-    br_multicast_open(br);
-    list_for_each_entry(port, &br->port_list, list) {
-        spin_lock(&port->lock);
-        if (port->state == BR_STATE_DISABLED || port->state == BR_STATE_BLOCKING)
-            continue;
-
-        __br_multicast_enable_port(port);
-        spin_unlock(&port->lock);
-    }
-
-unlock:
-    spin_unlock(&br->multicast_lock);
-
-    return err;
+  return TRUE;
 }

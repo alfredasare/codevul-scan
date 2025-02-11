@@ -1,9 +1,18 @@
-bool MediaStreamDevicesController::IsDefaultMediaAccessBlocked() const {
-  DCHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
-  if (!profile_ ||!profile_->GetHostContentSettingsMap()) {
-    return false;
-  }
-  ContentSetting current_setting = profile_->GetHostContentSettingsMap()->
-      GetDefaultContentSetting(CONTENT_SETTINGS_TYPE_MEDIASTREAM, NULL);
-  return (current_setting == CONTENT_SETTING_BLOCK);
+test_bson_visit_unsupported_type_empty_key (void)
+{
+   const char data[] = "\x0b\x00\x00\x00\x33\x00\x01\x00\x00\x00\x00";
+   bson_t b;
+   bson_iter_t iter;
+   unsupported_type_test_data_t context = {0};
+   bson_visitor_t visitor = {0};
+
+   visitor.visit_unsupported_type = visit_unsupported_type;
+
+   BSON_ASSERT (bson_init_static (&b, (const uint8_t *) data, sizeof(data))); // corrected line
+   BSON_ASSERT (bson_iter_init (&iter, &b));
+   BSON_ASSERT (!bson_iter_visit_all (&iter, &visitor, (void *) &context));
+   BSON_ASSERT (!bson_iter_next (&iter));
+   BSON_ASSERT (context.visited);
+   BSON_ASSERT (!strcmp (context.key, ""));
+   BSON_ASSERT (context.type_code == '\x33');
 }

@@ -1,55 +1,43 @@
-logger_command_cb (const void *pointer, void *data,
-                   struct t_gui_buffer *buffer,
-                   int argc, char **argv, char **argv_eol)
+smb_ofile_t *temp_ofile = NULL;
+
+smb_ofile_close_and_next(smb_ofile_t *of)
 {
-    /* make C compiler happy */
-    (void) pointer;
-    (void) data;
-    (void) argv_eol;
+	smb_ofile_t	*next_of;
+	smb_tree_t	*tree;
 
-    const char *allowed_commands[] = {"list", "set", "flush", "disable"};
-    const int num_allowed_commands = sizeof(allowed_commands) / sizeof(allowed_commands[0]);
+	ASSERT(of);
+	ASSERT(of->f_magic == SMB_OFILE_MAGIC);
 
-    char **args = strtok(argv[1], " ");
-    while (*args!= NULL) {
-        int found = 0;
-        for (int i = 0; i < num_allowed_commands; i++) {
-            if (strcmp(*args, allowed_commands[i]) == 0) {
-                found = 1;
-                break;
-            }
-        }
-        if (!found) {
-            return WEECHAT_RC_ERROR;
-        }
-        args = strtok(NULL, " ");
-    }
-
-    if ((argc == 1)
-        || ((argc == 2) && (weechat_strcasecmp (argv[1], "list") == 0)))
-    {
-        logger_list ();
-        return WEECHAT_RC_OK;
-    }
-
-    if (weechat_strcasecmp (argv[1], "set") == 0)
-    {
-        if (argc > 2)
-            logger_set_buffer (buffer, argv[2]);
-        return WEECHAT_RC_OK;
-    }
-
-    if (weechat_strcasecmp (argv[1], "flush") == 0)
-    {
-        logger_flush ();
-        return WEECHAT_RC_OK;
-    }
-
-    if (weechat_strcasecmp (argv[1], "disable") == 0)
-    {
-        logger_set_buffer (buffer, "0");
-        return WEECHAT_RC_OK;
-    }
-
-    WEECHAT_COMMAND_ERROR;
+	mutex_enter(&of->f_mutex);
+	switch (of->f_state) {
+	case SMB_OFILE_STATE_OPEN:
+		/* The file is still open. */
+		of->f_refcnt++;
+		ASSERT(of->f_refcnt);
+		tree = of->f_tree;
+		mutex_exit(&of->f_mutex);
+		smb_llist_exit(&of->f_tree->t_ofile_list);
+		smb_ofile_close(of, 0);
+		temp_ofile = smb_ofile_release(of);
+		smb_llist_enter(&tree->t_ofile_list, RW_READER);
+		next_of = smb_llist_head(&tree->t_ofile_list);
+		break;
+	case SMB_OFILE_STATE_CLOSING:
+	case SMB_OFILE_STATE_CLOSED:
+		/*
+		 * The ofile exists but is closed or
+		 * in the process being closed.
+		 */
+		mutex_exit(&of->f_mutex);
+		temp_ofile = smb_llist_next(&of->f_tree->t_ofile_list, of);
+		next_of = temp_ofile;
+		break;
+	default:
+		ASSERT(0);
+		mutex_exit(&of->f_mutex);
+		temp_ofile = smb_llist_next(&of->f_tree->t_ofile_list, of);
+		next_of = temp_ofile;
+		break;
+	}
+	return (next_of);
 }

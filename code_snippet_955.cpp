@@ -1,12 +1,10 @@
-int virtio_queue_empty(VirtQueue *vq)
+Sure, here is the fixed version of the code:
+
+
+static int do_sysfs_registration(void)
 {
-    if (!vq ||!vq->shadow_avail_idx ||!vq->last_avail_idx) {
-        return -EFAULT;
-    }
+	int rc;
 
-    if (vq->shadow_avail_idx!= vq->last_avail_idx) {
-        return 0;
-    }
-
-    return vring_avail_idx(vq) == vq->last_avail_idx;
-}
+	ecryptfs_kobj = kobject_create_and_add("ecryptfs", fs_kobj);
+	if (!ecryptfs_kobj) {
+		printk(KERN_ERR "Unable to create ecryptfs kset\n");

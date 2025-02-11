@@ -1,16 +1,6 @@
-opj_bool pi_next(opj_pi_iterator_t * pi)
+static int segment_bits_seq_show(struct seq_file *seq, void *offset)
 {
-    if (pi->poc.prg == LRCP) {
-        return pi_next_lrcp(pi);
-    } else if (pi->poc.prg == RLCP) {
-        return pi_next_rlcp(pi);
-    } else if (pi->poc.prg == RPCL) {
-        return pi_next_rpcl(pi);
-    } else if (pi->poc.prg == PCRL) {
-        return pi_next_pcrl(pi);
-    } else if (pi->poc.prg == CPRL) {
-        return pi_next_cprl(pi);
-    } else {
-        return OPJ_FALSE; // Return a valid value for unknown cases
-    }
-}
+        struct super_block *sb = seq->private;
+        struct f2fs_sb_info *sbi = F2FS_SB(sb);
+        unsigned int total_segs =
+                le3

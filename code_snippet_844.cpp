@@ -1,19 +1,8 @@
-static void armpmu_disable(struct pmu *pmu)
+static int em_smsw(struct x86_emulate_ctxt *ctxt)
 {
-    struct arm_pmu *armpmu = to_arm_pmu(pmu);
-    if (validate_user_input(armpmu->stop_url))
-    {
-        // Use prepared statement or parameterized query
-        armpmu->stop();
+    if (ctxt->dst.type == OP_MEM && ctxt->dst.bytes > 0 && ctxt->dst.bytes <= 2) {
+        ctxt->dst.val = ctxt->ops->get_cr(ctxt, 0);
+        ctxt->dst.bytes = 2;
     }
-    else
-    {
-        // Handle invalid input
-    }
-}
-
-bool validate_user_input(char *input)
-{
-    // Implement your validation logic here
-    return true;
+    return X86EMUL_CONTINUE;
 }

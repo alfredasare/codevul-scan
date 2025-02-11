@@ -1,32 +1,7 @@
-static void v9fs_fix_fid_paths(V9fsPDU *pdu, V9fsPath *olddir,
-                               V9fsString *old_name, V9fsPath *newdir,
-                               V9fsString *new_name)
+static void lex\_unget(lex\_t \*lex, int c)
 {
-    V9fsFidState *tfidp;
-    V9fsPath oldpath, newpath;
-    V9fsState *s = pdu->s;
-
-    // Initialize paths
-    v9fs_path_init(&oldpath);
-    v9fs_path_init(&newpath);
-    v9fs_co_name_to_path(pdu, olddir, old_name->data, &oldpath);
-    v9fs_co_name_to_path(pdu, newdir, new_name->data, &newpath);
-
-    // Verify SSL/TLS connection before updating fid's
-    if (!ssl_verify_server_identity(s->ssl_ctx)) {
-        log_error("SSL/TLS verification failed");
-        return;
-    }
-
-    // Update fid's pointing to the old name to start pointing to the new name
-    for (tfidp = s->fid_list; tfidp; tfidp = tfidp->next) {
-        if (v9fs_path_is_ancestor(&oldpath, &tfidp->path)) {
-            /* replace the name */
-            v9fs_fix_path(&tfidp->path, &newpath, strlen(oldpath.data));
-        }
-    }
-
-    // Free allocated memory
-    v9fs_path_free(&oldpath);
-    v9fs_path_free(&newpath);
+if (c >= 0 && c < CHAR\_MAX && stream\_unget(&lex->stream, c) == 0) {
+return;
+}
+// Error handling code here
 }

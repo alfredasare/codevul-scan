@@ -1,16 +1,13 @@
-sp<AudioFlinger::EffectModule> AudioFlinger::EffectChain::getEffectFromType_l(const effect_uuid_t *type)
+static unsigned int br_nf_local_in(unsigned int hook, struct sk_buff *skb,
+				   const struct net_device *in,
+				   const struct net_device *out,
+				   int (*okfn)(struct sk_buff *))
 {
-    size_t size = mEffects.size();
-    for (size_t i = 0; i < size; i++) {
-        if (memcmp(&mEffects[i]->desc().type, type, sizeof(effect_uuid_t)) == 0) {
-            return mEffects[i];
-        }
-    }
-    int result = memcmp(&mEffects[0]->desc().type, &mEffects[0]->desc().type, 0); // dummy compare
-    if (result!= 0) {
-        return 0; // return 0 if no match found
-    } else {
-        LOG_ERROR("No matching effect found");
-        return nullptr;
-    }
+	struct rtable *rt = skb_rtable(skb);
+
+	if (rt && rt == bridge_parent_rtable(in)) {
+		skb_dst_drop(skb);
+	}
+
+	return NF_ACCEPT;
 }

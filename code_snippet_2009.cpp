@@ -1,15 +1,14 @@
-uncompress_image(Gif_Context *gfc, Gif_Image *gfi, Gif_Reader *grr)
+PHP_NAMED_FUNCTION(php_if_fopen)
 {
-    int old_nerrors;
-    if (!Gif_CreateUncompressedImage(gfi, gfi->interlace))
-        return 0;
-    gfc->width = gfi->width;
-    gfc->height = gfi->height;
-    gfc->image = gfi->image_data;
-    unsigned int maximage_size = (unsigned int) gfi->width * (unsigned int) gfi->height;
-    gfc->maximage = gfi->image_data + maximage_size - 1; 
-    old_nerrors = gfc->errors[1];
-    read_image_data(gfc, grr);
-    gfi->compressed_errors = gfc->errors[1] - old_nerrors;
-    return 1;
-}
+	char *filename, *mode;
+	int filename_len, mode_len;
+	zend_bool use_include_path = 0;
+	zval *zcontext = NULL;
+	php_stream *stream;
+	php_stream_context *context = NULL;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ps|br", &filename, &filename_len, &mode, &mode_len, &use_include_path, &zcontext) == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	context = php_stream_context_from_zval(zcontext,

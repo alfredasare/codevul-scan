@@ -1,14 +1,17 @@
-SYSCALL_DEFINE2(clock_settime, const clockid_t, which_clock,
-		const struct timespec __user *, tp)
+int RSA_generate_key_ex(RSA *rsa, int bits, BIGNUM *e_value, BN_GENCB *cb)
 {
-	const struct k_clock *kc = clockid_to_kclock(which_clock);
-	struct timespec64 new_tp;
-
-	if (!kc ||!kc->clock_set)
-		return -EINVAL;
-
-	if (copy_from_user(&new_tp, tp, sizeof(*tp)))
-		return -EFAULT;
-
-	return kc->clock_set(which_clock, &new_tp);
+    if (rsa->meth->rsa_keygen) {
+        int ret = rsa->meth->rsa_keygen(rsa, bits, e_value, cb);
+        if (ret <= 0) {
+            /* Handle error and release resources */
+            return ret;
+        }
+    } else {
+        int ret = rsa_builtin_keygen(rsa, bits, e_value, cb);
+        if (ret <= 0) {
+            /* Handle error and release resources */
+            return ret;
+        }
+    }
+    return 1; /* Success */
 }

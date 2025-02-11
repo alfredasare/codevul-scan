@@ -1,20 +1,31 @@
-MagickExport void LocaleUpper(char *string)
-{
-  register char
-    *q;
+AXObjectCache* Document::GetOrCreateAXObjectCache() const {
+  Settings* settings = GetSettings();
+  if (!settings || !settings->GetAccessibilityEnabled())
+    return nullptr;
 
-  assert(string!= (char *) NULL);
+  Document& cache\_owner = AXObjectCacheOwner();
 
-  // Sanitize the input string using a whitelist approach
-  for (q = string; *q!= '\0'; q++) {
-    if (allowed_characters(*q)) { 
-      *q = (char)LocaleUppercase((int)*q);
-    } else {
-      *q = '\0'; // Set to null to prevent further processing
-    }
-  }
+  std::scoped_lock<std::mutex> lock(cache\_owner.layout\_view\_mutex_);
+  if (!cache\_owner.GetLayoutView())
+    return nullptr;
+
+  DCHECK(&cache\_owner == this || !ax\_object\_cache_);
+  if (!cache\_owner.ax\_object\_cache_)
+    cache\_owner.ax\_object\_cache_ = AXObjectCache::Create(cache\_owner);
+  return cache\_owner.ax\_object\_cache_.Get();
 }
 
-bool allowed_characters(char c) {
-  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c =='';
+In addition to the previous response, here's the fixed vulnerable code using a single statement for the check and use:
+
+AXObjectCache* Document::GetOrCreateAXObjectCache() const {
+Settings* settings = GetSettings();
+if (!settings || !settings->GetAccessibilityEnabled() || !AXObjectCacheOwner().GetLayoutView() || !AXObjectCacheOwner().GetLayoutView())
+return nullptr;
+
+Document& cache\_owner = AXObjectCacheOwner();
+
+BACKET(&cache\_owner == this || !ax\_object\_cache_);
+if (!cache\_owner.ax\_object\_cache_)
+cache\_owner.ax\_object\_cache\_ = AXObjectCache::Create(cache\_owner);
+return cache\_owner.ax\_object\_cache\_.Get();
 }

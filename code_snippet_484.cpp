@@ -1,16 +1,15 @@
-int ZEXPORT inflateGetHeader(strm, head)
-z_streamp strm;
-gz_headerp head;
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+
+struct bpf_verifier_env {
+	char log[256];
+};
+
+void bpf_verifier_log_write(struct bpf_verifier_env *env, const char *fmt, ...)
 {
-    struct inflate_state FAR *state;
+	va_list args;
+	char user_data[64];
+	int len;
 
-    /* check state */
-    if (strm == Z_NULL || strm->state == Z_NULL) return Z_STREAM_ERROR;
-    state = (struct inflate_state FAR *)strm->state;
-    if (state->wrap == 2) return Z_STREAM_ERROR;
-
-    /* save header structure */
-    state->head = head;
-    head->done = 0;
-    return Z_OK;
-}
+	if (!bpf_verifier_log_needed(&env->log))

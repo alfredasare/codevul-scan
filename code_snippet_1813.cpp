@@ -1,13 +1,29 @@
-static pdf_creator_t *new_creator(int *n_elements)
+poppler_page_get_text_output_dev (PopplerPage *page)
 {
-    pdf_creator_t *daddy;
-    int creator_template_size = sizeof(creator_template) / sizeof(creator_template[0]);
+  if (page == NULL || page->text_dev == NULL) {
+    return NULL;
+  }
 
-    daddy = malloc(creator_template_size * sizeof(pdf_creator_t));
-    memcpy(daddy, creator_template, creator_template_size * sizeof(pdf_creator_t));
+  if (page->gfx == NULL) {
+    page->gfx = page->page->createGfx(page->text_dev,
+				      72.0, 72.0, 0,
+				      gFalse, /* useMediaBox */
+				      gTrue, /* Crop */
+				      -1, -1, -1, -1,
+				      gFalse, /* printing */
+				      page->document->doc->getCatalog (),
+				      NULL, NULL, NULL, NULL);
 
-    if (n_elements)
-        *n_elements = creator_template_size;
+    if (page->gfx == NULL) {
+      return NULL;
+    }
 
-    return daddy;
+    page->page->display(page->gfx);
+
+    if (page->text_dev->endPage() < 0) {
+      return NULL;
+    }
+  }
+
+  return page->text_dev;
 }

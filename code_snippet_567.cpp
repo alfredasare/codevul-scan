@@ -1,8 +1,13 @@
-bool ProcessNeedsProfileDir(const std::string& process_type) {
-  const std::set<std::string> allowedProcessTypes = {"allowed_process_type1", "allowed_process_type2"};
-  if (std::find(allowedProcessTypes.begin(), allowedProcessTypes.end(), UTF8ToUTF16(process_type))!= allowedProcessTypes.end()) {
-    return ProcessNeedsProfileDir(GetProcessType(UTF8ToUTF16(process_type)));
-  } else {
-    return false;
-  }
-}
+Here's the fixed version of the vulnerable code based on the provided context:
+
+
+int ZEXPORT inflateGetHeader(z_streamp strm, gz_headerp head)
+{
+    struct inflate_state FAR *state;
+
+    /* check state */
+    if (strm == NULL || strm->state == NULL) return Z_STREAM_ERROR;
+    state = (struct inflate_state FAR *)strm->state;
+    if ((state->wrap & 2) == 0) return Z_STREAM_ERROR;
+
+    /* check head */

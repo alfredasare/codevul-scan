@@ -1,10 +1,18 @@
-check_for_exec(const_os_ptr op)
+MagickPrivate void ResetQuantumState(QuantumInfo *quantum_info)
 {
-    if (!r_has_attr(op, a_execute) && /* only true if noaccess */
-        ref_type_uses_access(r_type(op)) &&
-        (r_has_attr(op, a_executable) || !r_has_type(op, t_dictionary))
-        ) {
-        return_error(gs_error_invalid_operation); // Custom error message
-    }
-    return 0;
+  static const unsigned int max_index = sizeof(mask) / sizeof(mask[0]);
+  unsigned int mask[max_index];
+
+  assert(quantum_info != (QuantumInfo *) NULL);
+  assert(quantum_info->signature == MagickSignature);
+  quantum_info->state.inverse_scale=1.0;
+  if (fabs(quantum_info->scale) >= MagickEpsilon)
+    quantum_info->state.inverse_scale/=quantum_info->scale;
+  quantum_info->state.pixel=0U;
+  quantum_info->state.bits=0U;
+
+  for (int i = 0; i < max_index; ++i)
+    mask[i] = (unsigned int)(1U << i) - 1;
+
+  quantum_info->state.mask=mask;
 }

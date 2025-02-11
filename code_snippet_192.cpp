@@ -1,11 +1,31 @@
-static int sctp_v6_skb_iif(const struct sk_buff *skb)
+#define MAX_BUFFER 1024
+
+void notationDeclDebug(void *ctx ATTRIBUTE_UNUSED, const xmlChar *name,
+                       const xmlChar *publicId, const xmlChar *systemId)
 {
-    if (!skb || skb->cb == NULL)
-        return -EINVAL;
+    callbacks++;
+    if (quiet)
+        return;
 
-    struct inet6_skb_parm *opt = (struct inet6_skb_parm *) skb->cb;
-    if (&opt->iif > MAX_IIF_VALUE)
-        return -EOVERFLOW;
+    // Validate input parameters
+    if (name && xmlStrlen(name) > MAX_BUFFER) {
+        // Handle error: name parameter is too long
+        return;
+    }
 
-    return opt->iif;
+    if (publicId && xmlStrlen(publicId) > MAX_BUFFER) {
+        // Handle error: publicId parameter is too long
+        return;
+    }
+
+    if (systemId && xmlStrlen(systemId) > MAX_BUFFER) {
+        // Handle error: systemId parameter is too long
+        return;
+    }
+
+    // Process validated input parameters
+    fprintf(SAXdebug, "SAX.notationDecl(%s, %s, %s)\n",
+            (char *) name ? (char *) xmlMemSprintf("%.*s", MAX_BUFFER, name) : "",
+            (char *) publicId ? (char *) xmlMemSprintf("%.*s", MAX_BUFFER, publicId) : "",
+            (char *) systemId ? (char *) xmlMemSprintf("%.*s", MAX_BUFFER, systemId) : "");
 }

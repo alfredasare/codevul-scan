@@ -1,13 +1,11 @@
-static void l2tp_ip6_close(struct sock *sk, long timeout)
+char \*extract\_html(char \*buffer, size\_t size\_buffer)
 {
-    write_lock_bh(&l2tp_ip6_lock);
-    hlist_del_init(&sk->sk_bind_node);
-    sk_del_node_init(sk);
-    write_unlock_bh(&l2tp_ip6_lock);
+	char \*end = buffer + size\_buffer - 3; // Limit to one character before potential CRLF sequence
+	char \*cur;
 
-    if (sk_common_release(sk) == -1) {
-        syslog(LOG_WARNING, "Error releasing socket: %d", -errno);
-    } else {
-        syslog(LOG_INFO, "Socket released successfully");
-    }
+	for (cur = buffer; cur < end; cur++)
+		if (*cur == '\r' && *(cur+1) == '\n'
+		    && *(cur+2) == '\r' && *(cur+3) == '\n')
+			return cur + 4;
+	return NULL;
 }

@@ -1,15 +1,15 @@
-static void *mntns_get(struct task_struct *task)
-{
-    struct mnt_namespace *ns = ERR_PTR(-ENODATA);
-    struct nsproxy *nsproxy;
-
-    rcu_read_lock();
-    nsproxy = task_nsproxy(task);
-    if (nsproxy) {
-        ns = nsproxy->mnt_ns;
-        get_mnt_ns(ns);
+c++
+PermissionsData::PermissionsData(
+    const ExtensionId& extension_id,
+    Manifest::Type manifest_type,
+    Manifest::Location location,
+    std::unique_ptr<const PermissionSet> initial_permissions)
+: extension_id_(extension_id),
+  manifest_type_(manifest_type),
+  location_(location) {
+    if (!initial_permissions) {
+        throw std::invalid_argument("initial_permissions cannot be null");
     }
-    rcu_read_unlock();
-
-    return ns;
+    active_permissions_unsafe_ = std::move(initial_permissions);
+    withheld_permissions_unsafe_ = std::make_unique<PermissionSet>();
 }

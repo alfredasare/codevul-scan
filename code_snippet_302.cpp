@@ -1,26 +1,11 @@
-SYSCALL_DEFINE5(recvmmsg, int, fd, struct mmsghdr __user *, mmsg,
-	unsigned int, vlen, unsigned int, flags,
-	struct timespec __user *, timeout)
+_TIFFSwab24BitData(TIFF* tif, uint8* buf, tmsize_t cc)
 {
-	//... (rest of the function remains the same)
+    (void) tif;
+    assert(cc >= 0);
 
-	if (timeout) {
-		struct timespec timeout_sys;
+    if (cc % 3 != 0) {
+        return;
+    }
 
-		if (copy_from_user(&timeout_sys, timeout, sizeof(timeout_sys)) ||
-		    unlikely(!is_aligned(&timeout_sys, sizeof(timeout_sys))))
-			return -EFAULT;
-
-		datagrams = __sys_recvmmsg(fd, mmsg, vlen, flags, &timeout_sys);
-
-		if (datagrams > 0 &&
-		    copy_to_user(timeout, &timeout_sys, sizeof(timeout_sys)))
-			datagrams = -EFAULT;
-	}
-	return datagrams;
-}
-
-static inline bool is_aligned(void *ptr, size_t size)
-{
-	return ((uintptr_t)ptr % size == 0);
+    TIFFSwabArrayOfTriples((uint8*) buf, cc/3);
 }

@@ -1,16 +1,11 @@
-static int poll_drive(bool interruptible, int flag)
+SPR\_ListEntries(struct rx\_call \*call, afs\_int32 flag, afs\_int32 startindex,
+prentries \*bulkentries, afs\_int32 \*nextstartindex)
 {
-    /* no auto-sense, just clear dcl */
-    raw_cmd = &default_raw_cmd;
-    if (flag < 0 || flag > RAW_CMD_MAX_FLAGS) {
-        return -EINVAL;
-    }
-    raw_cmd->flags = flag & RAW_CMD_VALID_FLAGS;
-    raw_cmd->track = 0;
-    raw_cmd->cmd_count = 0;
-    cont = &poll_cont;
-    debug_dcl(DP->flags, "setting NEWCHANGE in poll_drive\n");
-    set_bit(FD_DISK_NEWCHANGE_BIT, &DRS->flags);
+afs\_int32 code;
+afs\_int32 cid = call ? call->cid : ANONYMOUSID;
 
-    return wait_til_done(floppy_ready, interruptible);
+code = listEntries(call, flag, startindex, bulkentries, nextstartindex, &cid);
+osi\_auditU(call, PTS\_LstEntsEvent, code, AUD\_LONG, flag, AUD\_END);
+ViceLog(125, ("PTS\_ListEntries: code %d cid %d flag %d\n", code, cid, flag));
+return code;
 }

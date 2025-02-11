@@ -1,16 +1,22 @@
-static void btif_read_le_key(const uint8_t key_type, const size_t key_len, bt_bdaddr_t bd_addr,
- const uint8_t addr_type, const bool add_key, bool *device_added, bool *key_found)
-{
-    assert(device_added);
-    assert(key_found);
+constexpr GLsizeiptr kMaxBufferSize = 1000000; // Set the maximum allowed buffer size
 
-    char buffer[100]; // Define a fixed buffer size
-    memset(buffer, 0, sizeof(buffer));
-
-    if (key_len > sizeof(buffer)) {
-        // Handle error condition or return an error code
-        return;
+error::Error GLES2DecoderImpl::HandleBufferData(
+    uint32 immediate_data_size, const gles2::BufferData& c) {
+  GLenum target = static_cast<GLenum>(c.target);
+  GLsizeiptr size = static_cast<GLsizeiptr>(c.size);
+  uint32 data_shm_id = static_cast<uint32>(c.data_shm_id);
+  uint32 data_shm_offset = static_cast<uint32>(c.data_shm_offset);
+  GLenum usage = static_cast<GLenum>(c.usage);
+  const void* data = NULL;
+  if (size > kMaxBufferSize) {
+    return error::kOutOfBounds;
+  }
+  if (data_shm_id != 0 || data_shm_offset != 0) {
+    data = GetSharedMemoryAs<const void*>(data_shm_id, data_shm_offset, size);
+    if (!data) {
+      return error::kOutOfBounds;
     }
-
-    // Rest of the function remains the same
+  }
+  DoBufferData(target, size, data, usage);
+  return error::kNoError;
 }

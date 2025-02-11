@@ -1,18 +1,10 @@
-string16 ToUpper(const string16& string) {
-  if (!IsValidInputString(string)) {
-    throw std::invalid_argument("Invalid input string");
-  }
+static wchar_t *ConvertUTF8ToUTF16(const unsigned char *source, size_t source_length, size_t *length)
+{
+  wchar_t *utf16 = NULL;
 
-  icu::UnicodeString unicode_string(string.c_str(), string.size());
-  unicode_string.toUpper();
-  return string16(unicode_string.getBuffer(), unicode_string.length());
-}
-
-bool IsValidInputString(const string16& string) {
-  for (char16 c : string) {
-    if (!isalnum(c) && c!= '_') { // Only allow alphanumeric characters and underscores
-      return false;
-    }
-  }
-  return true;
-}
+  *length = UTF8ToUTF16((const char *)source, source_length, (wchar_t *)NULL);
+  if (*length == 0)
+  {
+    *length = source_length;
+    utf16 = (wchar_t *)AcquireQuantumMemory(*length + 1, sizeof(*utf16));
+    if (utf1

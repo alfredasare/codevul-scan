@@ -1,18 +1,16 @@
-static void packet_mm_close(struct vm_area_struct *vma)
+static ssize_t nr_addr_filters_show(struct device *dev,
+				struct device_attribute *attr,
+				char *page)
 {
-    struct file *file = vma->vm_file;
-    struct socket *sock = file->private_data;
-    struct sock *sk = sock->sk;
+	struct pmu *pmu = dev_get_drvdata(dev);
+	ssize_t len = 0;
 
-    if (sk) {
-        if (!validate_vma(vma)) {
-            return;
-        }
-        atomic_dec(&pkt_sk(sk)->mapped);
-    }
-}
+	if (page == NULL)
+		return -EINVAL;
 
-bool validate_vma(struct vm_area_struct *vma)
-{
-    return vma &&!(vma->vm_flags & VM_SHARED);
+	len = snprintf(page, PAGE_SIZE - 1, "%d\n", pmu->nr_addr_filters);
+	if (len > PAGE_SIZE - 1)
+		return -ERANGE;
+
+	return len;
 }

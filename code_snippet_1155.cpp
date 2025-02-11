@@ -1,8 +1,11 @@
-static void *xt_match_seq_next(struct seq_file *seq, void *v, loff_t *ppos)
+u8 llc_data_accept_state(u8 state)
 {
-    if (*ppos >= seq->size || *ppos < 0) {
-        return NULL; // invalid offset
-    }
+	enum {
+		LLC_CONN_STATE_NORMAL = 0,
+		LLC_CONN_STATE_BUSY = 1,
+		LLC_CONN_STATE_REJ = 2,
+		LLC_CONN_STATE_MAX = 3,
+	};
 
-    return xt_mttg_seq_next(seq, v, ppos, false);
+	return state < LLC_CONN_STATE_MAX && state != LLC_CONN_STATE_REJ;
 }

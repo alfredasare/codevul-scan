@@ -1,11 +1,16 @@
-void ServiceWorkerPaymentInstrument::OnCanMakePaymentEventSkipped(ValidateCanMakePaymentCallback callback) {
-    can_make_payment_result_ = true;
-    has_enrolled_instrument_result_ = false;
+static int64_t sector_lun2qemu(int64_t sector, IscsiLun *iscsilun)
+{
+    // Check for input validation
+    if (sector < 0 || iscsilun->block_size <= 0) {
+        return -1;
+    }
 
-    // Verify that the callback object is no longer being referenced
-    callback = nullptr;
+    // Calculate the intermediate result and check for overflow
+    uint64_t intermediate = (uint64_t)sector * iscsilun->block_size;
+    if (intermediate > INT64_MAX || intermediate / iscsilun->block_size != sector) {
+        return -1;
+    }
 
-    base::ThreadTaskRunnerHandle::Get()->PostTask(
-        FROM_HERE,
-        base::BindOnce([this, callback]() { callback(this, can_make_payment_result_); }));
+    // Return the result
+    return intermediate / BDRV_SECTOR_SIZE;
 }

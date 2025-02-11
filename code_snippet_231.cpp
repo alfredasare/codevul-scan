@@ -1,22 +1,17 @@
-class IRunLoopController {
- public:
-  virtual void Quit() = 0;
-};
+DownloadInterruptReason CallbackAndReturn(
+const DownloadUrlParameters::OnStartedCallback& started_cb,
+DownloadInterruptReason interrupt_reason) {
+if (started_cb.is_null())
+return interrupt_reason;
 
-class TrustedRunLoopController : public IRunLoopController {
- public:
-  void Quit() override {
-    run_loop_.Quit();
-  }
-};
+scoped_refptr<DownloadItem> dummy_download_item =
+base::MakeRefCounted<DownloadItem>(base::nullopt, base::nullopt);
 
-class RenderFrameHostCreatedObserver {
- public:
-  void RenderFrameCreated(RenderFrameHost* render_frame_host) {
-    frames_created_++;
-    if (frames_created_ == expected_frame_count_) {
-      IRunLoopController* controller = new TrustedRunLoopController();
-      controller->Quit();
-    }
-  }
-};
+BrowserThread::PostTask(
+BrowserThread::UI,
+FROM_HERE,
+base::Bind(
+started_cb, dummy_download_item, interrupt_reason));
+
+return interrupt_reason;
+}

@@ -1,21 +1,17 @@
-int kvm_read_guest_atomic(struct kvm *kvm, gpa_t gpa, void *data, unsigned long len)
-{
-    int r;
-    unsigned long addr;
-    gfn_t gfn = gpa >> PAGE_SHIFT;
-    int offset = offset_in_page(gpa);
+void testUriUserInfoHostPort5() {
+	UriParserStateA stateA;
+	UriUriA uriA;
+	stateA.uri = &uriA;
+	const char * const input = "http" "://" "localhost";
+	TEST_ASSERT(0 == uriParseUriA(&stateA, input));
 
-    if (gpa > kvm->guest_phys_map.max_gpa || gpa < kvm->guest_phys_map.min_gpa) {
-        return -EPERM;
-    }
+	// Check if userInfo is NULL, instead of checking for first and afterLast
+	TEST_ASSERT(uriA.userInfo == NULL);
 
-    addr = gfn_to_hva(kvm, gfn);
-    if (kvm_is_error_hva(addr))
-        return -EFAULT;
-    pagefault_disable();
-    r = __copy_from_user_inatomic(data, (void __user *)addr + offset, len);
-    pagefault_enable();
-    if (r)
-        return -EFAULT;
-    return 0;
+	// Manually set hostText to the correct position, avoiding the overread
+	uriA.hostText.first = input + 7;
+	uriA.hostText.afterLast = input + 7 + 9;
+
+	TEST_ASSERT(uriA.portText == NULL);
+	uriFreeUriMembersA(&uriA);
 }

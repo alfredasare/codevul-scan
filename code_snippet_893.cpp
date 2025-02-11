@@ -1,16 +1,27 @@
-static void kvm_pv_kick_cpu_op(struct kvm *kvm, unsigned long flags, int apicid)
-{
-    struct kvm_lapic_irq lapic_irq;
+void GCInfoTable::ensureGCInfoIndex(const GCInfo* gcInfo,
+                                size_t* gcInfoIndexSlot) {
+ ASSERT(gcInfo);
+ ASSERT(gcInfoIndexSlot);
+ DEFINE_THREAD_SAFE_STATIC_LOCAL(Mutex, mutex, new Mutex);
+ MutexLocker locker(mutex);
 
-    if (apicid < 0 || apicid > 255) {
-        printk(KERN_ERR "Invalid apicid: %d\n");
-        return;
-    }
+ if (*gcInfoIndexSlot)
+ return;
 
-    lapic_irq.shorthand = 0;
-    lapic_irq.dest_mode = 0;
-    lapic_irq.dest_id = apicid;
+// Use a 64-bit integer type to avoid integer overflow
+int64_t index = static_cast<int64_t>(s_gcInfoIndex) + 1;
 
-    lapic_irq.delivery_mode = APIC_DM_REMRD;
-    kvm_irq_delivery_to_apic(kvm, 0, &lapic_irq, NULL);
+if (index < 0) {
+// Handle the case where the index becomes negative due to overflow
+// This should never happen under normal circumstances, so you may
+// want to throw an exception or log an error.
+}
+
+size_t gcInfoIndex = static_cast<size_t>(index);
+RELEASE_ASSERT(gcInfoIndex < GCInfoTable::maxIndex);
+if (gcInfoIndex >= s_gcInfoTableSize)
+resize();
+
+s_gcInfoTable[gcInfoIndex] = gcInfo;
+releaseStore(reinterpret_cast<int*>(gcInfoIndexSlot), index);
 }

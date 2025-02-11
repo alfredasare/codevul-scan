@@ -1,16 +1,31 @@
-php
-PHP_METHOD(PharFileInfo, getCompressedSize)
+_tiffMapProc(thandle_t fd, void** pbase, toff_t* psize)
 {
-    PHAR_ENTRY_OBJECT();
+	uint64_t size;
+	tmsize_t sizem;
+	HANDLE hMapFile;
 
-    if (zend_parse_parameters_none() == FAILURE) {
-        return;
-    }
+	size = _tiffSizeProc(fd);
 
-    if (!isset($entry_obj->entry) ||!isset($entry_obj->entry->compressed_filesize) ||!is_int($entry_obj->entry->compressed_filesize)) {
-        warning("Invalid entry object");
-        RETURN_FALSE;
-    }
+	// Check if size is within the range of tmsize_t
+	if (size > static_cast<uint64_t>(std::numeric_limits<tmsize_t>::max()) || size < static_cast<uint64_t>(std::numeric_limits<tmsize_t>::min())) {
+		return 0;
+	}
 
-    RETURN_LONG((int)$entry_obj->entry->compressed_filesize);
+	sizem = (tmsize_t)size;
+
+	if ((uint64_t)sizem != size) {
+		return 0;
+	}
+
+	hMapFile = CreateFileMapping(fd, NULL, PAGE_READONLY, 0, 0, NULL);
+	if (hMapFile == NULL) {
+		return 0;
+	}
+	*pbase = MapViewOfFile(hMapFile, FILE_MAP_READ, 0, 0, 0);
+	CloseHandle(hMapFile);
+	if (*pbase == NULL) {
+		return 0;
+	}
+	*psize = size;
+	return 1;
 }

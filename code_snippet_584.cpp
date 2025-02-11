@@ -1,26 +1,14 @@
-static inline int check_target(struct arpt_entry *e, const char *name)
+#include <pthread.h>
+
+static pthread_mutex_t m_lock = PTHREAD_MUTEX_INITIALIZER;
+
+static void pmac_ide_flush(DBDMA_io *io)
 {
-    struct xt_entry_target *t = arpt_get_target(e);
-    int ret;
-    struct xt_tgchk_param par = {
-      .table     = name,
-      .entryinfo = e,
-      .target    = t->u.kernel.target,
-      .targinfo  = t->data,
-      .hook_mask = e->comefrom,
-      .family    = NFPROTO_ARP,
-    };
+    MACIOIDEState *m = io->opaque;
 
-    // Validate and sanitize the 'name' input
-    if (strchr(name, '/')!= NULL) {
-        duprintf("arp_tables: invalid table name: `%s'\n", name);
-        return -EINVAL;
+    pthread_mutex_lock(&m_lock);
+    if (m->aiocb) {
+        blk_drain_all();
     }
-
-    ret = xt_check_target(&par, t->u.target_size - sizeof(*t), 0, false);
-    if (ret < 0) {
-        duprintf("arp_tables: check failed for `%s'.\n", t->u.kernel.target->name);
-        return ret;
-    }
-    return 0;
+    pthread_mutex_unlock(&m_lock);
 }

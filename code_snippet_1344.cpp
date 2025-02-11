@@ -1,6 +1,9 @@
-JsLex *jslSetLex(JsLex *l) {
-    size_t old_lex = (size_t)lex;
-    size_t new_lex = (size_t)l;
-    lex = (JsLex *)((old_lex + new_lex) & ~(size_t)1);
-    return (JsLex *)old_lex;
+// Provide a safe interface for retrieving individual rules
+RuleBasedHostResolverProc* GetRule(int index) {
+  return host_resolver_.GetRule(index);
+}
+
+// Or provide a safe interface for retrieving a range of rules
+std::vector<RuleBasedHostResolverProc*> GetRules(int start_index, int num_rules) {
+  return host_resolver_.GetRules(start_index, num_rules);
 }

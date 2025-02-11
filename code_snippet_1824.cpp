@@ -1,7 +1,7 @@
-int32_t HTMLFormControlElement::GetAxId() const {
-  AXObjectCache* cache = GetDocument().ExistingAXObjectCache();
-  if (cache!= nullptr) {
-    return cache->GetAXID(const_cast<HTMLFormControlElement*>(this));
+c++
+void SyncBackendHost::Core::DoUpdateEnabledTypes() {
+  std::unique_lock<std::mutex> lock(host_->core_thread_mutex_);
+  if (host_->IsCoreThread()) {
+    syncapi_->UpdateEnabledTypes();
   }
-  return -1;
 }

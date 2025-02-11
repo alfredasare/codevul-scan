@@ -1,24 +1,14 @@
-static void smp_task_timedout(struct timer_list *t)
+void gdImageColorTransparent (gdImagePtr im, int color)
 {
-    struct sas_task_slow *slow = from_timer(slow, t, timer);
-    struct sas_task *task = slow->task;
-    unsigned long flags;
-
-    spin_lock_irqsave(&task->task_state_lock, flags);
-
-    // Check if the task has already been completed or aborted
-    if (task->task_state_flags & (SAS_TASK_STATE_DONE | SAS_TASK_STATE_ABORTED)) {
-        spin_unlock_irqrestore(&task->task_state_lock, flags);
+    if (color < 0 || color >= im->colorsTotal) {
         return;
     }
-
-    // Complete the task only once
-    if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
-        task->task_state_flags |= SAS_TASK_STATE_DONE;
-        spin_unlock_irqrestore(&task->task_state_lock, flags);
-    } else {
-        spin_unlock_irqrestore(&task->task_state_lock, flags);
+    if (!im->trueColor) {
+        /* Make the old transparent color opaque again */
+        if (im->transparent != -1) {
+            im->alpha[im->transparent] = gdAlphaOpaque;
+        }
+        im->alpha[color] = gdAlphaTransparent;
     }
-
-    complete(&task->slow_task->completion);
+    im->transparent = color;
 }

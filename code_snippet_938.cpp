@@ -1,17 +1,26 @@
-static ssize_t double_flag_show(struct kobject *kobj,
-				struct kobj_attribute *attr, char *buf,
-				enum transparent_hugepage_flag enabled,
-				enum transparent_hugepage_flag req_madv)
+mptcp_print(netdissect_options *ndo,
+            const u_char *cp, u_int len, u_char flags)
 {
-	if (test_bit(enabled, &transparent_hugepage_flags)) {
-		if (test_bit(req_madv, &transparent_hugepage_flags)) {
-			return sprintf(buf, "[always] madvise never\n");
-		} else {
-			return sprintf(buf, "[always] madvise never\n");
-		}
-	} else if (test_bit(req_madv, &transparent_hugepage_flags)) {
-		return sprintf(buf, "always [madvise] never\n");
-	} else {
-		return sprintf(buf, "always madvise [never]\n");
-	}
+    const struct mptcp_option *opt;
+    u_int subtype;
+
+    if (len < 3)
+        return 0;
+
+    opt = (const struct mptcp_option *) cp;
+
+    /* Limit subtype to its valid range */
+    subtype = MPTCP_OPT_SUBTYPE(opt->sub_etc);
+    if (subtype > MPTCP_SUB_FCLOSE + 1) {
+        subtype = MPTCP_SUB_FCLOSE + 1;
+    }
+
+    /* Check for integer overflow or wraparound */
+    if (subtype > (MPTCP_SUB_FCLOSE + 1 - MPTCP_OPT_SUBTYPE(opt->sub_etc)) &&
+        MPTCP_OPT_SUBTYPE(opt->sub_etc) != 0) {
+        return 0;
+    }
+
+    ND_PRINT((ndo, " %s", mptcp_options[subtype].name));
+    return mptcp_options[subtype].print(ndo, cp, len, flags);
 }

@@ -1,10 +1,18 @@
-static int rb_check_bpage(struct ring_buffer_per_cpu *cpu_buffer,
-			  struct buffer_page *bpage)
+#include <stdint.h>
+
+static void interface_set_compression_level(QXLInstance *sin, int level)
 {
-	unsigned long val = (unsigned long)bpage;
+    dprint(1, "%s/%d:\n", __func__, sin->id);
 
-	if (RB_WARN_ON(cpu_buffer, (val & ~(RB_FLAG_MASK - 1)) == val))
-		return 1;
+    // Validate the input 'level'
+    if (level < 0 || level > 100) {
+        // Handle invalid input, e.g., return an error code or log an error message
+        return;
+    }
 
-	return 0;
+    // Sanitize the input 'level'
+    uint8_t sanitized_level = (uint8_t)level;
+
+    // Set the compression level
+    sin->compression_level = sanitized_level;
 }

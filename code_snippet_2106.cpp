@@ -1,24 +1,26 @@
-void vbf_stp_retry(struct worker *wrk, struct busyobj *bo)
+static void sync_lockstate_on_connect(btif_hh_device_t *p_dev)
 {
-    struct vfp_ctx *vfc;
+    int keylockstates;
 
-    CHECK_OBJ_NOTNULL(wrk, WORKER_MAGIC);
-    CHECK_OBJ_NOTNULL(bo, BUSYOBJ_MAGIC);
-    vfc = bo->vfc;
-    CHECK_OBJ_NOTNULL(vfc, VFP_CTX_MAGIC);
+    BTIF_TRACE_EVENT("%s: Syncing keyboard lock states after "
+                    "reconnect...", __FUNCTION__);
 
-    // Validate the storage_hint parameter
-    if (bo->storage_hint && strstr(bo->storage_hint, "..")!= NULL) {
-        // Handle the case where the storage_hint contains a path traversal sequence
-        // For example, "../config" instead of "/config"
-        bo->storage_hint = strsep(bo->storage_hint, "..");
+    /* If the device is connected, update keyboard state */
+    update_keyboard_lockstates(p_dev);
+
+    /* Check if the lockstate of caps, scroll, num is set.
+       If so, send a report to the kernel so the lockstate is in sync */
+    keylockstates = get_keylockstates();
+    if (keylockstates >= 0 && keylockstates < MAX_KEYLOCK_STATES)
+    {
+        BTIF_TRACE_DEBUG("%s: Sending hid report to kernel "\
+                        "indicating lock key state 0x%x", __FUNCTION__,
+                        keylockstates);
+        usleep(200000);
+        toggle_os_keylockstates(p_dev->fd, keylockstates);
     }
-
-    assert(bo->fetch_objcore->boc->state <= BOS_REQ_DONE);
-
-    VSLb_ts_busyobj(bo, "Retry", W_TIM_real(wrk));
-
-    // Rest of the code remains the same
-
-    return (F_STP_STARTFETCH);
+    else
+    {
+        BTIF_TRACE_WARNING("%s: Invalid keylock states value: %d", __FUNCTION__, keylockstates);
+    }
 }

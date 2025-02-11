@@ -1,38 +1,17 @@
-SYSCALL_DEFINE3(sendmsg, int, fd, struct msghdr __user *, msg, unsigned int, flags)
+create_attr_list(gpointer name, gpointer value, gpointer data)
 {
-    int fput_needed, err;
-    struct msghdr msg_sys;
-    struct socket *sock = sockfd_lookup_light(fd, &err, &fput_needed);
+    const char *filt_str[] = FILTER_STR;
 
-    if (!sock)
-        goto out;
+    CRM_CHECK(name != NULL, return);
 
-    msg_sys.msg_name = NULL;
-    msg_sys.msg_namelen = 0;
-    msg_sys.msg_iov = NULL;
-    msg_sys.msg_iovlen = 0;
-    msg_sys.msg_control = NULL;
-    msg_sys.msg_controllen = 0;
-    msg_sys.msg_flags = flags;
-
-    if (msg) {
-        if (msg->msg_name) {
-            if (msg->msg_namelen > MSG_MAXLEN) {
-                err = -ENAMETOOLONG;
-                goto out;
-            }
-        }
-        if (msg->msg_control) {
-            if (msg->msg_controllen > CTL_MAXLEN) {
-                err = -ENAMETOOLONG;
-                goto out;
-            }
+    /* filtering automatic attributes */
+    size_t name_len = strlen(name);
+    for (int i = 0; filt_str[i] != NULL; i++) {
+        size_t filt_len = strlen(filt_str[i]);
+        if (filt_len > name_len && strncmp(filt_str[i], name, filt_len) == 0) {
+            return;
         }
     }
 
-    err = __sys_sendmsg(sock, msg, &msg_sys, flags, NULL);
-
-    fput_light(sock->file, fput_needed);
-out:
-    return err;
+    attr_list = g_list_insert_sorted(attr_list, name, compare_attribute);
 }

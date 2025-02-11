@@ -1,24 +1,17 @@
-int ERR_load_ASN1_strings(void)
-{
-#ifndef OPENSSL_NO_ERR
-
-    const char *const func_error_string = ERR_func_error_string(ASN1_str_functs[0].error);
-    if (func_error_string == NULL) {
-        const char *const strings_path = get_secure_strings_path();
-        ERR_load_strings(strings_path, (char **)ASN1_str_functs);
-        ERR_load_strings(strings_path, (char **)ASN1_str_reasons);
-    }
-#endif
-    return 1;
-}
-
-const char *get_secure_strings_path(void)
-{
-    #ifdef _WIN32
-        return getenv("OPENSSL_STRINGS_PATH");
-    #elif defined(__linux__)
-        return "/path/to/secure/strings/file";
-    #else
-        // Handle other platforms
-    #endif
+static void parser_reset(struct jv_parser* p) {
+  if ((p->flags & JV_PARSE_STREAMING)) {
+    jv_free(p->path);
+    p->path = jv_array();
+    p->stacklen = 0;
+  }
+  p->last_seen = JV_LAST_NONE;
+  jv_free(p->output);
+  p->output = jv_invalid();
+  jv_free(p->next);
+  p->next = jv_invalid();
+  for (int i = 0; i < p->stackpos && i < JV_PARSER_MAX_STACK_DEPTH; i++)
+    jv_free(p->stack[i]);
+  p->stackpos = 0;
+  p->tokenpos = 0;
+  p->st = JV_PARSER_NORMAL;
 }

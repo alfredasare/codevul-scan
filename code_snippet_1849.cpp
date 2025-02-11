@@ -1,17 +1,14 @@
-static ssize_t pages_volatile_show(struct kobject *kobj,
-				   struct kobj_attribute *attr, char *buf)
+static void s\_wrpkt(Ssh ssh, struct Packet \*pkt)
 {
-    long ksm_pages_volatile = 0;
-    long ksm_rmap_items = 0;
-    long ksm_pages_shared = 0;
-    long ksm_pages_sharing = 0;
-    long ksm_pages_unshared = 0;
+int len, backlog, offset;
+len = s\_wrpkt\_prepare(ssh, pkt, &offset);
 
-    ksm_rmap_items = ksm_pages_shared = ksm_pages_sharing = ksm_pages_unshared = 0;
+// Fixed: Add boundary check for 'len' before using it in the write operation.
+if (len > 0 && len <= SSH\_BUF\_SIZE - offset) {
+backlog = s\_write(ssh, pkt->data + offset, len);
+}
 
-    ksm_pages_volatile = ksm_rmap_items - ksm_pages_shared - ksm_pages_sharing - ksm_pages_unshared;
-    if (ksm_pages_volatile < 0)
-        ksm_pages_volatile = 0;
-
-    return sprintf(buf, "%ld\n", ksm_pages_volatile);
+if (backlog > SSH\_MAX\_BACKLOG)
+ssh\_throttle\_all(ssh, 1, backlog);
+ssh\_free\_packet(pkt);
 }

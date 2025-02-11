@@ -1,9 +1,11 @@
-ZSTD_CCtx* ZSTD_createCCtx(void)
+cf2_getFamilyOtherBlues(CFF_Decoder* decoder, size_t* count, FT_Pos* *data)
 {
-    ZSTD_createCCtx_advanced_t* createCCtx_advanced = ZSTD_defaultCMem->createCCtx_advanced;
-    if (createCCtx_advanced!= NULL && createCCtx_advanced!= 0) {
-        return (*createCCtx_advanced)();
-    } else {
-        // Handle error or return a default value
+    FT_ASSERT(decoder && decoder->current_subfont);
+
+    if (!count || !data) {
+        return;
     }
+
+    *count = decoder->current_subfont->private_dict.num_family_other_blues;
+    *data = (FT_Pos*)&decoder->current_subfont->private_dict.family_other_blues;
 }

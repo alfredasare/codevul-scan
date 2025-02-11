@@ -1,9 +1,1 @@
-void KeyboardOverlayHandler::RegisterMessages() {
-  DCHECK(web_ui_);
-  if (web_ui_!= nullptr) {
-    web_ui_->RegisterMessageCallback("getInputMethodId",
-        NewCallback(this, &KeyboardOverlayHandler::GetInputMethodId));
-    web_ui_->RegisterMessageCallback("getLabelMap",
-        NewCallback(this, &KeyboardOverlayHandler::GetLabelMap));
-  }
-}
+Sure, here's the fixed version of the code that addresses the issue of integer overflow leading to buffer overflow (CWE-476, CVE-2017-6

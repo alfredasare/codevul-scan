@@ -1,28 +1,31 @@
-uint32_t tcpr_random(uint32_t *seed)
-{
-  uint32_t next = *seed;
-  uint32_t result;
-  uint32_t temp[2]; 
-
-  next *= 1103515245;
-  if ((next & (UINT32_MAX >> 31))!= 0) {
-    // handle overflow
+NO_INLINE void jspeBlockNoBrackets() {
+  if (JSP_SHOULD_EXECUTE) {
+    const int MAX_ITERATIONS = 1000;
+    int iterations = 0;
+    while (lex->tk && lex->tk!='}' && iterations < MAX_ITERATIONS) {
+      jsvUnLock(jspeStatement());
+      if (JSP_HAS_ERROR) {
+        if (lex && !(execInfo.execute&EXEC_ERROR_LINE_REPORTED)) {
+          execInfo.execute = (JsExecFlags)(execInfo.execute | EXEC_ERROR_LINE_REPORTED);
+          JsVar *stackTrace = jsvObjectGetChild(execInfo.hiddenRoot, JSPARSE_STACKTRACE_VAR, JSV_STRING_0);
+          if (stackTrace) {
+            jsvAppendPrintf(stackTrace, "at ");
+            jspAppendStackTrace(stackTrace);
+            jsvUnLock(stackTrace);
+          }
+        }
+      }
+      if (JSP_SHOULDNT_PARSE)
+        return;
+      iterations++;
+    }
+  } else {
+    int brackets = 0;
+    while (lex->tk && (brackets || lex->tk != '}') && iterations < MAX_ITERATIONS) {
+      if (lex->tk == '{') brackets++;
+      if (lex->tk == '}') brackets--;
+      JSP_ASSERT_MATCH(lex->tk);
+      iterations++;
+    }
   }
-  next += 12345;
-  temp[0] = (uint32_t) (next / 65536) % 2048;
-  next = 0; 
-
-  next *= 1103515245;
-  if ((next & (UINT32_MAX >> 31))!= 0) {
-    // handle overflow
-  }
-  next += 12345;
-  temp[1] = (uint32_t) (next / 65536) % 1024;
-  next = 0; 
-
-  result = (temp[0] << 10) ^ temp[1];
-
-  *seed = next;
-
-  return result;
 }

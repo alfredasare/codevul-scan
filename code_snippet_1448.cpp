@@ -1,11 +1,17 @@
-int generic_permission(struct inode *inode, int mask)
+static void *mntns_get(struct task_struct *task)
 {
-    int ret;
+	struct mnt_namespace *ns = NULL;
+	struct nsproxy *nsproxy;
 
-    ret = acl_permission_check(inode, mask);
-    if (ret < 0) {
-        return ret;
-    }
+	rcu_read_lock();
+	nsproxy = task_nsproxy(task);
+	if (nsproxy && (ns = nsproxy->mnt_ns)) {
+		get_mnt_ns(ns);
+	} else {
+		printk(KERN_ERR "Null mnt_namespace encountered\n");
+		rcu_read_unlock();
+		return NULL;
+	}
 
-    // Rest of the code remains the same
+	return ns;
 }

@@ -1,27 +1,28 @@
-static inline void *ResizeBlock(void *block, size_t size)
+#include <string.h>
+
+int qcow2_snapshot_list(BlockDriverState *bs, QEMUSnapshotInfo **psn_tab)
 {
-  register void *memory;
+    BDRVQcowState *s = bs->opaque;
+    QEMUSnapshotInfo *sn_tab, *sn_info;
+    QCowSnapshot *sn;
+    int i;
 
-  if (block == (void *) NULL)
-    return(AcquireBlock(size));
+    if (!s->nb_snapshots) {
+        *psn_tab = NULL;
+        return s->nb_snapshots;
+    }
 
-  size_t blockSize = SizeOfBlock(block);
-
-  if (size > blockSize - sizeof(size_t))
-  {
-    error("Invalid size parameter");
-    return (void *) NULL;
-  }
-
-  memory = AcquireBlock(size);
-  if (memory == (void *) NULL)
-    return (void *) NULL;
-
-  if (size <= blockSize - sizeof(size_t))
-    (void) memcpy_s(memory, blockSize, block, size);
-  else
-    (void) memcpy_s(memory, blockSize - sizeof(size_t), block, blockSize - sizeof(size_t));
-
-  memory_pool.allocation += size;
-  return memory;
+    sn_tab = g_malloc0(s->nb_snapshots * sizeof(QEMUSnapshotInfo));
+    for(i = 0; i < s->nb_snapshots; i++) {
+        sn_info = sn_tab + i;
+        sn = s->snapshots + i;
+        strlcpy(sn_info->id_str, sn->id_str, sizeof(sn_info->id_str));
+        strlcpy(sn_info->name, sn->name, sizeof(sn_info->name));
+        sn_info->vm_state_size = sn->vm_state_size;
+        sn_info->date_sec = sn->date_sec;
+        sn_info->date_nsec = sn->date_nsec;
+        sn_info->vm_clock_nsec = sn->vm_clock_nsec;
+    }
+    *psn_tab = sn_tab;
+    return s->nb_snapshots;
 }

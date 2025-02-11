@@ -1,33 +1,25 @@
-dodynamic(struct magic_set *ms, void *vbuf, size_t offset, size_t size,
-         int clazz, int swap)
+wkbConvCircularStringToShape(wkbObj *w, shapeObj *shape)
 {
-    Elf32_Dyn dh32;
-    Elf64_Dyn dh64;
-    unsigned char *dbuf = CAST(unsigned char *, vbuf);
+  int type;
+  lineObj line = {0, NULL, 0}; // Initialize numpoints to zero
+  const int MAX_POINTS = 1000; // Define the maximum number of points based on your application's requirements
 
-    if (xdh_sizeof + offset > size) {
-        /*
-         * We're out of note headers.
-         */
-        return xdh_sizeof + offset;
-    }
+  /*endian = */wkbReadChar(w);
+  type = wkbTypeMap(w,wkbReadInt(w));
 
-    if (offset >= size) {
-        return size; 
-    }
+  if( type != WKB_CIRCULARSTRING ) return MS_FAILURE;
 
-    memcpy(xdh_addr, &dbuf[offset], xdh_sizeof);
-    offset += xdh_sizeof;
+  /* Stroke the string into a point array */
+  if ( arcStrokeCircularString(w, SEGMENT_ANGLE, &line) == MS_FAILURE ) {
+    if(line.point) free(line.point);
+    return MS_FAILURE;
+  }
 
-    switch (xdh_tag) {
-        case DT_FLAGS_1:
-            if (xdh_val == DF_1_PIE)
-                ms->mode |= 0111;
-            else
-                ms->mode &= ~0111;
-            break;
-        default:
-            break;
-    }
-    return offset;
+  /* Fill in the lineObj */
+  if ( line.numpoints > 0 && line.numpoints <= MAX_POINTS ) { // Add bounds checking
+    msAddLine(shape, &line);
+    if(line.point) free(line.point);
+  }
+
+  return MS_SUCCESS;
 }

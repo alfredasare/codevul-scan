@@ -1,26 +1,34 @@
-static void dev_seq_printf_stats(struct seq_file *seq, struct net_device *dev)
+static bool __stratum_send(struct pool *pool, char *s, ssize_t len)
 {
-    const struct rtnl_link_stats64 *stats = dev_get_stats(dev);
-    char buffer[256]; // fixed-size buffer for storing the device name
+	SOCKETTYPE sock = pool->sock;
+	ssize_t ssent = 0;
+	size_t dest_len = strlen(s) + len + 2; // +2 for '\n' and null terminator
 
-    strncpy(buffer, dev->name, sizeof(buffer) - 1); // copy the device name into the buffer
-    buffer[sizeof(buffer) - 1] = '\0'; // null-terminate the buffer
+	if (dest_len > sizeof(pool->buffer)) {
+		applog(LOG_ERR, "Buffer overflow in stratum_send");
+		return false;
+	}
 
-    seq_printf(seq, "%6s: %7llu %7llu %4llu %4llu %4llu %5llu %10llu %9llu "
-               "%8llu %7llu %4llu %4llu %4llu %5llu %7llu %10llu\n",
-               buffer, stats->rx_bytes, stats->rx_packets,
-               stats->rx_errors,
-               stats->rx_dropped + stats->rx_missed_errors,
-               stats->rx_fifo_errors,
-               stats->rx_length_errors + stats->rx_over_errors +
-               stats->rx_crc_errors + stats->rx_frame_errors,
-               stats->rx_compressed, stats->multicast,
-               stats->tx_bytes, stats->tx_packets,
-               stats->tx_errors, stats->tx_dropped,
-               stats->tx_fifo_errors, stats->collisions,
-               stats->tx_carrier_errors +
-               stats->tx_aborted_errors +
-               stats->tx_window_errors +
-               stats->tx_heartbeat_errors,
-               stats->tx_compressed);
-}
+	if (opt_protocol)
+		applog(LOG_DEBUG, "SEND: %s", s);
+
+	strlcpy(pool->buffer, s, sizeof(pool->buffer));
+	strlcat(pool->buffer, "\n", sizeof(pool->buffer));
+	len++;
+
+	while (len > 0 ) {
+		struct timeval timeout = {0, 0};
+		ssize_t sent;
+		fd_set wd;
+
+		FD_ZERO(&wd);
+		FD_SET(sock, &wd);
+		if (select(sock + 1, NULL, &wd, NULL, &timeout) < 1) {
+			applog(LOG_DEBUG, "Write select failed on pool %d sock", pool->pool_no);
+			return false;
+		}
+		sent = send(pool->sock, pool->buffer + ssent, len, 0);
+		if (sent < 0) {
+			if (errno != EAGAIN && errno != EWOULDBLOCK) {
+				applog(LOG_DEBUG, "Failed to curl_easy_send in stratum_send");
+				return false;

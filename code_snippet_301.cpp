@@ -1,17 +1,10 @@
-static int __init init_inodecache(void)
+static int sha1_import(struct shash_desc *desc, const void *in)
 {
-    int size = sizeof(struct iso_inode_info);
-    if (size > INT_MAX) {
-        pr_err("Invalid size for isofs_inode_cache: %d\n", size);
-        return -EINVAL;
-    }
+	struct sha1_state *sctx = shash_desc_ctx(desc);
 
-    isofs_inode_cachep = kmem_cache_create("isofs_inode_cache",
-                                            sizeof(struct iso_inode_info),
-                                            0, (SLAB_RECLAIM_ACCOUNT|SLAB_MEM_SPREAD),
-                                            init_once);
-    if (isofs_inode_cachep == NULL) {
-        return -ENOMEM;
-    }
-    return 0;
+	if (sizeof(*sctx) < memcpy(sctx, in, sizeof(*sctx))) {
+		return -EINVAL;
+	}
+
+	return 0;
 }

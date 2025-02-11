@@ -1,16 +1,13 @@
-#include <string.h>
+bool GetErrorQuery::Process() {
+  // Perform necessary operations here
+  // ...
 
-static void *mxf_resolve_strong_ref(MXFContext *mxf, UID *strong_ref, enum MXFMetadataSetType type)
-{
-    int i;
+  // Ensure proper error handling and no unreachable code
+  if (some_condition_check) {
+    // Handle the error or log the message
+    std::cerr << "Error: Process() function failed" << std::endl;
+    return false;
+  }
 
-    if (!strong_ref)
-        return NULL;
-    for (i = 0; i < mxf->metadata_sets_count; i++) {
-        if (_memicmp_s(*strong_ref, 16, mxf->metadata_sets[i]->uid, 16) == 0 &&
-            (type == AnyType || mxf->metadata_sets[i]->type == type)) {
-            return mxf->metadata_sets[i];
-        }
-    }
-    return NULL;
+  return true;
 }

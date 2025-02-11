@@ -1,27 +1,15 @@
-#include <string.h>
-#include <iconv.h>
+vmnc_handle_wmvg_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
+                            const guint8 * data, int len, gboolean decode)
+{
+  const int MINIMUM_DATA_LENGTH = 10; // Add this line with the actual minimum length required
 
-is_path_absolute(const char *path) {
-    const char *allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-";
-    char *input_copy = strdup(path);
-    char *p = input_copy;
-    while (*p) {
-        if (strchr(allowed_chars, *p) == NULL) {
-            free(input_copy);
-            return 0;
-        }
-        p++;
-    }
-    free(input_copy);
+  /* Check if the data length is sufficient for further processing */
+  if (len < MINIMUM_DATA_LENGTH) {
+    GST_LOG_OBJECT (dec, "Data is too short, expected at least %d bytes", MINIMUM_DATA_LENGTH);
+    return ERROR_INSUFFICIENT_DATA;
+  }
 
-    iconv_t cd = iconv_open("UTF-8", "ASCII");
-    char *normalized_path = iconv((iconv_t)cd, path, strlen(path), NULL, 0);
-    iconv_close(cd);
+  /* Keyboard stuff; not interesting for playback */
 
-    if (normalized_path[0] == '/') {
-        free(normalized_path);
-        return 1;
-    }
-    free(normalized_path);
-    return 0;
+  return 10;
 }

@@ -1,30 +1,35 @@
-static int sig_cb(const char *elem, int len, void *arg)
+static int catc_ctrl_async(struct catc *catc, u8 dir, u8 request, u16 value,
+                           u16 index, void *buf, int len, void (*callback)(struct catc *catc, struct ctrl_queue *q))
 {
-    sig_cb_st *sarg = arg;
-    size_t i;
-    char etmp[20], *p;
-    int sig_alg = NID_undef, hash_alg = NID_undef;
-    if (elem == NULL || len > sizeof(etmp) - 1) {
-        return 0;
-    }
-    strncpy(etmp, elem, sizeof(etmp) - 1);
-    etmp[sizeof(etmp) - 1] = 0;
-    p = strchr(etmp, '+');
-    if (!p)
-        return 0;
-    *p = 0;
-    p++;
-    if (!*p)
-        return 0;
-    get_sigorhash(&sig_alg, &hash_alg, etmp);
-    get_sigorhash(&sig_alg, &hash_alg, p);
-    if (sig_alg == NID_undef || hash_alg == NID_undef)
-        return 0;
-    for (i = 0; i < sarg->sigalgcnt; i += 2) {
-        if (sarg->sigalgs[i] == sig_alg && sarg->sigalgs[i + 1] == hash_alg)
-            return 0;
-    }
-    sarg->sigalgs[sarg->sigalgcnt++] = hash_alg;
-    sarg->sigalgs[sarg->sigalgcnt++] = sig_alg;
-    return 1;
+        struct ctrl_queue *q;
+        int retval = 0;
+        unsigned long flags;
+
+        spin_lock_irqsave(&catc->ctrl_lock, flags);
+
+        q = catc->ctrl_queue + catc->ctrl_head;
+
+        q->dir = dir;
+        q->request = request;
+        q->value = value;
+        q->index = index;
+        q->buf = buf;
+        q->len = len;
+        q->callback = callback;
+
+        catc->ctrl_head = (catc->ctrl_head + 1) & (CTRL_QUEUE - 1);
+
+        if (catc->ctrl_head == catc->ctrl_tail) {
+                dev_err(&catc->usbdev->dev, "ctrl queue full\n");
+                if (++catc->ctrl_tail == CTRL_QUEUE)
+                        catc->ctrl_tail = 0;
+                retval = -1;
+        }
+
+        if (!test_and_set_bit(CTRL_RUNNING, &catc->flags))
+                catc_ctrl_run(catc);
+
+        spin_unlock_irqrestore(&catc->ctrl_lock, flags);
+
+        return retval;
 }

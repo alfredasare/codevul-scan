@@ -1,9 +1,5 @@
-static RAnalValue *anal_fill_im(RAnal *anal, st32 v) {
-    RAnalValue *ret = r_anal_value_new();
-    if (sizeof(ret->imm) > sizeof(st32)) {
-        ret->imm = 0; // or handle overflow error as needed
-    } else {
-        ret->imm = v;
-    }
-    return ret;
+void udp6_proc_exit(struct net *net) {
+ struct udp_afinfo *afinfo = udp_seq_afinfo(net, AF_INET6);
+ if (afinfo && udp_proc_unregister(net, afinfo))
+ udp_afinfo_free(afinfo);
 }

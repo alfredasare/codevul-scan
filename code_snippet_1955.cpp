@@ -1,23 +1,14 @@
-lou_dotsToChar(
-    const char *tableList, widechar *inbuf, widechar *outbuf, int length, int mode) {
-    const TranslationTableHeader *table;
-    int k;
-    widechar dots;
-    if (tableList == NULL || inbuf == NULL || outbuf == NULL) return 0;
+static pdf_creator_t *new_creator(int *n_elements)
+{
+    pdf_creator_t *daddy;
+    size_t template_size = sizeof(creator_template);
 
-    table = lou_getTable(tableList);
-    if (table == NULL || length <= 0) return 0;
-
-    if (length > strlen(inbuf)) {
-        length = strlen(inbuf);
-    }
-
-    for (k = 0; k < length; k++) {
-        if (k >= strlen(inbuf)) break;
-        dots = inbuf[k];
-        if (!(dots & B16) && (dots & 0xff00) == 0x2800) /* Unicode braille */
-            dots = (dots & 0x00ff) | B16;
-        outbuf[k] = _lou_getCharFromDots(dots);
-    }
-    return 1;
-}
+    static const pdf_creator_t creator_template[] = 
+    {
+        {"Title",        ""},
+        {"Author",       ""},
+        {"Subject",      ""},
+        {"Keywords",     ""},
+        {"Creator",      ""},
+        {"Producer",     ""},
+        {"CreationDate", ""},

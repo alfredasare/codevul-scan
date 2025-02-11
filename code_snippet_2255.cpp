@@ -1,22 +1,11 @@
-ec_get_a_is_pminus3 (mpi_ec_t ec)
+static int pid_numa_maps_open(struct inode *inode, struct file *file)
 {
-  gcry_mpi_t tmp;
-  int err = 0;
+	int error;
 
-  if (!ec->t.valid.a_is_pminus3)
-    {
-      ec->t.valid.a_is_pminus3 = 1;
-      tmp = mpi_alloc_like (ec->p);
-      if (tmp == NULL)
-        {
-          gcry_error();
-          gcry_exception(err, "Error allocating memory");
-          return 0;
-        }
-      mpi_sub_ui (tmp, ec->p, 3);
-      ec->t.a_is_pminus3 = !mpi_cmp (ec->a, tmp);
-      mpi_free (tmp);
-    }
+	error = numa_maps_open(inode, file, &proc_pid_numa_maps_op);
+	if (error)
+		return error;
 
-  return ec->t.a_is_pminus3;
+	get_pid(file->f_path.dentry->d_inode);
+	return 0;
 }

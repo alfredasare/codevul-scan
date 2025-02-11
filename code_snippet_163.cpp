@@ -1,25 +1,20 @@
-static v8::Handle<v8::Value> IsExtensionProcess(const v8::Arguments& args) {
-  if (!args.IsObject()) {
-    throw v8::TypeError::New(v8::String::New("Expected an object"));
-  }
+#include <stdbool.h>
+#include <vector/vector.h>
 
-  v8::Local<v8::Object> obj = args.GetHandle<v8::Object>();
-  if (!obj->HasOwnProperty(v8::String::New("extension_dispatcher"))) {
-    throw v8::TypeError::New(v8::String::New("Missing 'extension_dispatcher' property"));
-  }
+typedef enum {
+    SCRIPT_ACCESS_DENIED,
+    SCRIPT_ACCESS_GRANTED,
+} script_access_t;
 
-  v8::Local<v8::Object> extension_dispatcher = obj->Get(v8::String::New("extension_dispatcher"));
-  if (!extension_dispatcher->IsObject()) {
-    throw v8::TypeError::New(v8::String::New("Expected 'extension_dispatcher' to be an object"));
-  }
-
-  ExtensionImpl* v8_extension = GetValidatedExtensionImpl(extension_dispatcher);
-  return v8::Boolean::New(v8_extension->extension_dispatcher_->is_extension_process());
+script_access_t check_script_access(const vector_t *strvec)
+{
+    // Perform input validation and access control checks here
+    // Return SCRIPT_ACCESS_GRANTED if access is granted, otherwise return SCRIPT_ACCESS_DENIED
 }
 
-ExtensionImpl* GetValidatedExtensionImpl(v8::Local<v8::Object> obj) {
-  // Implement additional validation logic here
-  // For example, check if the object has a specific method or property
-  //...
-  return new ExtensionImpl(obj);
+script_security_handler(__attribute__((unused)) vector_t *strvec)
+{
+    if (check_script_access(strvec) == SCRIPT_ACCESS_GRANTED) {
+        script_security = true;
+    }
 }

@@ -1,37 +1,8 @@
-static int pptp_create(struct net *net, struct socket *sock, int kern)
+static AHCICmdHdr *get\_cmd\_header(AHCIState \*s, uint8\_t port, uint8\_t slot)
 {
-    int error = -ENOMEM;
-    struct sock *sk;
-    struct pppox_sock *po;
-    struct pptp_opt *opt;
+if (port >= s->ports || slot >= AHCI\_MAX\_CMDS || (s->dev[port].lst && slot >= s->dev[port].num)) {
+return NULL;
+}
 
-    sk = sk_alloc(net, PF_PPPOX, GFP_KERNEL, &pptp_sk_proto, kern);
-    if (!sk)
-        goto out;
-
-    sock_init_data(sock, sk);
-
-    sock->state = SS_UNCONNECTED;
-    sock->ops   = &pptp_ops;
-
-    sk->sk_backlog_rcv = pptp_rcv_core;
-    sk->sk_state       = PPPOX_NONE;
-    sk->sk_type        = SOCK_STREAM;
-    sk->sk_family      = PF_PPPOX;
-    sk->sk_protocol    = PX_PROTO_PPTP;
-    sk->sk_destruct    = pptp_sock_destruct;
-
-    po = pppox_sk(sk);
-    opt = &po->proto.pptp;
-
-    opt->seq_sent = 0; opt->seq_recv = 0xffffffff;
-    opt->ack_recv = 0; opt->ack_sent = 0xffffffff;
-
-    // Sanitize error messages
-    error = 0;
-    if (error)
-        error = -EIO; // Return a generic error message
-
-    out:
-        return error;
+return &((AHCICmdHdr \*)s->dev[port].lst)\[slot\];
 }

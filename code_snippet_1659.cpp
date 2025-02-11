@@ -1,6 +1,21 @@
-const char* menu_cache_app_get_generic_name(MenuCacheApp* app) {
-    if (!app ||!app->generic_name) {
-        return NULL;
-    }
-    return app->generic_name;
+int rosecmpm(rose_address *addr1, rose_address *addr2, unsigned short mask)
+{
+	unsigned int i, j;
+
+	if (mask > 10 || mask == 0)
+		return 1;
+
+	for (i = 1; i < mask; i++) {
+		j = i / 2;
+
+		if ((i % 2) != 0) {
+			if ((addr1->rose_addr[j] & 0x0F) != (addr2->rose_addr[j] & 0x0F))
+				return 1;
+		} else {
+			if ((addr1->rose_addr[j] & 0xF0) != (addr2->rose_addr[j] & 0xF0))
+				return 1;
+		}
+	}
+
+	return 0;
 }

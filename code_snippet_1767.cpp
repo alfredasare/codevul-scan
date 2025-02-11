@@ -1,14 +1,13 @@
-static int em_fxrstor(struct x86_emulate_ctxt *ctxt)
+xfs_queue_cowblocks(
+	struct xfs_mount *mp)
 {
-    struct fxregs_state fx_state;
-    int rc;
+	int cowb_set;
 
-    //...
-
-    if (rc == X86EMUL_CONTINUE) {
-        struct fxregs_state *fx_state_ptr = &fx_state;
-        rc = asm_safe("fxrstor %[fx]", : [fx] "r" (*fx_state_ptr));
-    }
-
-    //...
+	rcu_read_lock();
+	cowb_set = radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_COWBLOCKS_TAG);
+	if (cowb_set)
+		queue_delayed_work(mp->m_eofblocks_workqueue,
+				   &mp->m_cowblocks_work,
+				   msecs_to_jiffies(xfs_cowb_secs * 1000));
+	rcu_read_unlock();
 }

@@ -1,18 +1,19 @@
-static void ip_do_redirect(struct dst_entry *dst, struct sock *sk, struct sk_buff *skb)
-{
-    //...
-    u8 tos = RT_TOS(iph->tos);
-    u8 prot = iph->protocol;
-    u32 mark = skb->mark;
+c++
+#include <cctype> // for std::isalnum
 
-    // Verify permissions before accessing critical resources
-    if (!capable(CAP_NET_RAW)) {
-        pr_err("Insufficient permissions to redirect IP packet\n");
-        return;
+bool ReplacePathURL(const char* base,
+                const Parsed& base_parsed,
+                const Replacements<char>& replacements,
+                CanonOutput* output,
+                Parsed* new_parsed) {
+    // Validate input by checking if the base parameter is not empty and only contains alphanumeric characters
+    if (base == nullptr || strlen(base) == 0 || std::any_of(base, base + strlen(base), [](char c) { return !std::isalnum(c); })) {
+        return false;
     }
 
-    rt = (struct rtable *) dst;
-
-    __build_flow_key(net, &fl4, sk, iph, oif, tos, prot, mark, 0);
-    __ip_do_redirect(rt, skb, &fl4, true);
+    URLComponentSource<char> source(base);
+    Parsed parsed(base_parsed);
+    SetupOverrideComponents(base, replacements, &source, &parsed);
+    return DoCanonicalizePathURL<char, unsigned char>(
+        source, parsed, output, new_parsed);
 }

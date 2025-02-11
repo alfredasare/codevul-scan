@@ -1,29 +1,15 @@
-#include <string>
-#include <vector>
+PHP_FUNCTION(disable_magic_quotes_runtime)
+{
+	zend_bool current_setting;
 
-class MockNetworkTransaction {
-public:
-    void SetBeforeHeadersSentCallback(const BeforeHeadersSentCallback& callback) {
-        // Define a list of allowed directory paths
-        std::vector<std::string> allowedPaths = {"./", "../"};
+	if (zend_parse_parameters_none() == FAILURE) {
+		return;
+	}
 
-        // Validate the input path
-        if (!IsValidPath(callback.GetPath(), allowedPaths)) {
-            throw std::runtime_error("Invalid path");
-        }
+	current_setting = ini_get("magic_quotes_runtime");
+	if (current_setting) {
+		ini_set("magic_quotes_runtime", "0");
+	}
 
-        // Call the callback function with the validated path
-        callback.callback();
-    }
-
-private:
-    bool IsValidPath(const std::string& path, const std::vector<std::string>& allowedPaths) {
-        // Check if the path is in the allowed list
-        for (const auto& allowedPath : allowedPaths) {
-            if (path.find(allowedPath)!= std::string::npos) {
-                return true;
-            }
-        }
-        return false;
-    }
-};
+	RETURN_FALSE;
+}

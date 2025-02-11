@@ -1,10 +1,9 @@
-static int udf_rmdir(struct inode *dir, struct dentry *dentry)
+static int mov_write_nmhd_tag(AVIOContext *pb)
 {
-    //...
-    if (inode->i_nlink!= 2)
-    {
-        printk(KERN_ERR "Error: empty directory has incorrect link count\n");
-        clear_nlink(inode);
-    }
-    //...
+    const uint32_t nmhd_size = 12;
+    avio_write(pb, &nmhd_size, sizeof(nmhd_size));
+    ffio_wfourcc(pb, "nmhd");
+    uint32_t zero = 0;
+    avio_write(pb, &zero, sizeof(zero));
+    return 12;
 }

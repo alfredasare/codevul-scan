@@ -1,18 +1,11 @@
-static void freeze_limited_counters(struct cpu_hw_events *cpuhw,
-				    unsigned long pmc5, unsigned long pmc6)
+static bool pvscsi_vmstate_test_pci_device(void *opaque, int version_id)
 {
-    struct perf_event *event;
-    u64 val, prev, delta;
-    int i;
-
-    for (i = 0; i < cpuhw->n_limited; ++i) {
-        event = cpuhw->limited_counter[i];
-        if (!event->hw.idx)
-            continue;
-        val = (event->hw.idx == 5)? pmc5 : pmc6;
-        prev = local64_read(&event->hw.prev_count);
-        event->hw.idx = 0;
-        delta = (u64)val - prev;
-        local64_add((u64)delta, &event->count);
+    // Validate version_id to ensure it is within an expected range (e.g., 1 to 10)
+    if (version_id < 1 || version_id > 10) {
+        // Handle invalid input, e.g., log an error and return false
+        qemu_log_error("Invalid version_id: %d", version_id);
+        return false;
     }
+
+    return !pvscsi_vmstate_need_pcie_device(opaque);
 }

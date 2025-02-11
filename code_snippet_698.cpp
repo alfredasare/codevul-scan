@@ -1,14 +1,9 @@
-vpx_image_t *vpx_img_alloc(vpx_image_t *img, vpx_img_fmt_t fmt, unsigned int d_w, unsigned int d_h, unsigned int align) {
-    if (d_w > SIZE_MAX / sizeof(vpx_image_t) || d_h > SIZE_MAX / sizeof(vpx_image_t)) {
-        return NULL;
-    }
+#include <string>
+#include <codecvt>
 
-    size_t size = (size_t)(d_w * d_h * sizeof(vpx_image_t));
+bool ProcessNeedsProfileDir(const std::string& process_type) {
+    std::wstring_convert<std::conditional_t<true, std::codecvt_utf8<char16_t>, std::codecvt_utf8<char32_t>>, char16_t> converter;
+    std::u16string utf16_process_type = converter.from_bytes(process_type);
 
-    void *mem = aligned_alloc(align, size);
-
-    // Initialize the image structure
-    //...
-
-    return img;
+    return ProcessNeedsProfileDir(GetProcessType(utf16_process_type));
 }

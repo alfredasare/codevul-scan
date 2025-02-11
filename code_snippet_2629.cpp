@@ -1,0 +1,1 @@
+if ((feof(fp) == 0 && ferror(fp) != 0) || ferror(fp) == 1) {

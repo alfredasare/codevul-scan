@@ -1,18 +1,12 @@
-script_security_handler(__attribute__((unused)) vector_t *strvec)
+void BiquadDSPKernel::process(const float* source, float* destination, size_t framesToProcess)
 {
-    if (strvec == NULL || strvec->capacity < 1 || strvec->size > strvec->capacity) {
-        return;
+    ASSERT(biquadProcessor());
+
+    if (!source || !destination)
+    {
+        throw std::invalid_argument("Null pointer exception in process function");
     }
 
-    char* buffer = malloc(strvec->size + 1);
-    if (buffer == NULL) {
-        return;
-    }
-    memcpy(buffer, strvec->data, strvec->size);
-    buffer[strvec->size] = '\0';
-
-    if (strcmp(buffer, "trusted_value") == 0) {
-        script_security = true;
-    }
-    free(buffer);
+    updateCoefficientsIfNecessary(true, false);
+    m_biquad.process(source, destination, framesToProcess);
 }

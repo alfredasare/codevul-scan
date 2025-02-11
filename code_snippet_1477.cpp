@@ -1,12 +1,37 @@
-void tpm_gen_interrupt(struct tpm_chip *chip)
-{
-    struct tpm_cmd_t tpm_cmd;
-    ssize_t rc;
+fixed code:
 
-    tpm_cmd.header.in = tpm_getcap_header;
-    tpm_cmd.params.getcap_in.cap = TPM_CAP_PROP;
-    tpm_cmd.params.getcap_in.subcap_size = cpu_to_be32(4);
-    tpm_cmd.params.getcap_in.subcap = TPM_CAP_PROP_TIS_TIMEOUT;
+`#include <stdint.h>`
 
-    rc = transmit_cmd(chip, &tpm_cmd, TPM_INTERNAL_RESULT_SIZE, "Operation failed");
-}
+`#define ULONG_BIT_SIZE (8 * sizeof(uint64_t))`
+
+`bshift(uint64_t* b)`
+
+`{`
+
+ `uint64_t c;`
+
+ `int i;`
+
+ `c = b[3] & 1;`
+
+ `for (i = 3; i > 0; i--)`
+
+ `{`
+
+ `if (ULONG_BIT_SIZE - __builtin_clzl(b[i]) < 1)`
+
+ `return c;`
+
+ `b[i] = (b[i] >> 1) | (b[i - 1] << 31);`
+
+ `}`
+
+ `if (ULONG_BIT_SIZE - __builtin_clzl(b[i]) < 1)`
+
+ `return c;`
+
+ `b[i] >>= 1;`
+
+ `return c;`
+
+`}`

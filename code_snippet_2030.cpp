@@ -1,16 +1,18 @@
-void rose_frames_acked(struct sock *sk, unsigned short nr)
+status_t GraphicBuffer::lockAsyncYCbCr(uint32_t usage, const Rect& rect, android_ycbcr *ycbcr, int fenceFd)
 {
-    struct sk_buff *skb;
-    struct rose_sock *rose = rose_sk(sk);
-    int i, queue_size;
+    if (rect.left < 0 || rect.right > this->width ||
+        rect.top < 0 || rect.bottom > this->height) {
+        ALOGE("locking pixels (%d,%d,%d,%d) outside of buffer (w=%d, h=%d)",
+                rect.left, rect.top, rect.right, rect.bottom,
+                this->width, this->height);
+        return BAD_VALUE;
+    }
 
-    /* Remove all the ack-ed frames from the ack queue. */
-    if (rose->va!= nr) {
-        queue_size = skb_queue_len(&rose->ack_queue);
-        for (i = 0; i < queue_size; i++) {
-            skb = skb_dequeue(&rose->ack_queue);
-            kfree_skb(skb);
-        }
-        rose->va = (rose->va + 1) % ROSE_MODULUS;
+    if (fenceFd >= 0) {
+        status_t res = getBufferMapper().lockAsyncYCbCr(handle, usage, rect, ycbcr, fenceFd);
+        return res;
+    } else {
+        ALOGE("Invalid fenceFd: %d", fenceFd);
+        return BAD_VALUE;
     }
 }

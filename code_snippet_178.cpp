@@ -1,13 +1,30 @@
-XMLRPC_VALUE XMLRPC_CreateValueDateTime(const char* id, time_t time) {
-    XMLRPC_VALUE val = XMLRPC_CreateValueEmpty();
-    if(val) {
-        XMLRPC_SetValueDateTime(val, time);
-        if(id) {
-            char buffer[256]; // Buffer to store sanitized id
-            int len = snprintf(buffer, sizeof(buffer), "%s", id);
-            buffer[len] = '\0';
-            XMLRPC_SetValueID(val, buffer, 0);
-        }
+ProcRenderReferenceGlyphSet(ClientPtr client)
+{
+    GlyphSetPtr glyphSet;
+    int rc;
+    GlyphSetId glyphSetId;
+
+    REQUEST(xRenderReferenceGlyphSetReq);
+
+    REQUEST_SIZE_MATCH(xRenderReferenceGlyphSetReq);
+
+    glyphSetId = stuff->gsid;
+    if (glyphSetId < 0 || glyphSetId >= maxGlyphSets || glyphSets[glyphSetId] == NULL) {
+        return BadValue;
     }
-    return val;
+
+    rc = dixLookupResourceByType((void **) &glyphSet, stuff->existing,
+                                 GlyphSetType, client, DixGetAttrAccess);
+    if (rc != Success) {
+        client->errorValue = stuff->existing;
+        return rc;
+    }
+
+    if (glyphSet != glyphSets[glyphSetId]) {
+        dixUnlock();
+        return BadValue;
+    }
+
+    glyphSet->refcnt++;
+    return Success;
 }

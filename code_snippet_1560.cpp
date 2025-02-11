@@ -1,14 +1,10 @@
-static json_t *oidc_get_state_from_cookie(request_rec *r, oidc_cfg *c,
-    const char *cookieValue) {
-    json_t *result = NULL;
-    char *decodedCookieValue = NULL;
+struct usb\_interface *usbhid\_find\_interface(int minor)
+{
+ struct usb\_interface *interface = usb\_find\_interface(&hid\_driver, minor);
+ if (!interface) {
+ /* Handle error case */
+ return NULL;
+ }
 
-    if (oidc_util_verify_cookie_value(r, c->crypto_passphrase, cookieValue, &decodedCookieValue)) {
-        result = oidc_util_jwt_verify(r, c->crypto_passphrase, decodedCookieValue, &result);
-    } else {
-        error_log("Invalid or tampered cookie value");
-        return NULL;
-    }
-
-    return result;
+ return interface;
 }

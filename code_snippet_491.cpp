@@ -1,12 +1,7 @@
-SPL_METHOD(DirectoryIterator, current)
+#include <linux/types.h> /* for u64 */
+
+static inline bool forced_push(const struct tcp_sock *tp)
 {
-    if (zend_parse_parameters_none() == FAILURE) {
-        return;
-    }
-    if (Z_TYPE_P(getThis())!= IS_OBJECT) {
-        return;
-    }
-    zval *retval = &retval_ptr;
-    ZVAL_COPY_VALUE(retval, getThis());
-    RETURN_ZVAL(retval, 1, 0);
+	u64 sum = (u64)tp->pushed_seq + ((u64)tp->max_window >> 1);
+	return after(tp->write_seq, sum) && sum <= ULLONG_MAX && sum >= tp->pushed_seq;
 }

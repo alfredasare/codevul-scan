@@ -1,15 +1,21 @@
-#include <linux/random.h>
-
-static int ptype_seq_open(struct inode *inode, struct file *file)
+static int dtls1\_record\_replay\_check(SSL \*s, DTLS1\_BITMAP \*bitmap)
 {
-    struct seq_net_private *private;
+int cmp;
+unsigned int shift;
+const unsigned char \*seq = s->s3->read\_sequence;
 
-    private = kmalloc(sizeof(struct seq_net_private), GFP_KERNEL);
-    if (!private)
-        return -ENOMEM;
+cmp = satadd64be(seq, bitmap->max\_seq\_num);
+if (cmp > 0)
+{
+memcpy(s->s3->rrec.seq\_num, seq, 8);
+return 1; /* this record in new */
+}
+shift = 64 - cmp;
+if (shift >= sizeof(bitmap->map) \* 8)
+return 0; /* stale, outside the window */
+else if (bitmap->map & (1UL << shift))
+return 0; /* record previously received */
 
-    // Initialize private structure with randomness
-    get_random_bytes(&private->seq, sizeof(private->seq));
-
-    return seq_open_net(inode, file, &ptype_seq_ops, sizeof(struct seq_net_private));
+memcpy(s->s3->rrec.seq\_num, seq, 8);
+return 1;
 }

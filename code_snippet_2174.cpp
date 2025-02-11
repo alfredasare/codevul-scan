@@ -1,7 +1,11 @@
-_pango_Is_Emoji_Emoji_Default (gunichar ch)
+static char *timelib_string_fixed(Scanner *s)
 {
-  if (ch >= 0x0 && ch <= 0x10FFFF) {
-    return _pango_Is_Emoji_Presentation (ch);
-  }
-  return FALSE;
+	if (s->cur - s->tok >= INT_MAX - 1) {
+		// Handle error
+	}
+
+	char *tmp = calloc(1, s->cur - s->tok + 1);
+	strncpy(tmp, s->tok, s->cur - s->tok);
+
+	return tmp;
 }

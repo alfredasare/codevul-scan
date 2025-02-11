@@ -1,10 +1,13 @@
-static void __exit ipsec_pfkey_exit(void)
+void crypto_init_queue(struct crypto_queue *queue, unsigned int max_qlen)
 {
-    xfrm_unregister_km(&pfkeyv2_mgr);
-    sock_unregister(PF_KEY);
-    unregister_pernet_subsys(&pfkey_net_ops);
-    proto_unregister(&key_proto);
+	INIT_LIST_HEAD(&queue->list);
+	queue->backlog = &queue->list;
+	queue->qlen = 0;
+	queue->max_qlen = max_qlen;
+	crypto_cleanup_queue(queue);
+}
 
-    pfkeyv2_mgr = NULL;
-    pfkey_net_ops = NULL;
+void crypto_cleanup_queue(struct crypto_queue *queue)
+{
+	/* Cleanup and free any resources held by the queue here */
 }

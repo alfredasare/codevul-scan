@@ -1,14 +1,9 @@
-static int kill_as_cred_perm(const struct cred *cred, struct task_struct *target)
+static void free\_groupnames(char **groupnames)
 {
-    const struct cred *pcred = __task_cred(target);
-    if (!uid_eq(cred->euid, pcred->suid) &&!uid_eq(cred->euid, pcred->uid) &&
-      !uid_eq(cred->uid,  pcred->suid) &&!uid_eq(cred->uid,  pcred->uid))
-    {
-        if (!cred ||!target)
-            return -EINVAL;
-
-        if (!capable(CAP_KILL))
-            return -EPERM;
-    }
-    return 1;
+	if (!groupnames)
+		return;
+	for (int i = 0; groupnames[i]; i++) {
+		free(groupnames[i]);
+	}
+	free(groupnames);
 }

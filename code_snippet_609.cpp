@@ -1,13 +1,25 @@
-int lxcfs_truncate(const char *path, off_t newsize)
+force_luks_teardown_completed_cb (DBusGMethodInvocation *context,
+                               Device *device,
+                               gboolean job_was_cancelled,
+                               int status,
+                               const char *stderr,
+                               const char *stdout,
+                               gpointer user_data)
 {
-    const char *allowed_paths[] = {"/cgroup", "/sys", "/proc"};
-    size_t num_allowed_paths = sizeof(allowed_paths) / sizeof(allowed_paths[0]);
+  ForceLuksTeardownData *data = user_data;
 
-    for (size_t i = 0; i < num_allowed_paths; i++) {
-        if (strncmp(path, allowed_paths[i], strlen(allowed_paths[i])) == 0) {
-            return 0;
-        }
+  if (WEXITSTATUS (status) == 0 && !job_was_cancelled)
+    {
+
+      g_print ("**** NOTE: Successfully teared down luks device %s\n", device->priv->device_file);
+
+      if (data->fr_callback != NULL)
+        data->fr_callback (device, TRUE, data->fr_user_data);
     }
-
-    return -EINVAL;
+  else
+    {
+      g_print ("**** NOTE: force luks teardown failed.\n");
+      if (data->fr_callback != NULL)
+        data->fr_callback (device, FALSE, data->fr_user_data);
+    }
 }

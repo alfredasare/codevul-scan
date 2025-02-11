@@ -1,20 +1,14 @@
-static void free_pg_vec(struct pgv *pg_vec, unsigned int order,
-		       unsigned int len)
-{
-    if (len > MAX_PG_VEC_LENGTH) {
-        return; // or handle the error accordingly
-    }
+/* Loop through all the program headers and find the header with
+ * virtual address in which the "virtaddr" belongs to, but ensure
+ * we don't go beyond the allocated memory for xph_addr.
+ */
+for ( ; num && off < fsize; num--, off += xph_sizeof) {
+	if (pread(fd, &xph_addr, xph_sizeof, off) < (ssize_t)xph_sizeof) {
+		file_badread(ms);
+		return -1;
+	}
 
-    for (int i = 0; i < len; i++) {
-        if (pg_vec[i].buffer!= NULL) {
-            if (is_vmalloc_addr(pg_vec[i].buffer)) {
-                vfree(pg_vec[i].buffer);
-            } else {
-                free_pages((unsigned long)pg_vec[i].buffer, order);
-            }
-            pg_vec[i].buffer = NULL;
-        }
-    }
-
-    kfree(pg_vec);
+	if (virtaddr >= xph_addr.xph_vaddr && virtaddr < xph_addr.xph_vaddr + xph_addr.xph_filesz)
+		return xph_addr.xph_offset + (virtaddr - xph_addr.xph_vaddr);
 }
+return 0;

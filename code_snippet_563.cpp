@@ -1,10 +1,36 @@
-hfs_write_data_block(struct archive_write_disk *a, const char *buff, size_t size)
+int jas\_image\_copycmpt(jas\_image\_t *dstimage, int dstcmptno,
+jas\_image\_t *srcimage, int srccmptno)
 {
-    char normalized_path[PATH_MAX];
-    realpath(buff, normalized_path);
-    if (strcmp(normalized_path, buff)!= 0) {
-        // Handle the case where the normalized path is different from the original path
-        // For example, log an error or return an error code
-    }
-    return (write_data_block(a, buff, size));
+jas\_image\_cmpt\_t \*newcmpt;
+int num\_elements = dstimage->numcmpts\_ - dstcmptno;
+int total\_size = (num\_elements + 1) \* sizeof(jas\_image\_cmpt\_t \*);
+
+if (dstimage->numcmpts\_ >= dstimage->maxcmpts\_) {
+if (jas\_image\_growcmpts(dstimage, dstimage->maxcmpts\_ + 128)) {
+return -1;
+}
+}
+
+if (dstcmptno + 1 > dstimage->numcmpts\_) {
+dstimage->numcmpts\_ = dstcmptno + 1;
+}
+
+if (!(newcmpt = jas\_image\_cmpt\_copy(srcimage->cmpts\_{\[srccmptno\]}}))) {
+return -1;
+}
+
+// Check if there is enough space before copying
+if (total\_size > dstimage->maxcmpts\_ \* sizeof(jas\_image\_cmpt\_t \*)) {
+return -1;
+}
+
+if (dstcmptno < dstimage->numcmpts\_) {
+memmove(&dstimage->cmpts\_{[dstcmptno + 1], dstimage->cmpts\_{[dstcmptno], num\_elements \* sizeof(jas\_image\_cmpt\_t \*)});
+}
+
+dstimage->cmpts\_{[dstcmptno] = newcmpt;
+++dstimage->numcmpts\_;
+
+jas\_image\_setbbox(dstimage);
+return 0;
 }

@@ -1,10 +1,13 @@
-CalloutTag_find(CalloutTagTable* t, const UChar* name, const UChar* name_end) {
-  CalloutTagVal e;
-
-  e = -1;
-  if (IS_NOT_NULL(t)) {
-    t = load_callout_tag_table_from_config_file();
-    onig_st_lookup_strend(t, name, name_end, (HashDataType* )((void* )(&e)));
-  }
-  return e;
+void DesktopWindowTreeHostX11::BeforeActivationStateChanged() {
+> #if (defined(OS_LINUX) && defined(USE_X11))
+  was_active_ = IsActive();
+  had_pointer_ = has_pointer_ && IsActive();
+  had_pointer_grab_ = has_pointer_grab_ && IsActive();
+  had_window_focus_ = has_window_focus_ && IsActive();
+> #else
+  was_active_ = IsActive();
+  had_pointer_ = has_pointer_;
+  had_pointer_grab_ = has_pointer_grab_;
+  had_window_focus_ = has_window_focus_;
+> #endif
 }

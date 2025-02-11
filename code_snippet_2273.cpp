@@ -1,25 +1,9 @@
-allocbuf(BUF *bp, int fd, int blksize)
+#define MAX_NAME_LENGTH 64 // Define an appropriate maximum name length
+
+static int color_table_compare(const void *lhs, const void *rhs)
 {
-    size_t size;
-#ifdef HAVE_STRUCT_STAT_ST_BLKSIZE
-    struct stat stb;
+    const ColorEntry *entry1 = lhs;
+    const ColorEntry *entry2 = rhs;
 
-    if (fstat(fd, &stb) < 0) {
-        run_err("fstat: %s", strerror(errno));
-        return (0);
-    }
-
-    if (!S_ISREG(stb.st_mode) || !S_IRUSR & stb.st_mode) {
-        run_err("File is not readable");
-        return (0);
-    }
-
-    size = ROUNDUP(stb.st_blksize, blksize);
-    if (size == 0)
-        size = blksize;
-#else /* HAVE_STRUCT_STAT_ST_BLKSIZE */
-    size = blksize;
-#endif /* HAVE_STRUCT_STAT_ST_BLKSIZE */
-
-    //... rest of the function...
+    return strncasecmp(entry1->name, entry2->name, MIN(MAX_NAME_LENGTH, strlen(entry1->name), strlen(entry2->name)));
 }

@@ -1,14 +1,20 @@
-static inline void ip6_tnl_dst_store(struct ip6_tnl *t, struct dst_entry *dst)
-{
-    struct rt6_info *rt = (struct rt6_info *) dst;
-    uint64_t cookie = 0; // Initialize with a default value
-
-    if (rt && rt->rt6i_node) {
-        cookie = rt->rt6i_node->fn_sernum;
+bool RenderFrameImpl::ShouldUpdateSelectionTextFromContextMenuParams(
+    const base::string16& selection_text,
+    size_t selection_text_offset,
+    const gfx::Range& selection_range,
+    const ContextMenuParams& params) {
+  base::string16 trimmed_selection_text;
+  if (!selection_text.empty() && !selection_range.is_empty() &&
+      selection_text_offset < selection_text.length()) {
+    const int start = selection_range.GetMin() - selection_text_offset;
+    const size_t length = selection_range.length();
+    if (start >= 0 && start + length <= selection_text.length()) {
+      base::TrimWhitespace(selection_text.substr(start, length), base::TRIM_ALL,
+                           &trimmed_selection_text);
     }
-
-    t->dst_cookie = cookie; // Sanitized cookie value
-
-    dst_release(t->dst_cache);
-    t->dst_cache = dst;
+  }
+  base::string16 trimmed_params_text;
+  base::TrimWhitespace(params.selection_text, base::TRIM_ALL,
+                       &trimmed_params_text);
+  return trimmed_params_text != trimmed_selection_text;
 }

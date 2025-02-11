@@ -1,22 +1,21 @@
+#include <regex>
+
+bool IsSafeForHTML(const string16& text) {
+  static const std::regex kSafeHTML("^[a-zA-Z0-9\\s!@#$%^&*(),.?:\"'`~/\\-]+$");
+  return std::regex_match(text, kSafeHTML);
+}
+
 void RenderViewImpl::OnReplace(const string16& text) {
   if (!webview())
     return;
 
-  WebFrame* frame = webview()->focusedFrame();
-  if (!frame->hasSelection())
-    frame->selectWordAroundCaret();
+  if (IsSafeForHTML(text)) {
+    WebFrame* frame = webview()->focusedFrame();
+    if (!frame->hasSelection())
+      frame->selectWordAroundCaret();
 
-  string16 sanitizedText;
-  for (char16 c : text) {
-    if (isAllowedCharacter(c)) {
-      sanitizedText += c;
-    }
+    frame->replaceSelection(text);
+  } else {
+    // Log the error, reject the input, or handle it as appropriate for your application.
   }
-  sanitizedText = sanitizeText(sanitizedText); // implement a sanitization function
-
-  if (sanitizedText.length() > MAX_TEXT_LENGTH) {
-    sanitizedText = sanitizedText.substr(0, MAX_TEXT_LENGTH);
-  }
-
-  frame->replaceSelection(sanitizedText);
 }

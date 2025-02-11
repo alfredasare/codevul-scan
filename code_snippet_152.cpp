@@ -1,45 +1,42 @@
-bool RenderFrameHostManager::ReinitializeRenderFrame(
-    RenderFrameHostImpl* render_frame_host) {
-  DCHECK(!render_frame_host->IsRenderFrameLive());
+static void mp_shutdown(struct sb_uart_state *state)
+{
+	if (!state) {
+		pr\_err("mp\_shutdown: Invalid state pointer\n");
+		return;
+	}
 
-  try {
-    CreateOpenerProxies(render_frame_host->GetSiteInstance(), frame_tree_node_);
-  } catch (const std::exception& e) {
-    LOG(ERROR) << "Error creating opener proxies: " << e.what();
-    return false;
-  }
+	struct sb\_uart\_info *info = state->info;
+	struct sb\_uart\_port *port = state->port;
 
-  try {
-    if (!frame_tree_node_->parent()) {
-      DCHECK(!GetRenderFrameProxyHost(render_frame_host->GetSiteInstance()));
-      if (!InitRenderView(render_frame_host->render_view_host(), nullptr)) {
-        LOG(ERROR) << "Error initializing render view";
-        return false;
-      }
-    } else {
-      if (!InitRenderFrame(render_frame_host)) {
-        LOG(ERROR) << "Error initializing render frame";
-        return false;
-      }
+	if (!info) {
+		pr\_err("mp\_shutdown: Invalid info pointer\n");
+		return;
+	}
 
-      RenderFrameProxyHost* proxy_to_parent = GetProxyToParent();
-      if (proxy_to_parent) {
-        const gfx::Size* size = render_frame_host->frame_size()
-                                ? &*render_frame_host->frame_size()
-                                  : nullptr;
-        try {
-          GetProxyToParent()->SetChildRWHView(render_frame_host->GetView(), size);
-        } catch (const std::exception& e) {
-          LOG(ERROR) << "Error setting child RWH view: " << e.what();
-          return false;
-        }
-      }
-    }
-  } catch (const std::exception& e) {
-    LOG(ERROR) << "Unexpected error: " << e.what();
-    return false;
-  }
+	if (!port) {
+		pr\_err("mp\_shutdown: Invalid port pointer\n");
+		return;
+	}
 
-  DCHECK(render_frame_host->IsRenderFrameLive());
-  return true;
+	if (info->tty)
+		set\_bit(TTY\_IO\_ERROR, &info->tty->flags);
+
+	if (info->flags & UIF\_INITIALIZED) {
+		info->flags &= ~UIF\_INITIALIZED;
+
+		if (!info->tty || (info->tty->termios.c\_cflag & HUPCL))
+			uart\_clear\_mctrl(port, TIOCM\_DTR | TIOCM\_RTS);
+
+		wake\_up\_interruptible(&info->delta\_msr\_wait);
+
+		port->ops->shutdown(port);
+
+		synchronize\_irq(port->irq);
+	}
+	tasklet\_kill(&info->tlet);
+
+	if (info->xmit.buf) {
+		free\_page((unsigned long)info->xmit.buf);
+		info->xmit.buf = NULL;
+	}
 }

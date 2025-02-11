@@ -1,20 +1,30 @@
-static int uas_slave_configure(struct scsi_device *sdev)
+device_drive_ata_smart_refresh_data (Device *device,
+                                   char **options,
+                                   DBusGMethodInvocation *context)
 {
-    struct uas_dev_info *devinfo = sdev->hostdata;
-    int flags_len = sizeof(devinfo->flags) / sizeof(devinfo->flags[0]);
+  const gchar *action_id;
+  gchar **dupped_options = NULL;
 
-    if (devinfo->flags & US_FL_NO_REPORT_OPCODES)
-        sdev->no_report_opcodes = 1;
-
-    /* A few buggy USB-ATA bridges don't understand FUA */
-    if (devinfo->flags & US_FL_BROKEN_FUA)
-        sdev->broken_fua = 1;
-
-    if (devinfo->qdepth >= 2 && devinfo->qdepth <= 255) {
-        scsi_change_queue_depth(sdev, devinfo->qdepth - 2);
-    } else {
-        printk(KERN_WARNING "Invalid queue depth value: %d\n", devinfo->qdepth - 2);
+  action_id = NULL;
+  if (context != NULL)
+    {
+      action_id = "org.freedesktop.udisks.drive-ata-smart-refresh";
     }
 
-    return 0;
+  if (options != NULL) {
+      dupped_options = g_strdupv(options);
+  }
+
+  daemon_local_check_auth (device->priv->daemon,
+                           device,
+                           action_id,
+                           "DriveAtaSmartRefreshData",
+                           TRUE,
+                           device_drive_ata_smart_refresh_data_authorized_cb,
+                           context,
+                           1,
+                           dupped_options,
+                           (dupped_options == NULL ? g_free : NULL));
+
+  return TRUE;
 }

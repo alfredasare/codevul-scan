@@ -1,19 +1,17 @@
-spinlock_t lock = SPIN_LOCK_UNLOCKED(&sk_list_lock);
-sk_for_each_from(sk) {
-    struct inet_sock *inet = inet_sk(sk);
+atusb_set_txpower(struct ieee802154_hw *hw, s32 mbm)
+{
+    struct atusb *atusb = hw->priv;
+    u32 i;
 
-    spin_lock(&lock);
-    if (net_eq(sock_net(sk), net) && inet->inet_num == num &&
-       !(inet->inet_daddr && inet->inet_daddr!= raddr) &&
-       !(inet->inet_rcv_saddr && inet->inet_rcv_saddr!= laddr) &&
-       !(sk->sk_bound_dev_if && sk->sk_bound_dev_if!= dif &&
-          sk->sk_bound_dev_if!= sdif)) {
-        spin_unlock(&lock);
-        goto found;
+    if (mbm < 0 || mbm >= hw->phy->supported.tx_powers_size ||
+        hw->phy->supported.tx_powers[mbm] != mbm) {
+        return -EINVAL;
     }
-    spin_unlock(&lock);
+
+    for (i = 0; i < hw->phy->supported.tx_powers_size; i++) {
+        if (hw->phy->supported.tx_powers[i] == mbm)
+            return atusb_write_subreg(atusb, SR_TX_PWR_23X, i);
+    }
+
+    return -EINVAL;
 }
-spin_unlock(&lock);
-sk = NULL;
-found:
-return sk;

@@ -1,12 +1,13 @@
-void WaitForInterstitialAttach(content::WebContents* web_contents) {
-  if (!IsValidShowingInterstitialPageInput(web_contents)) {
-    return;
-  }
-  scoped_refptr<content::MessageLoopRunner> loop_runner(new content::MessageLoopRunner);
-  InterstitialObserver observer(web_contents, loop_runner->QuitClosure(), base::Closure());
-  loop_runner->Run();
+void Document::clearAXObjectCache()
+{
+    ASSERT(topDocument() == this);
+    if (this->m_axObjectCache.empty() || this->isSafeToClearCache()) {
+        m_axObjectCache.clear();
+    }
 }
 
-bool IsValidShowingInterstitialPageInput(content::WebContents* web_contents) {
-  return web_contents!= nullptr && web_contents->ShowingInterstitialPage();
+bool Document::isSafeToClearCache() const
+{
+    // Add your custom validation logic here
+    // Return true if it's safe to clear the cache, false otherwise
 }

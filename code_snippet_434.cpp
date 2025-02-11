@@ -1,28 +1,14 @@
-bool jsvMathsOpTypeEqual(JsVar *a, JsVar *b) {
-  bool eql = (a == 0) == (b == 0);
-  if (a && b) {
-    eql = ((jsvIsInt(a) || jsvIsFloat(a)) && (jsvIsInt(b) || jsvIsFloat(b))) ||
-        ((a->flags & JSV_VARTYPEMASK) == (b->flags & JSV_VARTYPEMASK));
-  }
-  if (eql) {
-    size_t size = sizeof(JsVar);
-    JsVar *contents = jsvMalloc(size);
-    if (jsvCopyData(a, b, contents, size) == 0) {
-      eql = jsvGetBool(contents);
-    } else {
-      eql = false;
-    }
-    jsvFree(contents);
-  } else {
-    assert(!(jsvIsString(a) && jsvIsString(b) && jsvIsBasicVarEqual(a, b)));
-  }
-  return eql;
-}
-
-int jsvCopyData(JsVar *src, JsVar *dst, void *buf, size_t size) {
-  if (size > sizeof(JsVar)) {
-    return -1;
-  }
-  memcpy(buf, src, size);
-  return 0;
+bool BaseMultipleFieldsDateAndTimeInputType::shouldHaveSecondField(const DateComponents& date) const
+{
+StepRange stepRange = createStepRange(AnyIsDefaultStep);
+int64_t dateSeconds = date.second() + date.millisecond() / 1000;
+int64_t minRemainder = stepRange.minimum().remainder(static_cast<int64_t>(msPerMinute));
+int64_t stepRemainder = stepRange.step().remainder(static_cast<int64_t>(msPerMinute));
+return dateSeconds > 0
+|| !((minRemainder == 0 && dateSeconds < std::numeric_limits<int>::max())
+|| (!minRemainder && dateSeconds <= std::numeric_limits<int>::max())
+|| (minRemainder && dateSeconds < (std::numeric_limits<int>::max() - minRemainder + 1)))
+|| !((stepRemainder == 0 && dateSeconds < std::numeric_limits<int>::max())
+|| (!stepRemainder && dateSeconds <= std::numeric_limits<int>::max())
+|| (stepRemainder && dateSeconds < (std::numeric_limits<int>::max() - stepRemainder + 1)));
 }

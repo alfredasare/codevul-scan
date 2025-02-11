@@ -1,16 +1,19 @@
-bool FrameFetchContext::ShouldSendClientHint(
-    mojom::WebClientHintsType type,
-    const ClientHintsPreferences& hints_preferences,
-    const WebEnabledClientHints& enabled_hints) const {
-  if (!IsValidInput(type, hints_preferences, enabled_hints)) {
-    return false;
-  }
+static struct nft_trans *nft_trans_alloc(struct nft_ctx *ctx, int msg_type,
+					 u32 size)
+{
+	struct nft_trans *trans;
 
-  return GetClientHintsPreferences().ShouldSend(type) ||
-         hints_preferences.ShouldSend(type) || enabled_hints.IsEnabled(type);
-}
+	// Check for integer overflow before allocation
+	if (size > SIZE_MAX - sizeof(struct nft_trans)) {
+		return NULL;
+	}
 
-bool IsValidInput(mojom::WebClientHintsType type, const ClientHintsPreferences& hints_preferences, const WebEnabledClientHints& enabled_hints) {
-  // Check input parameters for validity
-  return true;
+	trans = kzalloc(sizeof(struct nft_trans) + size, GFP_KERNEL);
+	if (trans == NULL)
+		return NULL;
+
+	trans->msg_type = msg_type;
+	trans->ctx	= *ctx;
+
+	return trans;
 }

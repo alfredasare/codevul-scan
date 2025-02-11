@@ -1,27 +1,21 @@
-rtadv_prefix_get (struct list *rplist, struct prefix_ipv6 *p)
+static struct oz_urb_link *oz_uncancel_urb(struct oz_hcd *ozhcd,
+struct urb *urb)
 {
-  struct rtadv_prefix *rprefix;
-  
-  rprefix = rtadv_prefix_lookup (rplist, p);
-  if (rprefix)
-    return rprefix;
+def __oz_uncancel_urb(struct oz_hcd *ozhcd, struct urb *urb) {
+struct oz_urb_link *urbl;
 
-  rprefix = rtadv_prefix_new (p);
-  listnode_add (rplist, rprefix);
-
-  return rprefix;
+list_for_each_entry(urbl, &ozhcd->urb_cancel_list, link) {
+if (urb == urbl->urb) {
+list_del_init(&urbl->link);
+return urbl;
+}
+}
+return NULL;
 }
 
-rtadv_prefix_new (struct prefix_ipv6 *p)
-{
-  struct rtadv_prefix *rprefix;
-  uint8_t buffer[sizeof(struct prefix_ipv6)];
+mutex_lock(&ozhcd->urb_cancel_list_mutex);
+struct oz_urb_link *result = __oz_uncancel_urb(ozhcd, urb);
+mutex_unlock(&ozhcd->urb_cancel_list_mutex);
 
-  rprefix = malloc (sizeof (struct rtadv_prefix));
-  memset (rprefix, 0, sizeof (struct rtadv_prefix));
-
-  memcpy (buffer, p, sizeof(struct prefix_ipv6));
-  memcpy (&rprefix->prefix, buffer, sizeof(struct prefix_ipv6));
-
-  return rprefix;
+return result;
 }

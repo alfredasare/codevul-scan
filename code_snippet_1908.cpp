@@ -1,34 +1,14 @@
-void RilSapSocket::pushRecord(void *p_record, size_t recordlen) {
-    pb_istream_t stream = pb_istream_from_buffer((uint8_t *)p_record, recordlen);
-    MsgHeader *reqHeader = (MsgHeader *)malloc(recordlen + sizeof(MsgHeader));
-    if (!reqHeader) {
-        RLOGE("pushRecord: OOM");
-        return;
-    }
-    memset(reqHeader, 0, sizeof(MsgHeader));
+static struct ndp_msg *ndp_msg_alloc(void)
+{
+	struct ndp_msg *msg;
 
-    if (recordlen > sizeof(MsgHeader)) {
-        RLOGE("Invalid record length: %zu", recordlen);
-        free(reqHeader);
-        return;
-    }
-
-    log_hex("BtSapTest-Payload", (const uint8_t*)p_record, recordlen);
-
-    if (!pb_decode(&stream, MsgHeader_fields, reqHeader)) {
-        RLOGE("Error decoding protobuf buffer : %s", PB_GET_ERROR(&stream));
-        free(reqHeader);
-    } else {
-        SapSocketRequest *recv = (SapSocketRequest*)malloc(sizeof(SapSocketRequest));
-        if (!recv) {
-            RLOGE("pushRecord: OOM");
-            free(reqHeader);
-            return;
-        }
-        recv->token = reqHeader->token;
-        recv->curr = reqHeader;
-        recv->socketId = id;
-
-        dispatchQueue.enqueue(recv);
-    }
+	msg = myzalloc(sizeof(*msg));
+	if (!msg)
+		return NULL;
+	msg->icmp6_hdr = (struct icmp6_hdr *) mycalloc(1, sizeof(msg->buf));
+	if (!msg->icmp6_hdr) {
+		myfree(msg);
+		return NULL;
+	}
+	return msg;
 }

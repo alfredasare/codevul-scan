@@ -1,20 +1,21 @@
-void free_share(sa_share_impl_t impl_share) {
-    sa_fstype_t *fstype;
-    char *temp;
+struct fib6_table *fib6_new_table(struct net *net, u32 id)
+{
+	struct fib6_table *tb;
 
-    if (impl_share == NULL) {
-        return;
-    }
+	if (id == 0)
+		id = RT6_TABLE_MAIN;
+	tb = fib6_get_table(net, id);
+	if (tb)
+		return tb;
 
-    for (fstype = fstypes; fstype!= NULL; fstype = fstype->next) {
-        temp = strdup(FSINFO(impl_share, fstype)->resource);
-        memset(temp, 0, strlen(temp));
-        free(temp);
-        FSINFO(impl_share, fstype)->resource = NULL;
-    }
+	tb = fib6_alloc_table(net, id);
+	if (!tb)
+		return NULL;
 
-    free(impl_share->sharepath);
-    free(impl_share->dataset);
-    free(impl_share->fsinfo);
-    free(impl_share);
+	if (!fib6_link_table(net, tb)) {
+		fib6_free_table(tb);
+		return NULL;
+	}
+
+	return tb;
 }

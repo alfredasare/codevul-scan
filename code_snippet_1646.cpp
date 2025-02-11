@@ -1,31 +1,12 @@
-static int cine_read_packet(AVFormatContext *avctx, AVPacket *pkt)
+void VP8XChunk::xmp(bool hasXMP)
 {
-    CineDemuxContext *cine = avctx->priv_data;
-    AVStream *st = avctx->streams[0];
-    AVIOContext *pb = avctx->pb;
-    int n, size, ret;
-
-    if (cine->pts >= st->duration)
-        return AVERROR_EOF;
-
-    ret = avio_seek(pb, st->index_entries[cine->pts].pos, SEEK_SET);
-    if (ret!= 0) {
-        return ret;
+    constexpr size_t MAX_BIT_SHIFT = 31; // max allowed bit shift
+    XMP_Uns32 flags = GetLE32(&this->data[0]);
+    if (hasXMP && (XMP_FLAG_BIT > MAX_BIT_SHIFT)) // check if the bit shift is within bounds
+    {
+        // handle error or return early
+        return;
     }
-
-    n = avio_rl32(pb);
-    if (n < 8)
-        return AVERROR_INVALIDDATA;
-    avio_skip(pb, n - 8);
-    size = avio_rl32(pb);
-
-    ret = av_get_packet(pb, pkt, size);
-    if (ret < 0) {
-        return ret;
-    }
-
-    pkt->pts = cine->pts++;
-    pkt->stream_index = 0;
-    pkt->flags |= AV_PKT_FLAG_KEY;
-    return 0;
+    flags ^= (-hasXMP ^ flags) & (1U << XMP_FLAG_BIT & MAX_BIT_SHIFT);
+    PutLE32(&this->data[0], flags);
 }

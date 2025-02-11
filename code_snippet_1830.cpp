@@ -1,11 +1,7 @@
-static bool isFunctionFlag(const char *n) {
-    if (n == NULL || strlen(n) < 5) {
-        return false; // invalid input
-    }
-
-    return (strncmp (n, "sym.func.", 9) == 0
-        || strncmp (n, "method.", 7) == 0
-        || strncmp (n, "sym.", 4) == 0
-        || strncmp (n, "func.", 5) == 0
-        || strncmp (n, "fcn.", 4) == 0);
+static int f2fs_write_node_page(struct page *page, struct writeback_control *wbc)
+{
+	if (wbc && wbc->sync_point)
+		return __write_node_page(page, false, NULL, wbc);
+	else
+		return -EINVAL;
 }

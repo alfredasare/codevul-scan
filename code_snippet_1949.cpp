@@ -1,16 +1,10 @@
-android::SoftOMXComponent *createSoftOMXComponent(
-    const char *name, const OMX_CALLBACKTYPE *callbacks,
-    OMX_PTR appData, OMX_COMPONENTTYPE **component) {
-    // Check the permissions required for the constructor
-    if (!hasRequiredPermissions()) {
-        return nullptr;
-    }
+R_API int r_core_cmd_command(RCore *core, const char *command) {
+	int ret, len;
+	char *buf = NULL;
+	char *rcmd = NULL;
+	char *ptr = NULL;
+	char *cmd = r_core_sysenv_begin (core, command);
 
-    // Create a new object with the minimum required permissions
-    android::SoftMP3 *softMP3 = new android::SoftMP3(name, callbacks, appData, component);
+	if (!cmd) return -1;
 
-    // Implement proper access control mechanisms
-    softMP3->setAccessControl(new AccessControlPolicy(), callbackValidation());
-
-    return softMP3;
-}
+	len = r_sys_cmd_str (cmd,

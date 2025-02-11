@@ -1,22 +1,29 @@
-static struct gs_tx_context *gs_alloc_tx_context(struct gs_can *dev)
-{
-    int i = 0;
-    unsigned long flags;
+bool PPResultAndExceptionToNPResult::SetResult(PP_Var result) {
+  DCHECK(!checked_exception_);  // Don't call more than once.
+  DCHECK(np_result_);  // Should be expecting a result.
 
-    spin_lock_irqsave(&dev->tx_ctx_lock, flags);
+  if (!IsValidPPVar(result)) {
+    WebBindings::setException(object_var_, kInvalidPluginValue);
+    return false;
+  }
 
-    for (; i < GS_MAX_TX_URBS; i++) {
-        if (i >= GS_MAX_TX_URBS) { 
-            spin_unlock_irqrestore(&dev->tx_ctx_lock, flags);
-            return NULL; 
-        }
-        if (dev->tx_context[i].echo_id == GS_MAX_TX_URBS) {
-            dev->tx_context[i].echo_id = i;
-            spin_unlock_irqrestore(&dev->tx_ctx_lock, flags);
-            return &dev->tx_context[i];
-        }
-    }
+  checked_exception_ = true;
 
-    spin_unlock_irqrestore(&dev->tx_ctx_lock, flags);
-    return NULL;
+  if (has_exception()) {
+    ThrowException();
+    return false;
+  } else if (!PPVarToNPVariant(result, np_result_)) {
+    WebBindings::setException(object_var_, kInvalidPluginValue);
+    return false;
+  } else {
+    return true;
+  }
+
+  Var::PluginReleasePPVar(result);
+}
+
+bool PPResultAndExceptionToNPResult::IsValidPPVar(PP_Var var) {
+  // Add your validation logic here.
+  // For example:
+  // return var->type == PP_VARTYPE_STRING && var->value.string->length < 1024;
 }

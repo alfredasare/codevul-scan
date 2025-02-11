@@ -1,13 +1,6 @@
-bool Document::useSecureKeyboardEntryWhenActive() const
-{
-    if (!isValidInput(m_useSecureKeyboardEntryWhenActive)) {
-        throw std::runtime_error("Invalid input parameter");
-    }
-    return m_useSecureKeyboardEntryWhenActive;
-}
+while (blk < end) {
+	segno = GET_SEGNO(sbi, blk);
+	sentry = get_seg_entry(sbi, segno);
+	offset = GET_BLKOFF_FROM_SEG0(sbi, blk);
 
-bool isValidInput(bool input) {
-    // Add your custom validation logic here
-    // For example, check if the input is within a valid range or matches a specific pattern
-    return true; // Replace with your actual validation logic
-}
+	if (end < START_BLOCK(sbi, segno +

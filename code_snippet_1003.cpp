@@ -1,13 +1,23 @@
-void SetWindowRestoreOverrides(aura::Window* window,
-                              const gfx::Rect& bounds_override,
-                              ui::WindowShowState window_state_override) {
-  if (!IsValidBoundsOverride(bounds_override) ||!IsValidWindowStateOverride(window_state_override)) {
-    return; // invalid input data, exit early
-  }
+static BOOL update_begin_paint(rdpContext* context)
+{
+    wStream* s;
+    rdpUpdate* update = context->update;
 
-  gfx::Rect sanitized_bounds_override = SanitizeRect(bounds_override);
-  ui::WindowShowState sanitized_window_state_override = SanitizeWindowStateOverride(window_state_override);
+    if (update->us)
+        update->EndPaint(context);
 
-  window->SetProperty(kRestoreWindowStateTypeOverrideKey, ToWindowStateType(sanitized_window_state_override));
-  window->SetProperty(kRestoreBoundsOverrideKey, new gfx::Rect(sanitized_bounds_override));
-}
+    s = fastpath_update_pdu_init_new(context->rdp->fastpath);
+
+    if (!s)
+        return FALSE;
+
+    // Ensure the buffer has enough space
+    if (Stream_GetCapacity(s) - Stream_GetPosition(s) < 2)
+    {
+        // Handle error: not enough space in the buffer
+        Stream_Free(s, FALSE);
+        return FALSE;
+    }
+
+    // Perform bounds-checked writing
+    Stream_Write_UINT1

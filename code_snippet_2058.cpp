@@ -1,10 +1,7 @@
-scoped_refptr<WebTaskRunner> Document::GetTaskRunner(TaskType type) {
-  if (ContextDocument() && ContextDocument()->GetFrame()) {
-    if (type!= TASK_TYPE_NORMAL && type!= TASK_TYPE_BACKGROUND) {
-      LOG(ERROR) << "Invalid TaskType: " << type;
-      return scoped_refptr<WebTaskRunner>();
-    }
-    return ContextDocument()->GetFrame()->FrameScheduler()->GetTaskRunner(type);
-  }
-  return Platform::Current()->CurrentThread()->GetWebTaskRunner();
+void DocumentLoader::WillCommitNavigation() {
+  std::scoped_lock<std::mutex> lock(will_commit_navigation_mutex_);
+  if (GetFrameLoader().StateMachine()->CreatingInitialEmptyDocument())
+    return;
+  probe::willCommitLoad(frame_, this);
+  frame_->GetIdlenessDetector()->WillCommitLoad();
 }

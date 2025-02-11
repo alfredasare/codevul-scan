@@ -1,17 +1,29 @@
-void sched_show_task(struct task_struct *p)
+int namePush(xmlParserCtxtPtr ctxt, const xmlChar * value)
 {
-    unsigned long free = 0;
-    int ppid;
-    unsigned state;
+    if (ctxt == NULL) return (-1);
 
-    state = p->state? __ffs(p->state) + 1 : 0;
-    printk(KERN_INFO "%-15.15s %c", p->comm,
-        state < sizeof(stat_nam) - 1? stat_nam[state] : '?');
-    #if BITS_PER_LONG == 32
-    if (state!= TASK_RUNNING)
-        printk(KERN_CONT " %08lx ", thread_saved_pc(p) & 0xffffffff);
-    #else
-    if (state!= TASK_RUNNING)
-        printk(KERN_CONT " %016lx ", thread_saved_pc(p) & 0xffffffffffffffff);
-    #endif
-   ...
+    if (ctxt->nameNr >= ctxt->nameMax) {
+        const xmlChar * *tmp;
+        const xmlChar * *oldTab = ctxt->nameTab;
+
+        tmp = (const xmlChar * *) xmlRealloc((xmlChar * *)ctxt->nameTab,
+                                    ctxt->nameMax * 2 *
+                                    sizeof(ctxt->nameTab[0]));
+        if (tmp == NULL) {
+            goto mem_error;
+        }
+	ctxt->nameTab = tmp;
+	for (int i = 0; i < ctxt->nameNr; i++) {
+	    ctxt->nameTab[i] = oldTab[i];
+	}
+        xmlFree(oldTab);
+        ctxt->nameMax *= 2;
+    }
+    ctxt->nameTab[ctxt->nameNr] = value;
+    ctxt->name = value;
+    return (ctxt->nameNr++);
+
+mem_error:
+    xmlErrMemory(ctxt, NULL);
+    return (-1);
+}

@@ -1,13 +1,12 @@
-void AudioInputRendererHost::DeleteEntries() {
-  DCHECK(BrowserThread::CurrentlyOn(BrowserThread::IO));
+int __init nfc_genl_init(void)
+{
+	struct genl_family *nf_family;
+	int rc;
 
-  for (AudioEntryMap::iterator i = audio_entries_.begin();
-       i!= audio_entries_.end(); ++i) {
-    // Securely close and delete the stream
-    if (i->second->IsSensitive()) {
-      // Sanitize the sensitive information before deletion
-      i->second->Sanitize();
-    }
-    CloseAndDeleteStream(i->second);
-  }
-}
+	nf_family = genl_ctrl_alloc();
+	if (!nf_family)
+		return -ENOMEM;
+
+	rc = genl_ctrl_resolve(nf_family);
+	if (rc < 0) {
+		genl_ctrl_put(nf_family);

@@ -1,31 +1,26 @@
-url_full_path (const struct url *url)
+md_attr_show(struct kobject *kobj, struct attribute *attr, char *page)
 {
-  int length = full_path_length (url);
-  char *full_path = xmalloc (length + 1);
+	if (!attr || !container_of(attr, struct md_sysfs_entry, attr)) {
+		pr_err("Invalid attribute pointer\n");
+		return -EINVAL;
+	}
 
-  full_path_write_safe (url, full_path);
-  full_path[length] = '\0';
+	struct md_sysfs_entry *entry = container_of(attr, struct md_sysfs_entry, attr);
+	struct mddev *mddev = container_of(kobj, struct mddev, kobj);
+	ssize_t rv;
 
-  return full_path;
-}
+	if (!entry->show)
+		return -EIO;
 
-void full_path_write_safe (const struct url *url, char *full_path)
-{
-  int i;
-  const char *path = url->path;
+	spin_lock(&all_mddevs_lock);
+	if (list_empty(&mddev->all_mddevs)) {
+		spin_unlock(&all_mddevs_lock);
+		return -EBUSY;
+	}
+	mddev_get(mddev);
+	spin_unlock(&all_mddevs_lock);
 
-  for (i = 0; path[i]; i++) {
-    if (path[i] == '\r') {
-      full_path[i] = '%';
-      full_path[i + 1] = 'r';
-      i++;
-    } else if (path[i] == '\n') {
-      full_path[i] = '%';
-      full_path[i + 1] = 'n';
-      i++;
-    } else {
-      full_path[i] = path[i];
-    }
-  }
-  full_path[i] = '\0';
+	rv = entry->show(mddev, page);
+	mddev_put(mddev);
+	return rv;
 }

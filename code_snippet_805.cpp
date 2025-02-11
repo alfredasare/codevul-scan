@@ -1,12 +1,27 @@
-static struct sock *udp_get_idx(struct seq_file *seq, loff_t pos)
-{
-    struct sock *sk = udp_get_first(seq, 0);
+c++
+void Document::UpdateViewportDescription() {
+  if (!GetFrame())
+    return;
 
-    if (sk) {
-        if (pos <= 0)
-            return sk;
-        while (pos > 1 && (sk = udp_get_next(seq, sk))!= NULL)
-            --pos;
+  mojom::ViewportFit current_viewport_fit =
+      GetViewportDescription().GetViewportFit();
+  if (viewport_fit_ != current_viewport_fit &&
+      frame_->Client()->GetRemoteNavigationAssociatedInterfaces()) {
+    if (!display_cutout_host_.is_bound()) {
+      if (frame_->Client()->GetRemoteNavigationAssociatedInterfaces()->GetInterface(&display_cutout_host_)) {
+        DCHECK(display_cutout_host_.is_bound());
+        display_cutout_host_->ViewportFitChanged(current_viewport_fit);
+      } else {
+        LOG(ERROR) << "Failed to bind display_cutout_host_ object.";
+        return;
+      }
+    } else {
+      display_cutout_host_->ViewportFitChanged(current_viewport_fit);
     }
-    return pos == 0? sk : NULL;
+  }
+
+  if (GetFrame()->IsMainFrame()) {
+    GetPage()->GetChromeClient().DispatchViewportPropertiesDidChange(
+        GetViewportDescription());
+  }
 }

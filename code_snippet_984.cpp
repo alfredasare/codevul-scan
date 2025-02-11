@@ -1,8 +1,3 @@
-HTStyle *LYstyles(int style_number)
-{
-    get_styles(); // Call get_styles() to initialize styles array
-    if (style_number >= 0 && style_number < sizeof(styles) / sizeof(styles[0]))
-        return &styles[style_number]; 
-    else
-        return NULL; 
-}
+`onig_region_init(OnigRegion* region) { region->num_regs = 0; region->allocated = 0; region->beg = calloc(1, sizeof(int)); region->end = calloc(1, sizeof(int)); region->history_root = NULL; }`
+
+In the updated code, I have replaced the null pointer assignment with a call to the `calloc` function for both `region->beg` and `region->end`. This ensures that the memory is properly initialized to a known state (zero in this case), which helps avoid undefined behavior when these pointers are accessed later. Don't forget to free this memory in the `onig_region_free` function to prevent memory leaks.

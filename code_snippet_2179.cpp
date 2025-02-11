@@ -1,13 +1,6 @@
-void CopyInterps(CompatInfo *info, bool needSymbol, enum xkb_match_operation pred, struct collect *collect) {
-    SymInterpInfo *si;
-    if (!info || !info->interps) {
-        return;
-    }
-
-    darray_foreach(si, info->interps) {
-        if (si->interp.match == pred &&
-            (si->interp.sym != XKB_KEY_NoSymbol) == needSymbol) {
-            darray_append(collect->sym_interprets, si->interp);
-        }
-    }
+static void php_snmp_session_destructor(zend_rsrc_list_entry *rsrc TSRMLS_DC)
+{
+	php_snmp_session *session = (php_snmp_session *)rsrc->ptr;
+	netsnmp_session_free(&session);
+	rsrc->ptr = NULL;
 }

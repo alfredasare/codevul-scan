@@ -1,8 +1,14 @@
-rdpsnd_queue_empty(void)
+ZEND_API int zend_parse_parameters(int num_args TSRMLS_DC, const char *type_spec, ...) /* {{{ */
 {
-    size_t queue_size = queue_hi - queue_lo;
-    if (queue_size < 0) {
-        queue_size = (size_t)-1; // queue is empty
+    va_list va;
+    int retval;
+
+    if (num_args <= 0) {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid number of arguments");
+        return FAILURE;
     }
-    return (queue_size == 0);
-}
+
+    RETURN_IF_ZERO_ARGS(num_args, type_spec, 0);
+
+    va_start(va, type_spec);
+    retval = zend_parse_va_args(num_args, type_spec, &va,

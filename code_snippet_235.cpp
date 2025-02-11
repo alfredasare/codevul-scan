@@ -1,33 +1,11 @@
-EXPORTED int mboxlist_findallmulti(struct namespace *namespace,
-                                   const strarray_t *patterns, int isadmin,
-                                   const char *userid, const struct auth_state *auth_state,
-                                   findall_cb *proc, void *rock)
-{
-    int r = 0;
+Extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
+if (size > 512) {
+return 0;
+}
 
-    if (!namespace) namespace = mboxname_get_adminnamespace();
-
-    struct find_rock cbrock;
-    memset(&cbrock, 0, sizeof(struct find_rock));
-
-    cbrock.auth_state = auth_state;
-    cbrock.db = mbdb;
-    cbrock.isadmin = isadmin;
-    cbrock.namespace = namespace;
-    cbrock.proc = proc;
-    cbrock.procrock = rock;
-    cbrock.userid = userid;
-    if (userid) {
-        const char *domp = strchr(userid, '@');
-        if (domp) cbrock.domain = domp + 1;
-    }
-
-    r = mboxlist_do_find(&cbrock, patterns);
-
-    if (r!= 0) {
-        log_error("Error finding rocks: %s", strerror(r));
-        return r;
-    }
-
-    return r;
+net::ProxyBypassRules rules;
+std::string input(data, data + std::min(size, 512));
+rules.ParseFromString(input);
+rules.ParseFromStringUsingSuffixMatching(input);
+return 0;
 }

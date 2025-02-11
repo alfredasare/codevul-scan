@@ -1,23 +1,21 @@
-static void png_put_data(png_structp png_ptr, png_bytep data, png_size_t length)
+SYSCALL_DEFINE3(semget, key_t, key, int, nsems, int, semflg)
 {
-    Image *image;
+	struct ipc_namespace *ns;
+	struct ipc_ops sem_ops;
+	struct ipc_params sem_params;
 
-    image = (Image *) png_get_io_ptr(png_ptr);
-    if (length!= 0)
-    {
-        png_size_t check;
+	ns = current->nsproxy->ipc_ns;
 
-        if (length > MAX_ALLOWED_LENGTH || length < 0)
-        {
-            png_error(png_ptr, "Invalid length value");
-            return;
-        }
+	if (nsems < 0 || nsems >= INT_MAX)
+		return -EINVAL;
 
-        check = (png_size_t) WriteBlob(image, (size_t) length, data);
+	sem_ops.getnew = newarray;
+	sem_ops.associate = sem_security;
+	sem_ops.more_checks = sem_more_checks;
 
-        if (check!= length)
-        {
-            png_error(png_ptr, "WriteBlob Failed");
-        }
-    }
+	sem_params.key = key;
+	sem_params.flg = semflg;
+	sem_params.u.nsems = nsems;
+
+	return ipcget(ns, &sem_ids(ns), &sem_ops, &sem_params);
 }

@@ -1,11 +1,12 @@
-static inline dma_addr_t pci_map_single_debug(struct pci_dev *pdev, void *ptr, size_t size, int direction)
+maximum_visible_length(char *str, int offset)
 {
-    dma_addr_t addr = pci_map_single(pdev, ptr, size, direction);
-    if (!is_valid_dma_address(addr, size)) {
-        pr_crit("%s: pci_map_single() returned invalid memory address!\n", pci_name(pdev));
-        return DMA_MAPPING_ERROR;
+    // Validate the offset parameter
+    if (offset < 0 || offset > strlen(str)) {
+        // Handle invalid offset value
+        // For example, return an error code or log an error message
+        return -1;
     }
-    if (addr + size > 0x100000000LL)
-        pr_crit("%s: pci_map_single() returned memory at 0x%llx!\n", pci_name(pdev), (unsigned long long)addr);
-    return addr;
+
+    visible_length_offset = offset;
+    return visible_length(str);
 }

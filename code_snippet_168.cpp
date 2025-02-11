@@ -1,18 +1,17 @@
-init_file_tables(void)
-{
-    static int done = 0;
-    const struct type_tbl_s *p;
+WebRunnerBrowserContext::WebRunnerBrowserContext(base::FilePath data_dir_path)
+>: data\_dir\_path_(std::move(data\_dir\_path)),
+net\_log_(CreateNetLog()),
+resource\_context\_(new ResourceContext()) {
+if (!data\_dir\_path_.IsAbsolute()) {
+LOG(ERROR) << "Data directory path is not absolute!";
+return;
+}
 
-    if (done)
-        return;
-    done++;
+if (!data\_dir\_path_.Resolve(base::ThreadUtils::GetFileThreadPool())
+.IsValid()) {
+LOG(ERROR) << "Failed to resolve data directory path!";
+return;
+}
 
-    for (p = type_tbl; p->len; p++) {
-        assert(p->type < FILE_NAMES_SIZE);
-        file_names[p->type] = strdup(p->name);
-        file_formats[p->type] = strdup(p->format);
-        file_names[p->type][strlen(p->name)] = '\0';
-        file_formats[p->type][strlen(p->format)] = '\0';
-    }
-    assert(p - type_tbl == FILE_NAMES_SIZE);
+BrowserContext::Initialize(this, GetPath());
 }

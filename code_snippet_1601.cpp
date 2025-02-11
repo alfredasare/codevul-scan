@@ -1,15 +1,41 @@
-static bool get_new_nicname(char **dest, char *br, int pid, char **cnic)
+long keyctl_restrict_keyring(key_serial_t id, const char __user *_type,
+                             const char __user *_restriction)
 {
-    char template[IFNAMSIZ];
-    snprintf(template, sizeof(template), "vethXXXXXX");
-    *dest = lxc_mkifname(template);
+        key_ref_t key_ref;
+        bool link_reject = !_type;
+        char type[32];
+        char *restriction = NULL;
+        long ret;
 
-    if (pid < 0 || pid > sysconf(_SC_OPEN_MAX) ||!has_permission(pid, CAP_NET_ADMIN)) {
-        return false;
-    }
+        key_ref = lookup_user_key(id, 0, KEY_NEED_SETATTR);
+        if (IS_ERR(key_ref))
+                return PTR_ERR(key_ref);
 
-    if (!create_nic(*dest, br, pid, cnic)) {
-        return false;
-    }
-    return true;
+        if (_type) {
+                ret = key_get_type_from_user(type, _type, sizeof(type));
+                if (ret < 0)
+                        goto error;
+        }
+
+        if (_restriction) {
+                size_t len = strnlen_user(_restriction, PAGE_SIZE);
+                if (len >= PAGE_SIZE) {
+                        ret = -EINVAL;
+                        goto error;
+                }
+
+                restriction = strndup_user(_restriction, len);
+                if (IS_ERR(restriction)) {
+                        ret = PTR_ERR(restriction);
+                        goto error;
+                }
+        }
+
+        ret = keyring_restrict(key_ref, link_reject ? NULL : type, restriction);
+        kfree(restriction);
+
+error:
+        key_ref_put(key_ref);
+
+        return ret;
 }

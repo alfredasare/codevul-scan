@@ -1,20 +1,9 @@
-_DbUsHeaderGetFieldRaw (DBusHeader        *header,
-                        int                field,
-                        const DBusString **str,
-                        int               *pos)
+static void armpmu\_disable(struct pmu \*pmu)
 {
-  if (!_dbus_header_cache_check (header, field)) {
-    return FALSE;
-  }
+	struct arm\_pmu \*armpmu = to\_arm\_pmu(pmu);
+	const struct arm\_pmu\_ops \*ops = armpmu->ops;
 
-  if (field < 0 || field >= DBUS_HEADER_FIELD_COUNT) {
-    return FALSE;
-  }
-
-  if (str)
-    *str = &header->data;
-  if (pos)
-    *pos = header->fields[field].value_pos;
-
-  return TRUE;
+	if (ops && ops->stop) {
+		ops->stop(armpmu);
+	}
 }

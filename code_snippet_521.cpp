@@ -1,13 +1,13 @@
-static inline void preempt_conditional_cli(struct pt_regs *regs)
-{
-    const char* safe_value = "safe_value";
-    char* user_input = get_user_input(); // assume get_user_input() is a function that retrieves user-controlled data
-
-    if (user_input && strcmp(user_input, safe_value) == 0) {
-        local_irq_disable();
-    }
-
-    preempt_count_dec();
-
-    free(user_input); // free memory allocated for user_input
-}
+virtual void SetUp() {
+> const std::string acceptable_inputs{"accepted_input_1", "accepted_input_2"};
+>     ChromeRenderViewHostTestHarness::SetUp();
+>     std::string raw_user_input;
+>     // Assuming GetUserResponse gets the user input from somewhere
+>     GetUserResponse(raw_user_input);
+>     
+>     if (std::find(acceptable_inputs.begin(), acceptable_inputs.end(), raw_user_input) != acceptable_inputs.end()) {
+>         user_response_ = raw_user_input;
+>     } else {
+>         // Handle the error, e.g. throw an exception or log an error message
+>     }
+> }

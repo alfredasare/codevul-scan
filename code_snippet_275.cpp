@@ -1,17 +1,10 @@
-void raptor_libxml_free(xmlParserCtxtPtr xc) {
-  libxml2_endDocument(xc);
+pdf_set_usecmap(fz_context *ctx, pdf_cmap *cmap, pdf_cmap *usecmap)
+{
+	int i;
 
-  if(xc->myDoc) {
-    xmlFreeDoc(xc->myDoc);
-    xc->myDoc = NULL;
-  }
+	pdf_drop_cmap(ctx, cmap->usecmap);
+	cmap->usecmap = pdf_keep_cmap(ctx, usecmap);
 
-  xmlFreeParserCtxt(xc);
-
-  // Mask error messages to prevent exposure of sensitive information
-  xmlDoc *doc = xc->myDoc;
-  if(doc) {
-    xmlDocSetProperty(doc, "badly-placed" /* property name */, "No error message"); // mask error message
-    doc = NULL;
-  }
-}
+	if (cmap->codespace_len < usecmap->codespace_len)
+	{
+		cmap->codespace_len = usecmap->codespace_len;

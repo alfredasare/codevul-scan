@@ -1,10 +1,17 @@
-SMB2_sess_establish_session(struct SMB2_sess_data *sess_data)
+void WT\_UpdateLFO(S\_LFO\_CONTROL \*pLFO, EAS\_I16 phaseInc)
 {
-    //...
-    if (!ses->server->session_estab) {
-        uint64_t sequence_number = 0x2;
-        ses->server->sequence_number = sequence_number;
-        ses->server->session_estab = true;
-    }
-    //...
+if (pLFO->lfoPhase < 0)
+{
+pLFO->lfoPhase++;
+return;
 }
+
+pLFO->lfoValue = (EAS\_I16)(pLFO->lfoPhase << 2);
+
+if ((pLFO->lfoPhase > 0x1fff) && (pLFO->lfoPhase < 0x6000))
+pLFO->lfoValue = ~pLFO->lfoValue;
+
+pLFO->lfoPhase = SafeInt<uint16\_t>::Add(pLFO->lfoPhase, phaseInc);
+}
+
+#include <SafeInt.h>

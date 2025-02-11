@@ -1,29 +1,13 @@
-static int parseCommonRequestHeader(const uint8_t *common_req, pcp_info_t *pcp_msg_info)
+HTStyle *LYstyles(int style_number)
 {
-    if (!common_req) {
-        return -1;
+    if (styles[style_number] == 0 && style_number >= 0 && style_number < NUM_STYLES)
+    {
+        get_styles();
+        if (styles[style_number] == 0) // Check if initialization failed
+        {
+            // Handle the error or return an error code
+            return NULL;
+        }
     }
-
-    pcp_msg_info->version = common_req[0];
-    pcp_msg_info->opcode = common_req[1] & 0x7f;
-    pcp_msg_info->lifetime = READNU32(common_req + 4);
-
-    struct in6_addr *int_ip = (struct in6_addr *)((uint8_t *)common_req + 8);
-    pcp_msg_info->int_ip = int_ip;
-    pcp_msg_info->mapped_ip = int_ip;
-
-    if (pcp_msg_info->version > this_server_info.server_version) {
-        pcp_msg_info->result_code = PCP_ERR_UNSUPP_VERSION;
-        return 1;
-    }
-
-    if (pcp_msg_info->lifetime > max_lifetime) {
-        pcp_msg_info->lifetime = max_lifetime;
-    }
-
-    if (pcp_msg_info->lifetime < min_lifetime && pcp_msg_info->lifetime!= 0) {
-        pcp_msg_info->lifetime = min_lifetime;
-    }
-
-    return 0;
+    return styles[style_number];
 }

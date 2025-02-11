@@ -1,16 +1,19 @@
-bool IsExtendingSelection(const MouseEventWithHitTestResults& event) {
-  if (!event.IsValid()) {
-    return false; // or throw an exception, depending on the requirements
-  }
+#define IP_VS_CONN_F_FWD_MAX 31 // Add a constant defining the maximum expected value
 
-  bool is_mouse_down_on_link_or_image = false;
-  if (event.IsOverLink()) {
-    is_mouse_down_on_link_or_image = true;
-  } else if (event.GetHitTestResult().GetImage()) {
-    is_mouse_down_on_link_or_image = true;
-  }
+static inline const char *ip_vs_fwd_name(unsigned int flags)
+{
+	if (flags > IP_VS_CONN_F_FWD_MAX) {
+		return "Invalid";
+	}
 
-  return (event.Event().GetModifiers() & WebInputEvent::Modifiers::kShiftKey)!=
-         0 &&
-        !is_mouse_down_on_link_or_image;
+	switch (flags & IP_VS_CONN_F_FWD_MASK) {
+	case IP_VS_CONN_F_LOCALNODE:
+		return "Local";
+	case IP_VS_CONN_F_TUNNEL:
+		return "Tunnel";
+	case IP_VS_CONN_F_DROUTE:
+		return "Route";
+	default:
+		return "Masq";
+	}
 }

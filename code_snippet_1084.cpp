@@ -1,32 +1,20 @@
-int sshkey_perm_ok(const char *filename)
+checkStringLen(size_t len, size_t max_jsonb_string_length)
 {
-    struct stat st;
-    if (stat(filename, &st) < 0) {
-        return 0; // error
+    if (len > max_jsonb_string_length)
+    {
+        ereport(ERROR,
+                (errcode(ERRCODE_PROGRAM_LIMIT_EXCEEDED),
+                 errmsg("string too long to represent as jsonb string"),
+                 errdetail("The input string cannot exceed %d bytes.", max_jsonb_string_length)));
     }
-    return (st.st_mode & S_IRWXG) == 0 && (st.st_mode & S_IRWXO) == 0;
+    return len;
 }
 
-sshkey_load_private_type(int type, const char *filename, const char *passphrase,
-    struct sshkey **keyp, char **commentp, int *perm_ok)
-{
-    int fd, r;
+...
 
-    if (keyp!= NULL)
-        *keyp = NULL;
-    if (commentp!= NULL)
-        *commentp = NULL;
+size_t max_jsonb_string_length = JENTRY_OFFLENMASK;
+size_t input_string_length;
 
-    if ((fd = open(filename, O_RDONLY)) < 0) {
-        if (perm_ok!= NULL)
-            *perm_ok = 0;
-        return SSH_ERR_SYSTEM_ERROR;
-    }
+// ... obtain input_string_length ...
 
-    if (perm_ok!= NULL)
-        *perm_ok = sshkey_perm_ok(filename);
-
-    r = sshkey_load_private_type_fd(fd, type, passphrase, keyp, commentp);
-    close(fd);
-    return r;
-}
+checkStringLen(input_string_length, max_jsonb_string_length);

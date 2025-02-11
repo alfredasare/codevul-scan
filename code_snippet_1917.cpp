@@ -1,13 +1,10 @@
-static int search_old_relocation(struct reloc_struct_t *reloc_table, ut32 addr_to_patch, int n_reloc) {
-    int j;
-    if (n_reloc <= 0 || n_reloc > reloc_table_size) {
-        return -1;
+#define MAX_TVB_SIZE 1024 * 1024 // Set a maximum size for tvb (e.g., 1 MB)
+
+dissect_fp_aal2(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data)
+{
+    if (tvb_captured_length(tvb) > MAX_TVB_SIZE) {
+        return NULL;
     }
 
-    for (j = 0; j < n_reloc; j++) {
-        if (addr_to_patch == reloc_table[j].data_offset) {
-            return j;
-        }
-    }
-    return -1;
+    return dissect_fp_common(tvb, pinfo, tree, data);
 }

@@ -1,13 +1,9 @@
-int ssl3_num_ciphers(void)
+enum ovl_path_type ovl_path_type(struct dentry *dentry)
 {
-    int num_ciphers = SSL3_NUM_CIPHERS;
-    int min_cipher = 0;
-    int max_cipher = SSL3_NUM_CIPHERS - 1;
+	struct ovl_entry *oe = dentry->d_fsdata;
 
-    // Validate the requested cipher
-    if (requested_cipher < min_cipher || requested_cipher > max_cipher) {
-        return -1;
-    }
-
-    return num_ciphers;
-}
+	if (oe && oe->__upperdentry) {
+		if (oe->lowerdentry) {
+			if (S_ISDIR(dentry->d_inode->i_mode))
+				return OVL_PATH_MERGE;
+			else

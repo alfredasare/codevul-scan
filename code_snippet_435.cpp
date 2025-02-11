@@ -1,5 +1,11 @@
-static inline bool forced_push(const struct tcp_sock *tp)
-{
-    int shifted_seq = (tp->pushed_seq + (tp->max_window >> 1)) & ((1 << 31) - 1);
-    return after(tp->write_seq, shifted_seq);
+bool GLES2Util::IsIntegerFormat(uint32_t internal_format) {
+  constexpr uint32_t min_valid_format = 0x1400;
+  constexpr uint32_t max_valid_format = 0x1404;
+
+  if (internal_format < min_valid_format || internal_format > max_valid_format) {
+    return false;
+  }
+
+  return (IsUnsignedIntegerFormat(internal_format) ||
+          IsSignedIntegerFormat(internal_format));
 }

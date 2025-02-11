@@ -1,11 +1,15 @@
-t42_parser_done(T42_Parser parser)
+SRP_gN *SRP_get_default_gN(const char *id)
 {
-    FT_Memory memory = parser->root.memory;
+	size_t i;
 
-    /* free the base dictionary only when we have a disk stream */
-    if (parser->in_memory && parser->base_dict) {
-        FT_FREE(parser->base_dict);
-    }
-
-    parser->root.funcs.done(&parser->root);
+	if (id == NULL) 
+		return knowngN;
+	for(i = 0; i < KNOWN_GN_NUMBER; i++)
+	{
+		if (strncmp(knowngN[i].id, id, sizeof(knowngN[i].id)) == 0)
+		{
+			return knowngN + i;
+		}
+	}
+	return NULL;
 }

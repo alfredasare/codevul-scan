@@ -1,18 +1,16 @@
-void ChildProcessLauncherHelper::SetProcessPriorityOnLauncherThread(
-    base::Process process,
-    const ChildProcessLauncherPriority& priority) {
-  JNIEnv* env = AttachCurrentThread();
-  DCHECK(env);
-  jstring visible = priority.visible? "true" : "false";
-  jboolean has_media_stream = priority.has_media_stream;
-  jboolean has_foreground_service_worker = priority.has_foreground_service_worker;
-  jint frame_depth = priority.frame_depth;
-  jboolean intersects_viewport = priority.intersects_viewport;
-  jboolean boost_for_pending_views = priority.boost_for_pending_views;
-  jint importance = static_cast<jint>(priority.importance);
-
-  // Use prepared statement to prevent code injection
-  jstring query = Java_ChildProcessLauncherHelperImpl_getQuery(env, java_peer_);
-  jmethodID method = env->GetMethodID(env->GetObjectClass(java_peer_), "execute", "(Ljava/lang/String;ZZZZBBI)V");
-  env->CallVoidMethod(java_peer_, method, query, visible, has_media_stream, has_foreground_service_worker, frame_depth, intersects_viewport, boost_for_pending_views, importance);
+void ResourceDispatcherHostImpl::OnTransferRequestToNewPage(int new_routing_id,
+                                                        int request_id) {
+  if (new_routing_id < 0 || new_routing_id >= static_cast<int>(std::numeric_limits<uint32_t>::max())) {
+    DVLOG(1) << "Invalid new_routing_id value: " << new_routing_id;
+    return;
+  }
+  PendingRequestList::iterator i = pending_requests_.find(
+      GlobalRequestID(filter_->child_id(), request_id));
+  if (i == pending_requests_.end()) {
+    DVLOG(1) << "Updating a request that wasn't found";
+    return;
+  }
+  net::URLRequest* request = i->second;
+  ResourceRequestInfoImpl* info = ResourceRequestInfoImpl::ForRequest(request);
+  info->set_route_id(new_routing_id);
 }

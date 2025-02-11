@@ -1,9 +1,23 @@
-void Instance::ConfigureNumberImageGenerator() {
-  std::vector<pp::ImageData> num_images = GetThumbnailResources();
-  if (num_images.size() > MAX_IMAGE_COUNT) {
-    // Handle error or throw exception
-  }
-  pp::ImageData number_background = CreateResourceImage(PP_RESOURCEIMAGE_PDF_BUTTON_THUMBNAIL_NUM_BACKGROUND);
-  std::vector<pp::ImageData> safe_num_images(num_images.begin(), num_images.end());
-  number_image_generator_->Configure(number_background, safe_num_images, device_scale_);
+static int jpg_unescape(const uint8_t *src, int src_size,
+                         uint8_t *dst, int dst_size)
+{
+    const uint8_t *src_end = src + src_size;
+    uint8_t *dst_start = dst;
+    uint8_t *dst_end = dst + dst_size;
+
+    while (src < src_end && dst < dst_end) {
+        uint8_t x = *src++;
+
+        *dst++ = x;
+
+        if (x == 0xFF && !*src)
+            src++;
+    }
+
+    *dst_size = dst - dst_start;
+
+    if (dst >= dst_end)
+        return -1;
+    else
+        return 0;
 }

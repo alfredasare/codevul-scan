@@ -1,14 +1,11 @@
-void IncrementRefCount(const std::string& uuid) {
-    const std::set<char> allowedChars = {"a-zA-Z0-9-_."};
-    bool isValid = true;
-    for (char c : uuid) {
-        if (!allowedChars.count(c)) {
-            isValid = false;
-            break;
-        }
+int get_camera_metadata_ro_entry(const camera_metadata_t *src, size_t index, camera_metadata_ro_entry_t *entry) {
+    if (!src || !entry) {
+        return -1;
     }
-    if (!isValid) {
-        return;
+
+    if (index >= src->count) {
+        return -1;
     }
-    context_->IncrementBlobRefCount(uuid);
+
+    return get_camera_metadata_entry((camera_metadata_t*)src, index, (camera_metadata_entry_t*)entry);
 }

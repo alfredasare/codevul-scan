@@ -1,5 +1,15 @@
-void SimpleSoftOMXComponent::onPortFlushCompleted(OMX_U32 portIndex __unused) {
-    // Use a secure method to store the portIndex, e.g., using a secure storage mechanism
-    std::unique_ptr<crypto::SecureStore> secureStorage = crypto::getSecureStore();
-    secureStorage->store("portIndex", portIndex);
+void RilSapSocket::pushRecord(void *p_record, size_t recordlen) {
+    pb_istream_t stream = pb_istream_from_buffer((uint8_t *)p_record, recordlen);
+    MsgHeader reqHeader; // Use stack memory instead of malloc
+    if (!pb_decode(&stream, MsgHeader_fields, &reqHeader)) {
+        RLOGE("Error decoding protobuf buffer : %s", PB_GET_ERROR(&stream));
+        return;
+    }
+
+    SapSocketRequest recv; // Use stack memory instead of malloc
+    recv.token = reqHeader.token;
+    recv.curr = &reqHeader;
+    recv.socketId = id;
+
+    dispatchQueue.enqueue(&recv);
 }

@@ -1,34 +1,8 @@
-c++
-void FileBrowserPrivateSearchDriveMetadataFunction::OnSearchMetadata(
-    drive::FileError error,
-    scoped_ptr<drive::MetadataSearchResultVector> results) {
-  if (error!= drive::FILE_ERROR_OK) {
-    SendResponse(false);
-    return;
-  }
+client), G_OBJECT (client));
+/* the store will own the ref */
+g\_object\_unref (client);
 
-  DCHECK(results.get());
-  const drive::MetadataSearchResultVector& results_ref = *results.get();
-
-  // Validate input data
-  if (!results_ref.IsValid()) {
-    SendResponse(false);
-    return;
-  }
-
-  // Use secure string manipulation
-  base::FilePath search_path = base::PathAppend(base::FilePath::kBaseDir, results_ref.GetString());
-  if (!base::PathIsSafe(search_path)) {
-    SendResponse(false);
-    return;
-  }
-
-  ConvertSearchResultInfoListToEntryDefinitionList(
-      GetProfile(),
-      extension_->id(),
-      results_ref,
-      base::Bind(
-          &FileBrowserPrivateSearchDriveMetadataFunction::OnEntryDefinitionList,
-          this,
-          base::Passed(&results)));
+return TRUE;
 }
+
+Please note that the correctness of this fix depends on the proper implementation of the `IceAcceptConnection` function and its potential error codes. The given fix assumes that the function returns `IceAcceptSuccess` when the connection is successfully established. Additionally, the `#define MAX_RETRY_COUNT 10` line should be placed outside the function definition to ensure its value is consistent across multiple calls to `accept_ice_connection`.

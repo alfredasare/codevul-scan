@@ -1,16 +1,8 @@
-static inline int get_free_page(struct xen_blkif_ring *ring, struct page **page)
+void *ndp_msg_payload(struct ndp_msg *msg)
 {
-	unsigned long flags;
-
-	spin_lock_irqsave(&ring->free_pages_lock, flags);
-	if (list_empty(&ring->free_pages)) {
-		spin_unlock_irqrestore(&ring->free_pages_lock, flags);
-		return gnttab_alloc_pages(1, page);
-	}
-	page[0] = list_first_entry(&ring->free_pages, struct page, lru);
-	list_del(&page[0]->lru);
-	ring->free_pages_num--;
-	spin_unlock_irqrestore(&ring->free_pages_lock, flags);
-
-	return 0;
+    if (msg && msg->buf && msg->payload_len > 0) {
+        return msg->buf;
+    } else {
+        return NULL;
+    }
 }

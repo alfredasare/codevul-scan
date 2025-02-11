@@ -1,15 +1,19 @@
-static int __mlock_posix_error_return(long retval) {
-    char buffer[256];
-    size_t buffer_len = 0;
+PHP\_FUNCTION(openssl\_get\_md\_methods)
+{
+zend\_bool aliases = 0;
+zval *input\_aliases = NULL;
 
-    if (retval == -EFAULT) {
-        buffer_len += sprintf(buffer + buffer_len, "EFAULT");
-    } else if (retval == -ENOMEM) {
-        buffer_len += sprintf(buffer + buffer_len, "ENOMEM");
-    } else if (retval == -EAGAIN) {
-        buffer_len += sprintf(buffer + buffer_len, "EAGAIN");
-    }
+if (zend\_parse\_parameters(ZEND\_NUM\_ARGS() TSRMLS\_CC, "|z", &input\_aliases) == FAILURE) {
+return;
+}
 
-    buffer[buffer_len] = '\0';
-    return buffer_len;
+array\_init(return\_value);
+
+if (input\_aliases) {
+aliases = Z\_BVAL\_P(input\_aliases);
+}
+
+OBJ\_NAME\_do\_all\_sorted(OBJ\_NAME\_TYPE\_MD\_METH,
+aliases ? openssl\_add\_method\_or\_alias : openssl\_add\_method,
+return\_value);
 }

@@ -1,16 +1,12 @@
-buffer_ref (Buffer *buffer)
-{
-  atomic_int refcount = buffer->refcount;
-  atomic_fetch_add(&refcount, 1);
-  buffer->refcount = refcount;
-  return buffer;
-}
+version of the code with added null check for the `cred` parameter before using it in the call to `auth_context_match`:
 
-void buffer_unref (Buffer *buffer)
+
+static int apply_credentials(git_buf *buf, http_subtransport *t)
 {
-  atomic_int refcount = buffer->refcount;
-  atomic_fetch_sub(&refcount, 1);
-  if (atomic_load(&refcount) == 0) {
-    // Deallocate the buffer
-  }
-}
+	git_cred *cred = t->cred;
+	git_http_auth_context *context;
+
+	/* Apply the credentials given to us in the URL */
+	if (!cred && t->connection_data.user && t->connection_data.pass) {
+		if (!t->url_cred &&
+			git_cred_userpass_plaintext_new(&t->url_cred,

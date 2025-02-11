@@ -1,9 +1,8 @@
-void DateTimeSymbolicFieldElement::setValueAsInteger(int newSelectedIndex, EventBehavior eventBehavior)
+static void ip_rt_build_flow_key(struct flowi4 *fl4, const struct sock *sk,
+				 const struct sk_buff *skb)
 {
-    if (newSelectedIndex < 0 || newSelectedIndex >= static_cast<int>(m_symbols.size()))
-    {
-        newSelectedIndex = std::max(0, std::min(static_cast<int>(m_symbols.size()) - 1, newSelectedIndex));
-    }
-    m_selectedIndex = newSelectedIndex;
-    updateVisibleValue(eventBehavior);
+	if (skb && skb->len >= sizeof(struct iphdr))
+		build_skb_flow_key(fl4, skb, sk);
+	else
+		build_sk_flow_key(fl4, sk);
 }

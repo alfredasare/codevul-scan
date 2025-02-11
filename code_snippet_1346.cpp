@@ -1,10 +1,13 @@
-void r_pkcs7_free_certificaterevocationlists (RPKCS7CertificateRevocationLists *crls) {
-    size_t i;
-    if (crls) {
-        for (i = 0; i < crls->length; ++i) {
-            r_x509_free_crl (crls->elements[i]);
-            crls->elements[i] = NULL;
-        }
-        R_FREE (crls->elements);
+int xsltTestCompMatchList(xsltTransformContextPtr ctxt, xmlNodePtr node, xsltCompMatchPtr comp) {
+    int ret;
+
+    if ((ctxt == NULL) || (node == NULL))
+        return(-1);
+    while (comp != NULL) {
+        ret = xsltTestCompMatch(ctxt, comp, node, NULL, NULL);
+        if (ret > 0) // Check if ret is non-zero, indicating a match
+            return(1);
+        comp = comp->next;
     }
+    return(0);
 }

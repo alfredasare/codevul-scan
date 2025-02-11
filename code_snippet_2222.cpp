@@ -1,19 +1,18 @@
-int iwl_sta_tx_modify_enable_tid(struct iwl_priv *priv, int sta_id, int tid)
+MagickPrivate void ResetQuantumState(QuantumInfo *quantum_info)
 {
-    unsigned long flags;
-    struct iwl_addsta_cmd sta_cmd;
-    enum { MAX_TID = 15 };
+  static const unsigned int max_index = sizeof(mask) / sizeof(mask[0]);
+  unsigned int mask[max_index];
 
-    lockdep_assert_held(&priv->shrd->mutex);
+  assert(quantum_info != (QuantumInfo *) NULL);
+  assert(quantum_info->signature == MagickSignature);
+  quantum_info->state.inverse_scale=1.0;
+  if (fabs(quantum_info->scale) >= MagickEpsilon)
+    quantum_info->state.inverse_scale/=quantum_info->scale;
+  quantum_info->state.pixel=0U;
+  quantum_info->state.bits=0U;
 
-    /* Validate the tid parameter */
-    if (tid < 0 || tid >= MAX_TID) {
-        return -EINVAL;
-    }
+  for (int i = 0; i < max_index; ++i)
+    mask[i] = (unsigned int)(1U << i) - 1;
 
-    spin_lock_irqsave(&priv->shrd->sta_lock, flags);
-    priv->stations[sta_id].sta.tid_disable_tx &= ~(1 << tid);
-    spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
-
-    return iwl_send_add_sta(priv, &sta_cmd, CMD_SYNC);
+  quantum_info->state.mask=mask;
 }

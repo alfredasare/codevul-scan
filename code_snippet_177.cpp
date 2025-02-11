@@ -1,27 +1,18 @@
-ProcRenderReferenceGlyphSet(ClientPtr client)
+static int __check_block_validity(struct inode *inode, const char *func, unsigned int line, struct ext4_map_blocks *map)
 {
-    GlyphSetPtr glyphSet;
-    int rc;
+	if (map->m_pblk == NULL || map->m_len > (int)(map->m_pgalloc - map->m_pblk)) {
+		ext4_error_inode(inode, func, line, map->m_pblk,
+				 "Buffer underflow or overflow detected");
+		return -EFSCORRUPTED;
+	}
 
-    REQUEST(xRenderReferenceGlyphSetReq);
-
-    REQUEST_SIZE_MATCH(xRenderReferenceGlyphSetReq);
-
-    LEGAL_NEW_RESOURCE(stuff->gsid, client);
-
-    // Validate input parameter
-    if (stuff->existing < 0 || stuff->existing >= NUM_GLYPHSETS) {
-        client->errorValue = stuff->existing;
-        return BadValue;
-    }
-
-    rc = dixLookupResourceByType((void **) &glyphSet, stuff->existing,
-                                 GlyphSetType, client, DixGetAttrAccess);
-    if (rc!= Success) {
-        return rc;
-    }
-    glyphSet->refcnt++;
-    if (!AddResource(stuff->gsid, GlyphSetType, (void *) glyphSet))
-        return BadAlloc;
-    return Success;
+	if (!ext4_data_block_valid(EXT4_SB(inode->i_sb), map->m_pblk,
+				   min(map->m_len, (int)(map->m_pgalloc - map->m_pblk)))) {
+		ext4_error_inode(inode, func, line, map->m_pblk,
+				 "lblock %lu mapped to illegal pblock "
+				 "(length %d)", (unsigned long) map->m_lblk,
+				 map->m_len);
+		return -EFSCORRUPTED;
+	}
+	return 0;
 }

@@ -1,12 +1,9 @@
-GraphicsSurfaceToken GraphicsContext3DPrivate::graphicsSurfaceToken() const
-{
-    if (!isValidUser() ||!isAuthorized()) {
-        throw std::runtime_error("Unauthorized access");
-    }
+bool HTMLFormControlElement::IsKeyboardFocusable() const {
+  if (!RuntimeEnabledFeatures::FocuslessSpatialNavigationEnabled())
+    return IsFocusable();
 
-    if (!validateRequestParameters()) {
-        throw std::invalid_argument("Invalid request parameters");
-    }
+  if (HasTabIndex() || IsFormControl())
+    return true;
 
-    return m_graphicsSurface->exportToken();
+  return false;
 }

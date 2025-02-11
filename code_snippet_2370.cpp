@@ -1,6 +1,12 @@
-gx_set_pattern_procs_standard(gx_device_color *pdevc)
+void php_gd_error_method(int type, const char *format, va_list args)
 {
-    pdevc->type = &gx_dc_pattern;
-    pdevc->type[0] = '\0';
-    return;
+	TSRMLS_FETCH();
+
+	int written = php_verror(NULL, "", type, format, args TSRMLS_CC);
+	if (written < 0) {
+		// Error occurred; handle error and return
+		// For example, report the error and terminate the process
+		report_error_and_terminate();
+		return;
+	}
 }

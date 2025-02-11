@@ -1,33 +1,18 @@
-yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, void *yyscanner, YR_COMPILER* compiler)
-{
-  char sanitized_yytname[256]; // buffer to store sanitized yytname
-  snprintf(sanitized_yytname, sizeof(sanitized_yytname), "%s", yytname[yytype]);
+#include "url_formatter.h"
 
-  // Escape HTML special characters
-  char *escaped_yytname = escape_html_chars(sanitized_yytname);
+bool AreWeShowingSignin(GURL url, SyncPromoUI::Source source,
+                        std::string email) {
+  // Sanitize the URL using url_formatter::FormatUrl()
+  std::string clean_url_string = url_formatter::FormatUrl(url.spec());
+  GURL clean_login_url(clean_url_string);
 
-  YYFPRINTF (yyoutput, "%s %s (",
-             yytype < YYNTOKENS? "token" : "nterm", escaped_yytname);
+  GURL::Replacements replacements;
+  replacements.ClearQuery();
 
-  yy_symbol_value_print (yyoutput, yytype, yyvaluep, yyscanner, compiler);
-  YYFPRINTF (yyoutput, ")");
+  GURL cleaned_url = clean_login_url.ReplaceComponents(replacements);
 
-  free(escaped_yytname);
-}
-
-char* escape_html_chars(char* str) {
-  char* result = malloc(strlen(str) + 1);
-  char* pos = result;
-  while (*str) {
-    if (*str == '<' || *str == '>' || *str == '"') {
-      *pos++ = '&';
-      *pos++ = 'x';
-      *pos++ = (char) ((*str == '<')? 60 : ((*str == '>')? 62 : 34));
-    } else {
-      *pos++ = *str;
-    }
-    str++;
-  }
-  *pos = '\0';
-  return result;
+  return (cleaned_url == clean_login_url && source != SyncPromoUI::SOURCE_UNKNOWN) ||
+      (IsValidGaiaSigninRedirectOrResponseURL(cleaned_url) &&
+       cleaned_url.spec().find("ChromeLoginPrompt") != std::string::npos &&
+       !email.empty());
 }

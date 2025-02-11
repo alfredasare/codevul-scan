@@ -1,15 +1,13 @@
-static void overloadedMethodDMethod(const v8::FunctionCallbackInfo<v8::Value>& info)
-{
-    // Whitelist of allowed input values or patterns
-    const std::set<std::string> allowedCallbacks = {"allowedCallback1", "allowedCallback2"};
+AudioSourceProviderClientLockScope(HTMLMediaElement& element)
+: m\_client(checkNullptr(element.audioSourceNode())) {
+if (m\_client)
+m\_client->lock();
+}
 
-    // Validate input
-    if (!allowedCallbacks.count(info.GetCallbackName())) {
-        return;
-    }
-
-    // Sanitized input is allowed, proceed with the method call
-    TestObjectPythonV8Internal::overloadedMethodDMethod(info);
-    TRACE_EVENT_SET_SAMPLING_STATE("Blink", "DOMMethod");
-    TRACE_EVENT_SET_SAMPLING_STATE("V8", "V8Execution");
+checkNullptr(HTMLMediaElementNode* node) {
+if (node == nullptr) {
+logError("Null pointer returned from audioSourceNode()");
+throw std::runtime_error("Null pointer returned from audioSourceNode()");
+}
+return node;
 }

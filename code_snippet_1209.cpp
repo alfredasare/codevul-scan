@@ -1,27 +1,19 @@
-xsltAttrTemplateValueProcess(xsltTransformContextPtr ctxt, const xmlChar *str) {
-    xmlChar *tempFileName = NULL;
-    int tempFileFD = -1;
+ExtensionDevToolsClientHost* DebuggerFunction::FindClientHost() {
+const std::string& extension\_id = extension()->id();
+if (extension\_id.empty()) {
+return nullptr;
+}
+DevToolsAgentHost* agent\_host = agent\_host\_get();
+if (!agent\_host) {
+return nullptr;
+}
+AttachedClientHosts& hosts = g\_attached\_client\_hosts.Get();
+AttachedClientHosts::iterator it = std::find\_if(
+hosts.begin(), hosts.end(),
+[&agent\_host, &extension\_id](ExtensionDevToolsClientHost* client\_host) {
+return client\_host->agent\_host() == agent\_host &&
+client\_host->extension\_id() == extension\_id;
+});
 
-    // Generate a secure temporary file name using a cryptographically secure pseudo-random number generator
-    tempFileName = xmlStrdup(str);
-    tempFileName = xmlStrcat(tempFileName, (xmlChar *)"_temp");
-    tempFileName = xmlStrcat(tempFileName, (xmlChar *)uuid_generate_string());
-
-    // Create the temporary file
-    tempFileFD = open(tempFileName, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
-    if (tempFileFD == -1) {
-        // Handle error
-        xmlFree(tempFileName);
-        return NULL;
-    }
-
-    // Process the file contents
-    //...
-
-    // Delete the temporary file
-    close(tempFileFD);
-    unlink(tempFileName);
-
-    xmlFree(tempFileName);
-    return NULL;
+return it == hosts.end() ? nullptr : \*it;
 }

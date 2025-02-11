@@ -1,11 +1,12 @@
-xfs_queue_cowblocks(struct xfs_mount *mp)
+#include <pthread.h>
+
+static pthread_mutex_t hpet_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static void hpet_pre_save(void *opaque)
 {
-    rcu_read_lock();
-    if (mp->m_perag_tree!= NULL &&
-        radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_COWBLOCKS_TAG)) {
-        queue_delayed_work(mp->m_eofblocks_workqueue,
-                           &mp->m_cowblocks_work,
-                           msecs_to_jiffies(xfs_cowb_secs * 1000));
-    }
-    rcu_read_unlock();
+    HPETState *s = opaque;
+
+    pthread_mutex_lock(&hpet_mutex);
+    s->hpet_counter = hpet_get_ticks(s);
+    pthread_mutex_unlock(&hpet_mutex);
 }

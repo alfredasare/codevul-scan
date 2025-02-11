@@ -1,13 +1,9 @@
-SAPI_API int sapi_register_treat_data(void (*treat_data)(int arg, char *str, zval *destArray TSRMLS_DC) TSRMLS_DC)
+static int kill_as_cred_perm(const struct cred *cred, struct task_struct *target)
 {
-    if (SG(sapi_started) && EG(in_execution)) {
-        return FAILURE;
-    }
-
-    // Sanitize and validate the input string
-    str = php_strip_quotes(str);
-    str = php_trim(str);
-
-    sapi_module.treat_data = treat_data;
-    return SUCCESS;
+	const struct cred *pcred = __task_cred(target);
+	
+	if (!(uid_eq(cred->euid, pcred->uid) || uid_eq(cred->euid, pcred->suid)))
+		return 0;
+	
+	return 1;
 }

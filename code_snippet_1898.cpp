@@ -1,30 +1,16 @@
-SkCodec::Result SkIcoCodec::onStartScanlineDecode(const SkImageInfo& dstInfo,
-                                                 const SkCodec::Options& options) {
-    int index = 0;
-    SkCodec::Result result = kInvalidScale;
-    int maxIndex = fEmbeddedCodecs->size() - 1; // Get the maximum possible index
+MagickBooleanType BilevelImage(Image *image, const double threshold) {
+  MagickBooleanType status;
 
-    while (true) {
-        index = this->chooseCodec(dstInfo.dimensions(), index);
-        if (index < 0) {
-            break;
-        }
+  if (!image) {
+    fprintf(stderr, "Error: Image pointer cannot be NULL\n");
+    return(MagickFalse);
+  }
 
-        if (index > maxIndex) { 
-            SkCodecPrintf("Error: Index out of bounds.\n");
-            return kInvalidScale;
-        }
+  if (threshold < 0.0 || threshold > 1.0) {
+    fprintf(stderr, "Error: Threshold value must be between 0.0 and 1.0\n");
+    return(MagickFalse);
+  }
 
-        SkCodec* embeddedCodec = fEmbeddedCodecs->operator[](index).get();
-        result = embeddedCodec->startScanlineDecode(dstInfo, &options);
-        if (kSuccess == result) {
-            fCurrScanlineCodec = embeddedCodec;
-            fCurrIncrementalCodec = nullptr;
-            return result;
-        }
-
-        index++; 
-    }
-
-    return result;
+  status = BilevelImageChannel(image, DefaultChannels, threshold);
+  return(status);
 }

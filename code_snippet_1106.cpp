@@ -1,12 +1,8 @@
-get_str_opt(struct archive_write *a, struct archive_string *s,
-           size_t maxsize, const char *key, const char *value)
+static inline void rps_unlock(struct softnet_data *sd)
 {
-    if (strlen(value) > SIZE_MAX - 1 || strlen(value) > maxsize) {
-        archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
-            "Value is longer than %zu characters "
-            "for option ``%s''", maxsize, key);
-        return (ARCHIVE_FATAL);
-    }
-    archive_strcpy(s, value);
-    return (ARCHIVE_OK);
+#ifdef CONFIG_RPS
+	spin_lock_bh(&sd->input_pkt_queue.lock);
+	// Perform necessary operations here
+	spin_unlock_bh(&sd->input_pkt_queue.lock);
+#endif
 }

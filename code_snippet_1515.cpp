@@ -1,10 +1,14 @@
-static int CallStat(const char *path, stat_wrapper_t *sb) {
-    int ret = 0;
-    base::ThreadRestrictions::AssertIOAllowed();
-    ret = stat(path, sb);
-    if (ret == -1) {
-        perror("stat");
-        return -1;
-    }
-    return ret;
+c++
+void WebContentsImpl::DidStartLoading(FrameTreeNode* frame_tree_node,
+                                      bool to_different_document) {
+  // Validate the input parameter before using it
+  if (frame_tree_node && frame_tree_node->current_frame_host()) {
+    LoadingStateChanged(frame_tree_node->IsMainFrame() && to_different_document,
+                        false, nullptr);
+
+    BrowserAccessibilityManager* manager =
+        frame_tree_node->current_frame_host()->browser_accessibility_manager();
+    if (manager)
+      manager->UserIsNavigatingAway();
+  }
 }

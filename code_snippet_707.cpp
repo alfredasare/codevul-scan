@@ -1,9 +1,9 @@
-ExprCreateUnary(enum expr_op_type op, enum expr_value_type type, ExprDef *child)
+static void corsSettingAttributeAttributeGetter(const v8::PropertyCallbackInfo<v8::Value>& info)
 {
-    if (child == NULL || child->expr_def == NULL) {
-        return NULL;
+    TestObjectPython* imp = V8TestObjectPython::toNative(info.Holder());
+    String resultValue = imp->fastGetAttribute(HTMLNames::corssettingattributeAttr);
+    if (resultValue.isNull() || resultValue != "anonymous" && resultValue != "use-credentials") {
+        resultValue = "anonymous";
     }
-    EXPR_CREATE(ExprUnary, expr, op, type);
-    expr->unary.child = child;
-    return expr;
+    v8SetReturnValueString(info, resultValue, info.GetIsolate());
 }

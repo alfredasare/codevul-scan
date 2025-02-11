@@ -1,7 +1,7 @@
-static bool pvscsi_vmstate_test_pci_device(void *opaque, int version_id)
+irc_server_set_nick(struct t_irc_server *server, const char *nick)
 {
-    if (opaque == NULL ||!is_valid_pci_device(opaque)) {
-        return false;
-    }
-    return!pvscsi_vmstate_need_pcie_device(opaque);
-}
+    struct t_irc_channel *ptr_channel;
+    
+    if (server->nick)
+        free(server->nick);
+    server->nick = (nick) ? strdup(nick) : NULL;

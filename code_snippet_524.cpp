@@ -1,10 +1,13 @@
-static inline uint16_t vring_avail_ring(VirtQueue *vq, int i)
+static void bsg_kref_release_function(struct kref *kref)
 {
-    if (i < 0 || i >= vq->vring.avail->ring_size) {
-        return 0;
-    }
+	struct bsg_class_device *bcd =
+		container_of(kref, struct bsg_class_device, ref);
+	struct device *parent = bcd->parent;
 
-    hwaddr pa;
-    pa = vq->vring.avail + offsetof(VRingAvail, ring[i]);
-    return virtio_lduw_phys(vq->vdev, pa);
+	if (bcd->release) {
+		put_device(parent);
+		bcd->release(parent);
+	} else {
+		put_device(parent);
+	}
 }

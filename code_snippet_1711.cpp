@@ -1,20 +1,16 @@
-static struct sk_buff *ctrl_build_family_msg(const struct genl_family *family,
-					     u32 portid, int seq, u8 cmd)
-{
-	struct sk_buff *skb;
-	int err;
-
-	skb = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-	if (skb == NULL) {
-		kfree(skb);
-		return ERR_PTR(-ENOBUFS);
-	}
-
-	err = ctrl_fill_info(family, portid, seq, 0, skb, cmd);
-	if (err < 0) {
-		nlmsg_free(skb);
-		return ERR_PTR(err);
-	}
-
-	return skb;
+SoftMPEG4Encoder::~SoftMPEG4Encoder() {
+    ALOGV("Destruct SoftMPEG4Encoder");
+    int encoderStatus = releaseEncoder();
+    if (encoderStatus > 0 && encoderStatus < MAX_BUFFER_SIZE) { // Add input validation and bounds checking
+        List<BufferInfo *> &outQueue = getPortQueue(1);
+        List<BufferInfo *> &inQueue = getPortQueue(0);
+        CHECK(outQueue.empty());
+        CHECK(inQueue.empty());
+        // Safe deallocation of memory using valid pointers
+        free(buffer);
+        buffer = nullptr;
+    } else {
+        // Handle error scenarios
+        ALOGE("Error in releaseEncoder() or buffer size is invalid: %d", encoderStatus);
+    }
 }

@@ -1,28 +1,18 @@
-code:
+void MediaControlTextTrackListElement::defaultEventHandler(Event* event) {
+  if (event->type() == EventTypeNames::change) {
+    Node* target = event->target()->toNode();
+    if (!target || !target->isElementNode())
+      return;
 
-
-static void aio_free_ring(struct kioctx *ctx)
-{
-    int i;
-
-    for (i = 0; i < ctx->nr_pages; i++) {
-        int ret;
-
-        ret = put_page(ctx->ring_pages[i]);
-        if (ret) {
-            printk(KERN_ERR "aio_free_ring: put_page failed (%d)\n");
-            return;
-        }
-        pr_debug("pid(%d) [%d] page->count=%d\n", current->pid, i, page_count(ctx->ring_pages[i]));
+    mediaControls().disableShowingTextTracks();
+    int trackIndex =
+        toElement(target)->getIntegralAttribute(trackIndexAttrName());
+    if (trackIndex != trackIndexOffValue && trackIndex >= 0 && trackIndex < mediaControls().getNumberOfTracks()) {
+      mediaControls().showTextTrackAtIndex(trackIndex);
+      mediaElement().disableAutomaticTextTrackSelection();
     }
 
-    int ret2 = put_aio_ring_file(ctx);
-    if (ret2) {
-        printk(KERN_ERR "aio_free_ring: put_aio_ring_file failed (%d)\n");
-        return;
-    }
-
-    if (ctx && ctx->ring_pages && ctx->ring_pages!= ctx->internal_pages) {
-        kfree(ctx->ring_pages);
-    }
+    event->setDefaultHandled();
+  }
+  MediaControlDivElement::defaultEventHandler(event);
 }

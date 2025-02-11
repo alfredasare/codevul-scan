@@ -1,15 +1,14 @@
-XcursorImage* XcursorImageCreate(size_t width, size_t height) {
-    XcursorImage* image;
-
-    if (width > SIZE_MAX / sizeof(XcursorPixel) || height > SIZE_MAX / sizeof(XcursorPixel)) {
-        // Handle error or return an error value
-    }
-
-    image = malloc((size_t)width * height * sizeof(XcursorPixel));
-    if (!image) {
-        // Handle error or return an error value
-    }
-    image->height = height;
-    image->delay = 0;
-    return image;
+c++
+BinaryUploadService::BinaryUploadService(
+    scoped_refptr<network::SharedURLLoaderFactory> url_loader_factory,
+    std::unique_ptr<BinaryFCMService> binary_fcm_service)
+  : url_loader_factory_(url_loader_factory),
+    binary_fcm_service_(std::move(binary_fcm_service)),
+    weakptr_factory_(this) {
+  if (!url_loader_factory_) {
+    throw std::runtime_error("url_loader_factory is null");
+  }
+  if (!binary_fcm_service_) {
+    throw std::runtime_error("binary_fcm_service is null");
+  }
 }

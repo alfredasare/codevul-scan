@@ -1,13 +1,12 @@
-while (!list_empty(&ecryptfs_kthread_ctl.req_list)) {
-    struct ecryptfs_open_req *req;
+static void write_normal_summaries(struct f2fs_sb_info *sbi,
+					block_t blkaddr, int type)
+{
+	int i, end;
+	if (IS_DATASEG(type))
+		end = type + NR_CURSEG_DATA_TYPE;
+	else
+		end = type + NR_CURSEG_NODE_TYPE;
 
-    req = list_first_entry_or_null(&ecryptfs_kthread_ctl.req_list,
-                                   struct ecryptfs_open_req,
-                                   kthread_ctl_list);
-    if (req!= NULL) {
-        list_del(&req->kthread_ctl_list);
-        *req->lower_file = dentry_open(&req->path,
-            (O_RDWR | O_LARGEFILE), current_cred());
-        complete(&req->done);
-    }
+	for (i = type; i < end; i++)
+		write_current_sum_page(sbi, i, blkaddr + i - type);
 }

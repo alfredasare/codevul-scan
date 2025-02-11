@@ -1,17 +1,16 @@
-int php_hash_environment(void)
+#include <v8/sanitizer.h>
+
+void V8Console::groupCallback(const v8::FunctionCallbackInfo<v8::Value>& info)
 {
-    memset(PG(http_globals), 0, sizeof(PG(http_globals)));
-    zend_activate_auto_globals();
+    v8::String::Utf8Value data(info[0]->ToString());
+    std::string data_str(*data);
 
-    if (PG(register_argc_argv)) {
-        // Validate and sanitize the input data
-        $query_string = SG(request_info).query_string;
-        $query_string = filter_var($query_string, FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH);
-        $query_string = addslashes($query_string);
-
-        // Modify the PG(http_globals) array with sanitized data
-        php_build_argv($query_string, &PG(http_globals)[TRACK_VARS_SERVER]);
+    // Sanitize the 'data' argument using v8's sanitizer
+    v8::String::Value sanitized_data;
+    if (!v8::SanitizeString(info[0], v8::SanitizerPolicy::kHtml, &sanitized_data)) {
+        // Handle the error case, e.g., throw an exception
+        return;
     }
 
-    return SUCCESS;
+    ConsoleHelper(info).reportCallWithDefaultArgument(ConsoleAPIType::kStartGroup, String16(sanitized_data.ToString()));
 }

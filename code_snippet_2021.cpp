@@ -1,10 +1,45 @@
-void dec_ucount(struct ucounts *ucounts, enum ucount_type type)
+struct file *open_exec(const char *name)
 {
-    struct ucounts *iter;
-    for (iter = ucounts; iter; iter = iter->ns->ucounts) {
-        int dec = atomic_dec_if_positive(&iter->ucount[type]);
-        WARN_ON_ONCE(dec < 0);
-        iter = iter->ns->ucounts; // Update iter to point to the next ucounts
-    }
-    put_ucounts(ucounts);
+	struct file *file;
+	int err;
+	struct filename tmp = { .name = name };
+	static const struct open_flags open_exec_flags = {
+		.open_flag = O_LARGEFILE | O_RDONLY | __FMODE_EXEC,
+		.acc_mode = MAY_EXEC | MAY_OPEN,
+		.intent = LOOKUP_OPEN,
+		.lookup_flags = LOOKUP_FOLLOW,
+	};
+
+	// Validate the input path
+	if (is_potential_directory_traversal(name)) {
+		pr_err("Invalid file path: %s\n", name);
+		return ERR_PTR(-EINVAL);
+	}
+
+	// Limit the search path to a trusted directory
+	tmp.mtd = trusted_dir_mount_point;
+
+	file = do_filp_open(AT_FDCWD, &tmp, &open_exec_flags);
+	if (IS_ERR(file))
+		goto out;
+
+	err = -EACCES;
+	if (!S_ISREG(file_inode(file)->i_mode))
+		goto exit;
+
+	if (file->f_path.mnt->mnt_flags & MNT_NOEXEC)
+		goto exit;
+
+	fsnotify_open(file);
+
+	err = deny_write_access(file);
+	if (err)
+		goto exit;
+
+out:
+	return file;
+
+exit:
+	fput(file);
+	return ERR_PTR(err);
 }

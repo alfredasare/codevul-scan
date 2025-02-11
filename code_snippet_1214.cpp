@@ -1,9 +1,13 @@
-static void ff_jref_idct2_put(uint8_t *dest, size_t line_size, int16_t *block)
+g\_NP\_GetMIMEDescription(void)
 {
-    if (line_size > SIZE_MAX) {
-        return;
-    }
-    
-    ff_j_rev_dct2 (block);
-    put_pixels_clamped2_c(block, dest, line_size);
+if (g\_plugin\_NP\_GetMIMEDescription == NULL)
+return NULL;
+
+D(bugiI("NP\_GetMIMEDescription\n"));
+char \*str = g\_plugin\_NP\_GetMIMEDescription();
+if (str == NULL) {
+D(bugiE("NP\_GetMIMEDescription returned NULL\n"));
+return NULL;
+}
+return str;
 }

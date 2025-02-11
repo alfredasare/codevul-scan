@@ -1,8 +1,6 @@
-static void nfs_set_pageerror(struct page *page)
+BpMemory::BpMemory(const sp<IBinder>& impl)
+: BpInterface<IMemory>(impl), mOffset(0), mSize(0)
 {
-    if (!page ||!page->mapping) {
-        return; // invalid input, exit early
-    }
-
-    nfs_zap_mapping(page_file_mapping(page)->host, page_file_mapping(page));
+mOffset = 0;
+mSize = 0;
 }

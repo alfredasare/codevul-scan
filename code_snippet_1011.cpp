@@ -1,23 +1,35 @@
-TEE_Result syscall_cryp_obj_restrict_usage(unsigned long obj, unsigned long usage)
+static int __net_init ipip_init_net(struct net *net)
 {
-	TEE_Result res;
-	struct tee_ta_session *sess;
-	struct tee_obj *o;
+	struct ipip_net *ipn = net_generic(net, ipip_net_id);
+	int err;
 
-	res = tee_ta_get_current_session(&sess);
-	if (res!= TEE_SUCCESS)
-		goto exit;
+	ipn->tunnels[0] = ipn->tunnels_wc;
+	ipn->tunnels[1] = ipn->tunnels_l;
+	ipn->tunnels[2] = ipn->tunnels_r;
+	ipn->tunnels[3] = ipn->tunnels_r_l;
 
-	res = tee_obj_get(to_user_ta_ctx(sess->ctx), tee_svc_uref_to_vaddr(obj), &o);
-	if (res!= TEE_SUCCESS)
-		goto exit;
-
-	if (usage > 0xFFFFFFFFUL || usage < 0UL) {
-		return TEE_ERROR_INVALID_OPERATION;
+	ipn->fb_tunnel_dev = alloc_netdev(sizeof(struct ip_tunnel),
+					   "tunl0",
+					   ipip_tunnel_setup);
+	if (!ipn->fb_tunnel_dev) {
+		err = -ENOMEM;
+		goto err_alloc_dev;
 	}
 
-	o->info.objectUsage = usage & 0xFFFFFFFFUL;
+	dev_net_set(ipn->fb_tunnel_dev, net);
 
-exit:
-	return res;
+	err = ipip_fb_tunnel_init(ipn->fb_tunnel_dev);
+	if (err)
+		goto err_reg_dev;
+
+	if ((err = register_netdev(ipn->fb_tunnel_dev)))
+		goto err_reg_dev;
+
+	return 0;
+
+err_reg_dev:
+	ipip_dev_free(ipn->fb_tunnel_dev);
+err_alloc_dev:
+	/* nothing */
+	return err;
 }

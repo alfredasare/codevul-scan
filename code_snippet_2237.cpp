@@ -1,8 +1,7 @@
-int midi_data_reassemble_init(void)
-{
-    if (reassembly_table_init(&midi_data_reassembly_table, &addresses_reassembly_table_functions) != 0)
-    {
-        return -1;
-    }
-    return 0;
+pv_api_ip;
+ps\_mem\_q\_op = (impeg2d\_fill\_mem\_rec\_op\_t *)pv\_api\_op;
+
+impeg2d\_fill\_mem\_rec(ps\_mem\_q\_ip, ps\_mem\_q\_op);
+
+return(IV\_SUCCESS);
 }

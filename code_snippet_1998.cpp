@@ -1,10 +1,19 @@
-bool FeatureInfo::IsWebGL2OrES3OrHigherContext() const {
-  static constexpr int MIN_CONTEXT_TYPE = 0;
-  static constexpr int MAX_CONTEXT_TYPE = 2; // or the maximum valid value
+main (int argc, char *argv[])
+{
+    BufFilePtr	    inputraw, input, output;
+    int		    c;
+    size_t	    nread;
 
-  if (context_type_ < MIN_CONTEXT_TYPE || context_type_ > MAX_CONTEXT_TYPE) {
-    return false;
-  }
+    inputraw = BufFileOpenRead (0);
+    input = BufFilePushCompressed (inputraw);
+    output = BufFileOpenWrite (1);
 
-  return context_type_ == WebGL2 || context_type_ == ES3 || context_type_ == ES3_1;
+    /* Use 'fread' and 'fwrite' with 'nread' variable to ensure proper bounds checking */
+    char buffer[BUFSIZ];
+    while ((nread = fread(buffer, sizeof(char), sizeof(buffer), input)) > 0)
+        fwrite(buffer, sizeof(char), nread, output);
+
+    BufFileClose (input, FALSE);
+    BufFileClose (output, FALSE);
+    return 0;
 }

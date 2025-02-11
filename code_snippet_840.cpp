@@ -1,45 +1,24 @@
-server_request_tun(void)
+ExprDef *
+ExprCreateUnary(enum expr_op_type op, enum expr_value_type type,
+                ExprDef *child)
 {
-    Channel *c = NULL;
-    int mode, tun;
-    int sock;
-
-    mode = packet_get_int();
-    switch (mode) {
-        case SSH_TUNMODE_POINTOPOINT:
-        case SSH_TUNMODE_ETHERNET:
-            break;
-        default:
-            packet_send_debug("Unsupported tunnel device mode.");
-            return NULL;
+    EXPR_CREATE(ExprUnary, expr, op, type);
+    if (child != NULL) {
+        expr->unary.child = child;
+        expr_node_incref(child); /* Increment reference count of child */
     }
-    if ((options.permit_tun & mode) == 0) {
-        packet_send_debug("Server has rejected tunnel device forwarding");
-        return NULL;
+    return expr;
+}
+
+void
+expr_node_decref(ExprDef *node)
+{
+    if (node == NULL) {
+        return;
     }
-
-    tun = packet_get_int();
-    if (forced_tun_device!= -1) {
-        if (tun!= SSH_TUNID_ANY && forced_tun_device!= tun)
-            goto done;
-        tun = forced_tun_device;
+    node->refcount--;
+    if (node->refcount == 0) {
+        /* Free the node and any associated resources */
+        free(node);
     }
-
-    // Validate and sanitize the 'tun' variable
-    if (!is_valid_dir_path(tun)) {
-        packet_send_debug("Invalid directory path for tunnel device");
-        return NULL;
-    }
-
-    sock = tun_open(tun, mode);
-    if (sock < 0)
-        goto done;
-    c = channel_new("tun", SSH_CHANNEL_OPEN, sock, sock, -1,
-                    CHAN_TCP_WINDOW_DEFAULT, CHAN_TCP_PACKET_DEFAULT, 0, "tun", 1);
-    c->datagram = 1;
-
-done:
-    if (c == NULL)
-        packet_send_debug("Failed to open the tunnel device.");
-    return c;
 }

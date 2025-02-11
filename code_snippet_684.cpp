@@ -1,3 +1,6 @@
-DeathNotifier::DeathNotifier(const std::string& notify) {
-    mNotify = notify;
+~InputBuffer() {
+  if (release_cb_) {
+    VLOGF(4) << "id = " << id_;
+    std::move(release_cb_).Run(id_);
+  }
 }

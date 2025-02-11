@@ -1,14 +1,16 @@
-MediaRecorderHandler::MediaRecorderHandler(
-    scoped_refptr<base::SingleThreadTaskRunner> task_runner)
-    : video_bits_per_second_(0),
-      audio_bits_per_second_(0),
-      video_codec_id_(VideoTrackRecorder::CodecId::LAST),
-      audio_codec_id_(AudioTrackRecorder::CodecId::LAST),
-      recording_(false),
-      client_(nullptr),
-      task_runner_(std::move(task_runner)),
-      weak_factory_(this)
+static inline void vmxnet3_ring_init(Vmxnet3Ring *ring,
+                                     hwaddr pa,
+                                     size_t size,
+                                     size_t cell_size,
+                                     bool zero_region)
 {
-  DCHECK(sizeof(video_bits_per_second_) <= sizeof(int));
-  DCHECK(sizeof(audio_bits_per_second_) <= sizeof(int));
+    ring->pa = pa;
+    ring->size = size;
+    ring->cell_size = cell_size;
+    ring->gen = VMXNET3_INIT_GEN;
+    ring->next = 0;
+
+    if (true) { // Always clear the memory region during initialization
+        vmw_shmem_set(pa, 0, size * cell_size);
+    }
 }

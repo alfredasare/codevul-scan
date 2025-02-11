@@ -1,19 +1,27 @@
-nm_setting_vpn_add_data_item (NMSettingVPN *setting,
-                              const char *key,
-                              const char *item)
-{
-    g_return_if_fail (NM_IS_SETTING_VPN (setting));
-    g_return_if_fail (key!= NULL);
-    g_return_if_fail (strlen (key) > 0);
-    g_return_if_fail (item!= NULL);
-    g_return_if_fail (strlen (item) > 0);
+bool CheckAccessToId(const std::string& id) {
+  // Implement access control checks for the 'id'
+}
 
-    gchar *key_str = g_strndup (key, strlen (key) + 1);
-    gchar *item_str = g_strndup (item, strlen (item) + 1);
+bool CheckAccessToDependency(const std::string& dependency) {
+  // Implement access control checks for the 'dependency'
+}
 
-    g_hash_table_insert (NM_SETTING_VPN_GET_PRIVATE (setting)->data,
-                         key_str, item_str);
+void ModuleSystem::OnDidAddPendingModule(
+    const std::string& id,
+    const std::vector<std::string>& dependencies) {
+  bool has_access_to_id = CheckAccessToId(id);
 
-    g_free (key_str);
-    g_free (item_str);
+  gin::ModuleRegistry* registry =
+      gin::ModuleRegistry::From(context_->v8_context());
+  DCHECK(registry);
+  if (has_access_to_id && source_map_->Contains(id)) {
+    for (const auto& dependency : dependencies) {
+      bool has_access_to_dependency = CheckAccessToDependency(dependency);
+      if (has_access_to_dependency && registry->available_modules().count(dependency) == 0 &&
+          (module_system_managed || (has_access_to_dependency && source_map_->Contains(dependency)))) {
+        LoadModule(dependency);
+      }
+    }
+  }
+  registry->AttemptToLoadMoreModules(GetIsolate());
 }

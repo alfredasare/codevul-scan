@@ -1,6 +1,10 @@
-std::unique_ptr<TabStyleViews> TabStyleViews::CreateForTab(Tab* tab) {
-  if (!tab ||!tab->IsValid()) {
-    throw std::invalid_argument("Invalid tab object");
-  }
-  return std::make_unique<GM2TabStyle>(tab);
+MojoJpegDecodeAccelerator::MojoJpegDecodeAccelerator(
+scoped\_refptr<base::SingleThreadTaskRunner> io\_task\_runner,
+mojom::JpegDecodeAcceleratorPtr info)
+: io\_task\_runner\_(std::move(io\_task\_runner)) {
+if (info && info->is\_valid()) {
+jpeg\_decoder\_ = std::move(info);
+} else {
+// Handle error scenario, e.g., logging or throwing an exception.
+}
 }

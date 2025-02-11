@@ -1,22 +1,8 @@
-int kvm_arm_vcpu_arch_has_attr(struct kvm_vcpu *vcpu, struct kvm_device_attr *attr)
+int hashtable_del(hashtable_t *hashtable, const char *key)
 {
-    int ret;
-
-    if (attr->group < 0 || attr->group > KVM_ARM_VCPU_MAX_GROUP) {
-        ret = -EINVAL;
-    } else {
-        switch (attr->group) {
-            case KVM_ARM_VCPU_PMU_V3_CTRL:
-                ret = kvm_arm_pmu_v3_has_attr(vcpu, attr);
-                break;
-            case KVM_ARM_VCPU_TIMER_CTRL:
-                ret = kvm_arm_timer_has_attr(vcpu, attr);
-                break;
-            default:
-                ret = -ENXIO;
-                break;
-        }
+    if (hashtable_has_key(hashtable, key)) {
+        size_t hash = hash_str(key);
+        return hashtable_do_del(hashtable, key, hash);
     }
-
-    return ret;
+    return 0; // Return a success/non-error code if the key does not exist, or modify the function to return -1 if needed
 }

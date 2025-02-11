@@ -1,33 +1,23 @@
-struct dst_entry *inet_csk_route_req(struct sock *sk,
-				     const struct request_sock *req)
+iakerb_make_finished(krb5_context context, krb5_key key, const krb5_data *conv, krb5_data **finished)
 {
- 	struct rtable *rt;
- 	const struct inet_request_sock *ireq = inet_rsk(req);
-	struct ip_options *opt = inet_rsk(req)->opt;
- 	struct net *net = sock_net(sk);
- 	struct flowi4 fl4;
+krb5_error\_code code;
+krb5\_iakerb\_finished iaf;
 
- 	flowi4_init_output(&fl4, sk->sk_bound_dev_if, sk->sk_mark,
- 			   RT_CONN_FLAGS(sk), RT_SCOPE_UNIVERSE,
- 			   sk->sk_protocol, inet_sk_flowi_flags(sk),
- 			   (opt && opt->srr)? opt->faddr : ireq->rmt_addr,
- 			   ireq->loc_addr, ireq->rmt_port, inet_sk(sk)->inet_sport);
+\*finished = NULL;
 
- 	if (fl4.flowi_proto!= sk->sk_protocol || fl4.flowi_mark!= sk->sk_mark) {
-		return NULL; // or handle the error as appropriate
- 	}
+memset(&iaf, 0, sizeof(iaf));
 
- 	security_req_classify_flow(req, flowi4_to_flowi(&fl4));
- 	rt = ip_route_output_flow(net, &fl4, sk);
- 	if (IS_ERR(rt))
- 		goto no_route;
- 	if (opt && opt->is_strictroute && rt->rt_dst!= rt->rt_gateway)
- 		goto route_err;
- 	return &rt->dst;
+if (key == NULL || key->length == 0)
+return KRB5KDC\_ERR\_NULL\_KEY;
 
-route_err:
-	ip_rt_put(rt);
-no_route:
-	IP_INC_STATS_BH(net, IPSTATS_MIB_OUTNOROUTES);
-	return NULL;
+code = krb5\_k\_make\_checksum(context, 0, key, KRB5\_KEYUSAGE\_IAKERB\_FINISHED,
+conv, &iaf.checksum);
+if (code != 0)
+return code;
+
+code = encode\_krb5\_iakerb\_finished(&iaf, finished);
+
+krb5\_free\_checksum\_contents(context, &iaf.checksum);
+
+return code;
 }

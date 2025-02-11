@@ -1,9 +1,4 @@
-static int addAggInfoFunc(sqlite3 *db, AggInfo *pInfo){
-    int i;
-    pInfo->aFunc = sqlite3_malloc((int)sizeof(pInfo->aFunc[0]) * pInfo->nFunc);
-    if (pInfo->aFunc == NULL) {
-        // Handle allocation failure
-    }
-    pInfo->nFunc = (int)i;
-    return i;
+StateStore& ExtensionSystemImpl::Shared::state\_store() {
+std::unique\_lock<std::mutex> lock(state\_store\_mutex_);
+return *state\_store\_;
 }

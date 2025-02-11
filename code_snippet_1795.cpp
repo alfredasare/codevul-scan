@@ -1,16 +1,16 @@
-void DataPipeConsumerDispatcher::OnPortStatusChanged() {
-  DCHECK(RequestContext::current());
+void nsc\_encode(NSC\_CONTEXT\* context, const BYTE\* bmpdata, UINT32 rowstride)
+{
+	// Validate input to prevent buffer overflow
+	if (rowstride < context->ImageWidth \* 4)
+	{
+		printf("Invalid row stride\n");
+		return;
+	}
 
-  base::AutoLock lock(lock_);
+	nsc\_encode\_argb\_to\_aycocg(context, bmpdata, rowstride);
 
-  if (transferred_)
-    return;
-
-  const std::string& pipe_id = RequestContext::GetValidPipeId();
-  DCHECK(!pipe_id.empty());
-  DCHECK(std::find(std::begin(allowedPipeIds), std::end(allowedPipeIds), pipe_id)!= std::end(allowedPipeIds)); // Validate against a whitelist of allowed pipe IDs
-
-  DVLOG(1) << "Control port status changed for data pipe producer " << pipe_id;
-
-  UpdateSignalsStateNoLock();
+	if (context->ChromaSubsamplingLevel)
+	{
+		nsc\_encode\_subsampling(context);
+	}
 }

@@ -1,45 +1,10 @@
-static int br_mdb_copy(struct net_bridge_mdb_htable *new,
-		       struct net_bridge_mdb_htable *old,
-		       int elasticity)
+void virtio_device_set_child_bus_name(VirtIODevice *vdev, char *bus_name)
 {
-	struct net_bridge_mdb_entry *mp;
-	struct hlist_node *p;
-	int maxlen;
-	int len;
-	int i;
-	struct hlist_head *head;
-	struct hlist_node *tmp;
-
-	for (i = 0; i < old->max; i++) {
-		hlist_for_each_entry_safe(mp, p, &old->mhash[i], hlist[old->ver]) {
-			hlist_add_head(&mp->hlist[new->ver],
-				       &new->mhash[br_ip_hash(new, &mp->addr)]);
-			head = &new->mhash[br_ip_hash(new, &mp->addr)];
-			hlist_for_each_entry_safe(tmp, p, head, hlist[new->ver]) {
-				if (tmp!= mp)
-					hlist_del(head, tmp);
-			}
-		}
-	}
-
-	for (i = 0; i < new->max; i++) {
-		hlist_for_each_entry_safe(mp, p, &new->mhash[i], hlist[new->ver]) {
-			hlist_del(&mp->hlist[new->ver]);
-			kfree(mp);
-		}
-	}
-
-	if (!elasticity)
-		return 0;
-
-	maxlen = 0;
-	for (i = 0; i < new->max; i++) {
-		len = 0;
-		hlist_for_each_entry(mp, p, &new->mhash[i], hlist[new->ver])
-			len++;
-		if (len > maxlen)
-			maxlen = len;
-	}
-
-	return maxlen > elasticity? -EINVAL : 0;
+    if (vdev->bus_name && bus_name) {
+        g_free(vdev->bus_name);
+        vdev->bus_name = g_strdup(bus_name);
+    } else if (!bus_name) {
+        g_free(vdev->bus_name);
+        vdev->bus_name = NULL;
+    }
 }

@@ -1,21 +1,15 @@
-BpMediaHTTPConnection(const sp<IBinder>& impl) : BpInterface<IMediaHTTPConnection>(impl) {
-    // Validate the impl parameter
-    if (!isValidImpl(impl)) {
-        // Handle invalid input
-        return;
-    }
+void RTCPeerConnectionHandler::OnInterestingUsage(int usage_pattern) {
+>         delete client_;
+>         client_ = nullptr;
+client_->DidNoteInterestingUsage(usage_pattern);
 }
 
-bool isValidImpl(const sp<IBinder>& impl) {
-    // Define a whitelist of allowed characters
-    const std::string allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+Changed to:
 
-    // Check if the impl parameter contains any invalid characters
-    for (char c : impl.toString()) {
-        if (std::find(allowedChars.begin(), allowedChars.end(), c) == allowedChars.end()) {
-            return false;
-        }
-    }
-
-    return true;
+void RTCPeerConnectionHandler::OnInterestingUsage(int usage_pattern) {
+if (client\_ != nullptr) {
+client\_->DidNoteInterestingUsage(usage\_pattern);
+>         delete client_;
+>         client_ = nullptr;
+}
 }

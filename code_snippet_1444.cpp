@@ -1,17 +1,31 @@
-bool WM_Initialized = false;
+// Fix for ecdsa_restart_det_free
+static void ecdsa_restart_det_free( mbedtls_ecdsa_restart_det_ctx *ctx )
+{
+    if( ctx == NULL || ctx->is_initialized == 0 || ctx->is_freed == 1 )
+        return;
 
-int WildMidi_MasterVolume(uint8_t master_volume) {
-    if (!WM_Initialized) {
-        WM_Initialize(); // Initialize the WildMidi module
-        WM_Initialized = true;
-    }
-    if (master_volume > 127) {
-        _WM_GLOBAL_ERROR(__FUNCTION__, __LINE__, WM_ERR_INVALID_ARG,
-                "(master volume out of range, range is 0-127)", 0);
-        return (-1);
-    }
+    mbedtls_hmac_drbg_free( &ctx->rng_ctx );
 
-    _WM_MasterVolume = _WM_lin_volume[master_volume];
+    ctx->is_initialized = 0;
+    ctx->is_freed = 1;
+}
 
-    return (0);
+// Additions for mbedtls_ecdsa_restart_det_init
+void mbedtls_ecdsa_restart_det_init( mbedtls_ecdsa_restart_det_ctx *ctx )
+{
+    // ...
+    ctx->is_initialized = 0;
+    ctx->is_freed = 0;
+    // ...
+}
+
+// Additions for mbedtls_ecdsa_restart_det_setup
+int mbedtls_ecdsa_restart_det_setup( mbedtls_ecdsa_restart_det_ctx *ctx,
+                                     mbedtls_entropy_context *entropy,
+                                     mbedtls_ctr_drbg_context *ctr_drbg )
+{
+    // ...
+    ctx->is_initialized = 1;
+    ctx->is_freed = 0;
+    // ...
 }

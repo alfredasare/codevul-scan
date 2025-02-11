@@ -1,22 +1,16 @@
-static void Ins_ROUND(INS_ARG) {
-    if (!isValidInputFormat(args[0])) {
-        throw new InvalidInputException("Invalid input format");
-    }
-    args[0] = deserializeInput(args[0], CUR.metrics.compensations[CUR.opcode - 0x68]);
+OS_POSIX)
+FilePath input\_path(sanitized\_path);
+PrepareStringForFileOps(input\_path, &filename);
+if (filename.length() > 0 && filename[0] == '~')
+filename = FixupHomedir(filename);
+#endif
+
+GURL file\_url = net::FilePathToFileURL(FilePath(filename));
+if (file\_url.is\_valid()) {
+return UTF16ToUTF8(net::FormatUrl(file\_url, std::string(),
+net::kFormatUrlOmitUsernamePassword, UnescapeRule::NORMAL, NULL,
+NULL, NULL));
 }
 
-private boolean isValidInputFormat(String input) {
-    String[] allowedFormats = {"format1", "format2", "format3"};
-    for (String format : allowedFormats) {
-        if (input.matches(format)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-private String deserializeInput(String input, Object obj) {
-    JsonNode jsonNode = Json.parse(input);
-    ObjectMapper mapper = new ObjectMapper();
-    return mapper.treeToValue(jsonNode, obj.getClass());
+return text;
 }

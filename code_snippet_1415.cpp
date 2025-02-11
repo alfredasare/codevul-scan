@@ -1,9 +1,30 @@
-parse_error_msg(apr_array_header_t *tokens, apr_size_t index)
+static __net_exit void ppp_exit_net(struct net *net)
 {
-    if (index >= tokens->nelts) {
-        return "end of string";
-    }
+	struct ppp_net *pn = net_generic(net, ppp_net_id);
+	struct net_device *dev;
+	struct net_device *aux;
+	struct ppp *ppp;
+	LIST_HEAD(list);
+	int id;
 
-    char *msg = apr_pstrcat(tokens->pool, "\"", APR_ARRAY_IDX(tokens, index, Token).str, "\" at position ", APR_SIZE_T_FMT, NULL);
-    return msg;
+	rtnl_lock();
+	for_each_netdev_safe(net, dev, aux) {
+		if (dev->netdev_ops == &ppp_netdev_ops) {
+			dev_set_persistent_net(dev, NULL);
+			unregister_netdevice_queue(dev, &list);
+		}
+	}
+
+	idr_for_each_entry(&pn->units_idr, ppp, id) {
+		/* Skip devices already unregistered by previous loop */
+		if (!net_eq(dev_net(ppp->dev), net)) {
+			dev_set_persistent_net(ppp->dev, NULL);
+			unregister_netdevice_queue(ppp->dev, &list);
+		}
+	}
+
+	unregister_netdevice_many(&list);
+	rtnl_unlock();
+
+	idr_destroy(&pn->units_idr);
 }

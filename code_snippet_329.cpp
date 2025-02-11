@@ -1,15 +1,11 @@
-int do_migrate_pages(struct mm_struct *mm,
-                     const nodemask_t *from_nodes, const nodemask_t *to_nodes, int flags)
-{
-    if (!mm ||!from_nodes ||!to_nodes) {
-        return -EINVAL; // Invalid input, return error
-    }
+void RenderFrameImpl::didReceiveTitle(blink::WebLocalFrame* frame,
+                                   const blink::WebString& title,
+                                   blink::WebTextDirection direction) {
+  // Validate the frame pointer to ensure it's not tampered with
+  if (!frame || frame != frame_ || !frame->parent()) {
+    LOG(WARNING) << "Invalid frame pointer received";
+    return;
+  }
 
-    // Validate the flags parameter
-    if (flags < 0 || flags > 0x01) {
-        return -EINVAL; // Invalid flags value, return error
-    }
-
-    // Rest of the function implementation
-    return -ENOSYS;
+  render_view_->didReceiveTitle(frame, title, direction);
 }

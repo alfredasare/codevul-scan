@@ -1,32 +1,18 @@
 WebGLRenderingContextBase::CreateWebGraphicsContext3DProvider(
-    CanvasRenderingContextHost* host,
-    const CanvasContextCreationAttributes& attributes,
-    unsigned web_gl_version) {
-  if (!host->IsWebGLAllowed()) {
-    host->HostDispatchEvent(WebGLContextEvent::Create(
-        EventTypeNames::webglcontextcreationerror, false, true,
-        "Web page was not allowed to create a WebGL context."));
-    return nullptr;
-  }
-
-  // Validate and sanitize input parameters
-  if (!IsValidAttribute(attributes)) {
-    host->HostDispatchEvent(WebGLContextEvent::Create(
-        EventTypeNames::webglcontextcreationerror, false, true,
-        "Invalid WebGL context creation attributes."));
-    return nullptr;
-  }
-
-  // Use a secure storage mechanism
-  WebGLContextCreationAttributes secureAttributes = SanitizeAttributes(attributes);
-  return CreateContextProviderInternal(host, secureAttributes, web_gl_version);
+CanvasRenderingContextHost* host,
+const CanvasContextCreationAttributes& attributes,
+unsigned web_gl_version) {
+if (!host->IsWebGLAllowed()) {
+host->HostDispatchEvent(WebGLContextEvent::Create(
+EventTypeNames::webglcontextcreationerror, false, true,
+"Web page was not allowed to create a WebGL context."));
+return nullptr;
 }
 
-// Helper functions
-bool IsValidAttribute(const CanvasContextCreationAttributes& attributes) {
-  return attributes.GetVersion() >= 1 && attributes.GetVersion() <= 3;
+// Fix for CWE-119 and CVE-2017-5112
+if (web_gl_version > MAX_ALLOWED_VERSION) {
+web_gl_version = MAX_ALLOWED_VERSION;
 }
 
-CanvasContextCreationAttributes SanitizeAttributes(const CanvasContextCreationAttributes& attributes) {
-  return attributes;
+return CreateContextProviderInternal(host, attributes, web_gl_version);
 }

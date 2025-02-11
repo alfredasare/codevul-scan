@@ -1,16 +1,13 @@
-ready_callback_key_compare_only_active (gconstpointer a,
-                                        gconstpointer b)
+set_vrrp_defaults(data_t * data)
 {
-    const ReadyCallback *callback_a;
+	// ... previous code ...
 
-    callback_a = a;
+	strncpy(data->vrrp_iptables_inchain, "INPUT", sizeof(data->vrrp_iptables_inchain) - 1);
+#ifdef _HAVE_LIBIPSET_
+	strncpy(data->vrrp_ipset_address, "keepalived", sizeof(data->vrrp_ipset_address) - 1);
+	strncpy(data->vrrp_ipset_address6, "keepalived6", sizeof(data->vrrp_ipset_address6) - 1);
+	strncpy(data->vrrp_ipset_address_iface6, "keepalived_if6", sizeof(data->vrrp_ipset_address_iface6) - 1);
+#endif
 
-    /* Validate and sanitize input parameters */
-    if (!a ||!b ||!callback_a ||!callback_a->active)
-    {
-        return -1;
-    }
-
-    /* Use a secure comparison function */
-    return g_strcmp0 (a, b);
+	// ... remaining code ...
 }

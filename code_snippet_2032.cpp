@@ -1,7 +1,31 @@
-static inline int stellaris_txpacket_datalen(stellaris_enet_state *s)
+rb_update_read_stamp(struct ring_buffer_per_cpu *cpu_buffer,
+                     struct ring_buffer_event *event)
 {
-    if (s->tx_fifo[0] > 0xFF || s->tx_fifo[1] > 0xFF) {
-        // Handle invalid values
-    }
-    return (s->tx_fifo[0] & 0xFF) + ((s->tx_fifo[1] & 0xFF) << 8);
+	u64 delta;
+
+	switch (event->type_len) {
+	case RINGBUF_TYPE_PADDING:
+		return;
+
+	case RINGBUF_TYPE_TIME_EXTEND:
+		if (event->array && event->array[0] < RING_BUFFER_ARRAY_SIZE) {
+			delta = event->array[0];
+			delta <<= TS_SHIFT;
+			delta += event->time_delta;
+			cpu_buffer->read_stamp += delta;
+		}
+		return;
+
+	case RINGBUF_TYPE_TIME_STAMP:
+		/* FIXME: not implemented */
+		return;
+
+	case RINGBUF_TYPE_DATA:
+		cpu_buffer->read_stamp += event->time_delta;
+		return;
+
+	default:
+		BUG();
+	}
+	return;
 }

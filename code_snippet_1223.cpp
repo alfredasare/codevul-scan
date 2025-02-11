@@ -1,13 +1,9 @@
-static void handle_binary_protocol_error(conn *c) {
-    write_bin_error(c, PROTOCOL_BINARY_RESPONSE_EINVAL, NULL, 0);
-    if (settings.verbose) {
-        if ((c->binary_header.request.opcode >= PROTOCOL_BINARY_OPCODE_MIN) &&
-            (c->binary_header.request.opcode <= PROTOCOL_BINARY_OPCODE_MAX)) {
-            fprintf(stderr, "Protocol error (opcode %02x), close connection %d\n",
-                    c->binary_header.request.opcode, c->sfd);
-        } else {
-            // Handle invalid opcode error
-        }
-    }
-    c->write_and_go = conn_closing;
+int fz_colorspace_is_gray(fz_context *ctx, const fz_colorspace *cs)
+{
+	if (cs) {
+		return cs->type == FZ_COLORSPACE_GRAY;
+	} else {
+		fz_warn(ctx, "Null colorspace passed to fz_colorspace_is_gray");
+		return 0;
+	}
 }

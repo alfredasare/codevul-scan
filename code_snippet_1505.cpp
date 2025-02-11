@@ -1,14 +1,16 @@
-void CustomButton::StartThrobbing(int cycles_til_stop) {
-  is_throbbing_ = true;
-  std::string executable_path = "/path/to/executable"; // Use an absolute path
-  if (!IsValidPath(executable_path)) {
-    // Handle invalid path error
-    return;
-  }
-  hover_animation_->StartThrobbing(cycles_til_stop, executable_path);
-}
+static int edge_get_icount(struct tty_struct *tty, struct serial_icounter_struct *icount)
+{
+	struct usb_serial_port *port = tty->driver_data;
+	struct edgeport_port *edge_port = usb_get_serial_port_data(port);
+	struct async_icount *ic = &edge_port->icount;
 
-bool IsValidPath(const std::string& path) {
-  // Implement path validation and sanitization logic here
-  return true; // Return true if the path is valid and sanitized
-}
+	const int max_value = INT_MAX - 10;
+
+	if (ic->cts > max_value) {
+		pr_err("Error: cts value is too large\n");
+		return -EINVAL;
+	}
+	icount->cts = min(ic->cts, icount->cts_number);
+
+	if (ic->dsr > max_value) {
+		pr_err("Error: dsr value is too large\n");

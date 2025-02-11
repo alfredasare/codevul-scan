@@ -1,15 +1,35 @@
-void GetWebRTCSessionDescriptionFromSessionDescriptionCallback(
-    base::OnceCallback<const webrtc::SessionDescriptionInterface*()> description_callback,
-    blink::WebRTCSessionDescription* web_description) {
-  const webrtc::SessionDescriptionInterface* description = nullptr;
-  {
-    auto callback = std::move(description_callback);
-    description = callback.Run();
+void UiSceneCreator::CreateScene() {
+  if (Create2dBrowsingSubtreeRoots() == nullptr) {
+    // Log an error and handle it appropriately
+    LOGE("Error creating 2d browsing subtree roots");
+    return;
   }
-  if (description) {
-    std::string sdp;
-    description->ToString(&sdp);
-    web_description->Initialize(blink::WebString::FromUTF8(description->type()),
-                                blink::WebString::FromUTF8(sdp));
+
+  if (CreateWebVrRoot() == nullptr) {
+    // Log an error and handle it appropriately
+    LOGE("Error creating WebVR root");
+    return;
   }
+
+  // ... add similar null checks for all other objects being created
+
+  // Create the remaining objects as long as none of the previous creations have failed
+  CreateBackground();
+  CreateViewportAwareRoot();
+  CreateContentQuad();
+  CreateExitPrompt();
+  CreateAudioPermissionPrompt();
+  CreateWebVRExitWarning();
+  CreateSystemIndicators();
+  CreateUrlBar();
+  CreateOmnibox();
+  CreateWebVrUrlToast();
+  CreateCloseButton();
+  CreateToasts();
+  CreateSplashScreenForDirectWebVrLaunch();
+  CreateWebVrTimeoutScreen();
+  CreateUnderDevelopmentNotice();
+  CreateVoiceSearchUiGroup();
+  CreateController();
+  CreateKeyboard();
 }

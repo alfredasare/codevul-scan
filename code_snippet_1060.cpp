@@ -1,17 +1,16 @@
-static int vmw_legacy_srf_destroy(struct vmw_resource *res)
-{
-    struct vmw_private *dev_priv = res->dev_priv;
-    uint32_t submit_size;
-    uint8_t *cmd;
-
-    BUG_ON(res->id == -1);
-
-    /*... */
-
-    if (unlikely(!cmd)) {
-        DRM_ERROR("Failed to reserve FIFO space\n");
-        return -ENOMEM;
+static int esil_6502_fini (RAnalEsil *esil) {
+    // Example: close file descriptor
+    if (esil->fd != -1) {
+        close(esil->fd);
+        esil->fd = -1;
     }
 
-    /*... */
+    // Example: free memory
+    if (esil->buffer) {
+        free(esil->buffer);
+        esil->buffer = NULL;
+    }
+
+    // After cleanup, return true
+    return true;
 }

@@ -1,18 +1,13 @@
-const FileDownloader* Plugin::FindFileDownloader(PP_Resource url_loader) const {
-  const FileDownloader* file_downloader = NULL;
+FcCacheObjectDereference (void *object)
+{
+FcCacheSkip	*skip;
 
-  if (url_loader == nexe_downloader_.url_loader()) {
-    file_downloader = &nexe_downloader_;
-  } else {
-    std::set<FileDownloader*>::const_iterator it = url_downloaders_.begin();
-    while (it!= url_downloaders_.end()) {
-      if (url_loader == (*it)->url_loader()) {
-        file_downloader = (*it);
-        break;
-      }
-      ++it;
-    }
-  }
-
-  return file_downloader? file_downloader : &nexe_downloader_;
+lock\_cache ();
+skip = FcCacheFindByAddrUnlocked (object);
+if (skip && (FcRefDec (&skip->ref) == 1))
+{
+FcDirCacheDisposeUnlocked (skip->cache);
+free(skip);
+}
+unlock\_cache ();
 }

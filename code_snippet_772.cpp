@@ -1,7 +1,10 @@
-static void put_amf_string(AVIOContext *pb, const char *str)
+static void longMethodMethod(const v8::FunctionCallbackInfo<v8::Value>& info)
 {
-    char buffer[1024];
-    snprintf(buffer, sizeof(buffer), "%s", str);
-    avio_wb16(pb, strlen(buffer));
-    avio_write(pb, buffer, strlen(buffer));
+    TestObject* imp = V8TestObject::toNative(info.Holder());
+    int result = imp->longMethod();
+    if (result >= INT_MIN && result <= INT_MAX) {
+        v8SetReturnValueInt(info, result);
+    } else {
+        // Handle error case
+    }
 }

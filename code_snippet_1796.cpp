@@ -1,29 +1,15 @@
-static bool name_is_illegal(const char *name)
-{
-    if (!name ||!*name) {
-        return true;
-    }
+void WebURLLoaderImpl::Context::HandleDataURL() {
+ResourceResponseInfo info{};
+std::string data{};
+int error\_code{};
 
-    const char *allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._";
-    size_t allowed_len = strlen(allowed_chars);
+if (GetInfoFromDataURL(request\_.url(), &info, &data, &error\_code)) {
+OnReceivedResponse(info);
+if (!data.empty())
+OnReceivedData(data.data(), data.size(), 0);
+}
 
-    while (*name) {
-        char c = *name;
-        bool found = false;
-
-        for (size_t i = 0; i < allowed_len; i++) {
-            if (c == allowed_chars[i]) {
-                found = true;
-                break;
-            }
-        }
-
-        if (!found) {
-            return true;
-        }
-
-        name++;
-    }
-
-    return false;
+ResourceResponseInfo info\_copy{info};
+std::string data\_copy{data};
+OnCompletedRequest(error\_code, false, info\_copy, base::TimeTicks::Now());
 }

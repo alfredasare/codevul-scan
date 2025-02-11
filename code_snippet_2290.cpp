@@ -1,7 +1,10 @@
-static jint Bitmap_getGenerationId(JNIEnv* env, jobject, jlong bitmapHandle) {
-    if (bitmapHandle == 0 ||!reinterpret_cast<SkBitmap*>(bitmapHandle)) {
-        return -1; // or env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "Invalid bitmap handle");
-    }
-    SkBitmap* bitmap = reinterpret_cast<SkBitmap*>(bitmapHandle);
-    return static_cast<jint>(bitmap->getGenerationID());
+JsVar *res = jsvMathsOpSkipNames(a, one, op==LEX_PLUSPLUS ? '+' : '-');
+jsvUnLock(one);
+jsvReplaceWith(a, res);
+jsvUnLock(res);
 }
+}
+return __jspePostfixExpression(a);
+}
+
+Here is the fixed version of the `jspePostfixExpression` function that includes proper error handling and memory management for the `JsVar *one` variable.

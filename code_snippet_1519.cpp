@@ -1,13 +1,11 @@
-static struct mschmd_header *chmd_open(struct mschmd_decompressor *base, const char *filename)
-{
-    const char *allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-";
-    for (int i = 0; i < strlen(filename); i++) {
-        if (strchr(allowed_chars, filename[i]) == NULL) {
-            return NULL;
-        }
-    }
-    if (strchr(filename, '/') || strstr(filename, "..")) {
-        return NULL;
-    }
-    return chmd_real_open(base, filename, 1);
+return process_1byte_op(a, data, op, 0x18);
+}
+
+static inline int is_constant(const Operand *op) {
+#ifdef R_HAS_FLOAT
+if (op->type & OT_FLOAT) {
+return op->value._float != 0.0;
+}
+#endif
+return op->type & OT_CONSTANT;
 }

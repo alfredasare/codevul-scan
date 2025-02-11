@@ -1,18 +1,22 @@
-static int __verify_planes_array(struct vb2_buffer *vb, const struct v4l2_buffer *b)
-{
-    if (!V4L2_TYPE_IS_MULTIPLANAR(b->type))
-        return 0;
+c++
+const int NUM_CONTENT_RESTRICTIONS = 8; // or the appropriate number
 
-    /* Is memory for copying plane information present? */
-    if (b->m.planes == NULL) {
-        dprintk(1, "multi-planar buffer passed but planes array not provided\n");
-        return -EINVAL;
-    }
+void Browser::UpdateCommandsForContentRestrictionState() {
+  int restrictions = GetContentRestrictionsForSelectedTab();
 
-    if (b->length < 0 || b->length > vb->num_planes || b->length > VB2_MAX_PLANES) {
-        dprintk(1, "incorrect planes array length, expected %d, got %d\n", vb->num_planes, b->length);
-        return -EINVAL;
-    }
+  // Check that the value of restrictions is within the expected range
+  if (restrictions < 0 || restrictions >= NUM_CONTENT_RESTRICTIONS) {
+    // Handle the error case where restrictions is out of bounds
+    // ...
+    return;
+  }
 
-    return 0;
+  command_updater_.UpdateCommandEnabled(
+      IDC_COPY, !(restrictions & CONTENT_RESTRICTION_COPY));
+  command_updater_.UpdateCommandEnabled(
+      IDC_CUT, !(restrictions & CONTENT_RESTRICTION_CUT));
+  command_updater_.UpdateCommandEnabled(
+      IDC_PASTE, !(restrictions & CONTENT_RESTRICTION_PASTE));
+  UpdateSaveAsState(restrictions);
+  UpdatePrintingState(restrictions);
 }

@@ -1,11 +1,13 @@
-static void hpet_pre_save(void *opaque)
+static ssize_t vfs\_pwrite\_fn(void \*file, const void \*buf, size\_t len, off\_t offset)
 {
-    HPETState *s = opaque;
+ struct files\_struct \*fsp = NULL;
+ ssize\_t result;
 
-    /* save current counter value */
-    if (hpet_get_ticks(s) < s->hpet_counter_size) {
-        s->hpet_counter = hpet_get_ticks(s);
-    } else {
-        // Handle error or log the issue
-    }
+ fsp = (struct files\_struct \*)file;
+
+ mutex\_lock(&fsp->files\_mutex);
+ result = SMB\_VFS\_PWRITE(fsp, buf, len, offset);
+ mutex\_unlock(&fsp->files\_mutex);
+
+ return result;
 }

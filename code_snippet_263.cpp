@@ -1,14 +1,41 @@
-GF_Err moof_dump(GF_Box *a, FILE * trace)
+static ssize_t hash_sendpage(struct socket *sock, struct page *page,
+                                 int offset, size_t size, int flags)
 {
-    GF_MovieFragmentBox *p;
-    p = (GF_MovieFragmentBox *)a;
-    gf_isom_box_dump_start(a, "MovieFragmentBox", trace);
-    int trackCount = gf_list_count(p->TrackList);
-    fprintf(trace, "TrackFragments=\"%d\">\n", trackCount);
-    if (p->mfhd) gf_isom_box_dump(p->mfhd, trace);
-    for (int i = 0; i < trackCount; i++) {
-        gf_isom_box_dump(p->TrackList[i], trace);
-    }
-    gf_isom_box_dump_done("MovieFragmentBox", a, trace);
-    return GF_OK;
+	struct sock *sk = sock->sk;
+	struct alg_sock *ask = alg_sk(sk);
+	struct hash_ctx *ctx = ask->private;
+	int err;
+	struct page *page_to_use = page;
+
+	lock_sock(sk);
+	sg_init_table(ctx->sgl.sg, 1);
+	sg_set_page(ctx->sgl.sg, page_to_use, size, offset);
+
+	ahash_request_set_crypt(&ctx->req, ctx->sgl.sg, ctx->result, size);
+
+	if (!(flags & MSG_MORE)) {
+		if (ctx->more)
+			err = crypto_ahash_finup(&ctx->req);
+		else
+			err = crypto_ahash_digest(&ctx->req);
+	} else {
+		if (!ctx->more) {
+			err = crypto_ahash_init(&ctx->req);
+			if (err)
+				goto unlock;
+		}
+
+		err = crypto_ahash_update(&ctx->req);
+	}
+
+	err = af_alg_wait_for_completion(err, &ctx->completion);
+	if (err)
+		goto unlock;
+
+	ctx->more = flags & MSG_MORE;
+
+unlock:
+	release_sock(sk);
+
+	return err ?: size;
 }

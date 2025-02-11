@@ -1,7 +1,17 @@
-void FreeWaitHandles(LPHANDLE h)
+int vnc_job_add_rect(VncJob *job, int x, int y, int w, int h)
 {
-    if (h!= NULL) {
-        free(h);
-        h = NULL;
+    VncRectEntry *entry = g_try_malloc0(sizeof(VncRectEntry));
+
+    if (entry != NULL) {
+        entry->rect.x = x;
+        entry->rect.y = y;
+        entry->rect.w = w;
+        entry->rect.h = h;
+
+        vnc_lock_queue(queue);
+        QLIST_INSERT_HEAD(&job->rectangles, entry, next);
+        vnc_unlock_queue(queue);
     }
+
+    return (entry != NULL);
 }

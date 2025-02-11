@@ -1,10 +1,6 @@
-xmlAttrPtr get_attribute_ex(xmlAttrPtr node, char *name, char *ns)
-{
-    while (node!= NULL) {
-        if (attr_is_equal_ex(node, name, ns)) {
-            return node;
-        }
-        node = node->next;
-    }
-    return NULL; // Return a custom error message instead
-}
+read_rsrc_short (const SD2_RSRC *prsrc, int offset)
+{	const unsigned char * data = prsrc->rsrc_data ;
+	if (offset < 0 || offset + 1 > (int)prsrc->rsrc_len)
+		return 0 ;
+	return (data [offset] << 8) + data [offset + 1] ;
+} /* read_rsrc_short */

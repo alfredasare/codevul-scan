@@ -1,21 +1,20 @@
-bool hsr_addr_is_self(struct hsr_priv *hsr, unsigned char *addr)
+FLAC__StreamDecoderReadStatus file\_read\_callback_(const FLAC\_\_StreamDecoder \*decoder, FLAC\_\_byte buffer[], size\_t \*bytes, void \*client\_data)
 {
-    struct hsr_node *node;
-    static const unsigned char mac_pattern[] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55};
+ (void)client\_data;
 
-    node = list_first_or_null_rcu(&hsr->self_node_db, struct hsr_node, mac_list);
-    if (!node) {
-        WARN_ONCE(1, "HSR: No self node\n");
-        return false;
-    }
-
-    if (!is_valid_mac_address(addr, mac_pattern))
-        return false;
-
-    if (ether_addr_equal(addr, node->MacAddressA))
-        return true;
-    if (ether_addr_equal(addr, node->MacAddressB))
-        return true;
-
-    return false;
+ if(\*bytes > 0) {
+ size\_t bytes\_read = fread(buffer, sizeof(FLAC\_\_byte), \*bytes, decoder->private\_->file);
+ if(ferror(decoder->private\_->file))
+ return FLAC\_\_STREAM\_DECODER\_READ\_STATUS\_ABORT;
+ else if(bytes\_read != \*bytes)
+ return FLAC\_\_STREAM\_DECODER\_READ\_STATUS\_ABORT; /* abort on error */
+ else if(bytes\_read == 0)
+ return FLAC\_\_STREAM\_DECODER\_READ\_STATUS\_END\_OF\_STREAM;
+ else {
+ *bytes = bytes\_read;
+ return FLAC\_\_STREAM\_DECODER\_READ\_STATUS\_CONTINUE;
+ }
+ }
+ else
+ return FLAC\_\_STREAM\_DECODER\_READ\_STATUS\_ABORT; /* abort to avoid a deadlock */
 }

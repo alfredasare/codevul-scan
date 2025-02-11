@@ -1,10 +1,22 @@
-u64 ring_buffer_time_stamp(struct ring_buffer *buffer, int cpu)
-{
-    u64 time;
+#define MAX_VERSION 3
 
-    preempt_disable_notrace();
-    time = rb_time_stamp(buffer);
-    preempt_enable_no_resched_notrace();
+static int csnmp_config_add_host_version(host_definition_t *hd,
+                                         oconfig_item_t *ci) {
+  int version;
 
-    return (u64)(size_t)time;
-}
+  if ((ci->values_num != 1) || (ci->values[0].type != OCONFIG_TYPE_NUMBER)) {
+    WARNING("snmp plugin: The `Version' config option needs exactly one number "
+            "argument.");
+    return (-1);
+  }
+
+  version = (int)ci->values[0].value.number;
+  if (version < 1 || version > MAX_VERSION) {
+    WARNING("snmp plugin: `Version' must be between `1' and `%d'.", MAX_VERSION);
+    return (-1);
+  }
+
+  hd->version = version;
+
+  return (0);
+} /* int csnmp_config_add_host_address */

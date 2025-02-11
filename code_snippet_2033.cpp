@@ -1,32 +1,26 @@
-static void bandwidth_create_run_file(pid_t pid) {
-    char *fname;
-    if (asprintf(&fname, "%s/%d-bandwidth", RUN_FIREJAIL_BANDWIDTH_DIR, (int) pid) == -1)
-        errExit("asprintf");
+SkCodec::Result SkIcoCodec::onStartScanlineDecode(const SkImageInfo& dstInfo,
+                                                   const SkCodec::Options& options) {
+    int index = 0;
+    SkCodec::Result result = kInvalidScale;
+    while (true) {
+        index = this->chooseCodec(dstInfo.dimensions(), index);
+        if (index < 0) {
+            break;
+        }
 
-    struct stat s;
-    if (stat(fname, &s, AT_SYMLINK_NOFOLLOW)!= 0) {
-        free(fname);
-        return;
+        SkCodec* embeddedCodec = fEmbeddedCodecs->operator[](index).get();
+        if (embeddedCodec != nullptr) {
+            result = embeddedCodec->startScanlineDecode(dstInfo, &options);
+            if (kSuccess == result) {
+                fCurrScanlineCodec = embeddedCodec;
+                fCurrIncrementalCodec = nullptr;
+                return result;
+            }
+        }
+
+        index++;
     }
 
-    if (!S_ISREG(s.st_mode)) {
-        fprintf(stderr, "Error: file is not a regular file\n");
-        exit(1);
-    }
-
-    if (access(fname, W_OK)!= 0) {
-        fprintf(stderr, "Error: insufficient permissions\n");
-        exit(1);
-    }
-
-    FILE *fp = fopen(fname, "w");
-    if (fp) {
-        SET_PERMS_STREAM(fp, 0, 0, 0644);
-        fclose(fp);
-    } else {
-        fprintf(stderr, "Error: cannot create bandwidth file\n");
-        exit(1);
-    }
-
-    free(fname);
+    SkCodecPrintf("Error: No matching candidate image in ico or null SkCodec pointer.\n");
+    return result;
 }

@@ -1,32 +1,20 @@
-static int get_process_info(pid_t tid, pid_t* out_pid, uid_t* out_uid, uid_t* out_gid) {
-    char path[64];
-    // Validate tid using a whitelist of allowed values
-    if (tid < 1 || tid > 99999) {
-        return -1; // invalid tid
+char *url_full_path(const struct url *url) {
+    if (url == NULL) {
+        return NULL;
     }
 
-    snprintf(path, sizeof(path), "/proc/%d/status", tid);
-
-    FILE* fp = fopen(path, "r");
-    if (!fp) {
-        return -1;
+    int length = full_path_length(url);
+    if (length < 0 || length > INT_MAX - 1) {
+        return NULL;
     }
 
-    int fields = 0;
-    char line[1024];
-    while (fgets(line, sizeof(line), fp)) {
-        size_t len = strlen(line);
-        if (len > 6 &&!memcmp(line, "Tgid:\t", 6)) {
-            *out_pid = atoi(line + 6);
-            fields |= 1;
-        } else if (len > 5 &&!memcmp(line, "Uid:\t", 5)) {
-            *out_uid = atoi(line + 5);
-            fields |= 2;
-        } else if (len > 5 &&!memcmp(line, "Gid:\t", 5)) {
-            *out_gid = atoi(line + 5);
-            fields |= 4;
-        }
+    char *full_path = xmalloc(length + 1);
+    if (full_path == NULL) {
+        return NULL;
     }
-    fclose(fp);
-    return fields == 7? 0 : -1;
+
+    full_path_write(url, full_path);
+    full_path[length] = '\0';
+
+    return full_path;
 }

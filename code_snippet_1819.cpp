@@ -1,22 +1,19 @@
-int UDPSocketWin::GetPeerAddress(IPEndPoint* address) const {
-  DCHECK(CalledOnValidThread());
-  DCHECK(address);
-  if (!is_connected())
-    return ERR_SOCKET_NOT_CONNECTED;
+uid_t from_kuid(struct user_namespace *targ, kuid_t kuid)
+{
+	if (!targ || !kuid) {
+		return NO_USER_ID;
+	}
 
-  if (!remote_address_.get()) {
-    SockaddrStorage storage;
-    int result = getpeername(socket_, storage.addr, &storage.addr_len);
-    if (result == SOCKET_ERROR) {
-      return MapSystemError(WSAGetLastError());
-    }
-    scoped_ptr<IPEndPoint> address(new IPEndPoint());
-    if (!address->FromSockAddr(storage.addr, storage.addr_len)) {
-      return ERR_ADDRESS_INVALID;
-    }
-    remote_address_.reset(address.release());
-  }
+	uid_t min_id, max_id;
+	size_t count;
+	int ret = __get_user_ns_info(targ, &min_id, &max_id, &count);
+	if (ret < 0) {
+		return NO_USER_ID;
+	}
 
-  *address = *remote_address_;
-  return OK;
+	if (__kuid_val(kuid) < min_id || __kuid_val(kuid) > max_id) {
+		return NO_USER_ID;
+	}
+
+	return map_id_up(&targ->uid_map, __kuid_val(kuid));
 }

@@ -1,9 +1,17 @@
-static void m_stop(struct seq_file *m, void *v)
+int yr_re_ast_create(RE_AST** re_ast)
 {
-    struct proc_maps_private *priv = m->private;
-    struct vm_area_struct *vma = v;
+  *re_ast = (RE_AST*) yr_malloc(sizeof(RE_AST));
 
-    vma_stop(priv, vma);
-    if (priv->task != NULL)
-        put_task_struct(priv->task);
+  if (*re_ast == NULL)
+    return ERROR_INSUFFICIENT_MEMORY;
+
+  if (sizeof(*re_ast) != sizeof(RE_AST)) {
+    free(*re_ast);
+    return ERROR_INVALID_OPERATION;
+  }
+
+  (*re_ast)->flags = 0;
+  (*re_ast)->root_node = NULL;
+
+  return ERROR_SUCCESS;
 }

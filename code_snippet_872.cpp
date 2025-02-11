@@ -1,19 +1,17 @@
-bool DelegatedFrameHost::ShouldCreateResizeLock() {
-  RenderWidgetHostImpl* host = client_->GetHost();
+base::AutoLock lock(profile->list_lock());
 
-  if (resize_lock_)
-    return false;
+void AddEmailToOneClickRejectedList(Profile* profile,
+                                const std::string& email) {
+  ListPrefUpdate updater(profile->GetPrefs(),
+                         prefs::kReverseAutologinRejectedEmailList);
 
-  if (host->should_auto_resize())
-    return false;
+  // Use a set to prevent duplicate email addresses
+  base::flat_set<std::string>* email_set =
+      updater->GetMutableList().Get<std::string>();
 
-  gfx::Size desired_size = client_->DesiredFrameSize();
-  if (desired_size == current_frame_size_in_dip_ || desired_size.IsZero())
-    return false;
-
-  ui::Compositor* compositor = client_->GetCompositor();
-  if (!compositor)
-    return false;
-
-  return true;
+  // First, check if the email address is already present in the set
+  if (email_set->count(email) == 0) {
+    // If not found, append it to the list
+    updater->AppendIfNotPresent(new base::StringValue(email));
+  }
 }

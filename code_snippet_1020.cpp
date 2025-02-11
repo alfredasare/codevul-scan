@@ -1,16 +1,19 @@
-void WT_UpdateLFO (S_LFO_CONTROL *pLFO, EAS_I16 phaseInc)
-{
-    /* Check if pLFO->lfoPhase is within the valid range */
-    if (pLFO->lfoPhase < -0x7fff || pLFO->lfoPhase > 0x7fff) {
-        /* Handle out-of-range values, e.g., clamp or error */
-        pLFO->lfoPhase = (pLFO->lfoPhase % 0x8000); 
-    }
-    if (pLFO->lfoPhase < 0)
-    {
-        pLFO->lfoPhase++;
-    }
-    pLFO->lfoValue = (EAS_I16) (pLFO->lfoPhase << 2);
-    if ((pLFO->lfoPhase > 0x1fff) && (pLFO->lfoPhase < 0x6000))
-        pLFO->lfoValue = ~pLFO->lfoValue;
-    pLFO->lfoPhase = (pLFO->lfoPhase + phaseInc) & 0x7fff;
+R\_API void \*r\_bin\_free(RBin *bin) {
+if (!bin) {
+return NULL;
+}
+if (bin->io\_owned) {
+r\_io\_free (bin->iob.io);
+}
+bin->file = NULL;
+free(bin->force);
+free(bin->srcdir);
+r\_list\_free(bin->binfiles);
+r\_list\_free(bin->binxtrs);
+r\_list\_free(bin->plugins);
+sdb\_free(bin->sdb);
+r\_id\_pool\_free(bin->file\_ids);
+memset(bin, 0, sizeof(RBin));
+free(bin);
+return NULL;
 }

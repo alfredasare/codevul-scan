@@ -1,26 +1,17 @@
-static int segment_bits_seq_show(struct seq_file *seq, void *offset)
+static void net_enque(struct priv_net *pn, void *buf, int len)
 {
-    struct super_block *sb = seq->private;
-    struct f2fs_sb_info *sbi = F2FS_SB(sb);
-    unsigned int total_segs = le32_to_cpu(sbi->raw_super->segment_count_main);
-    int i;
+	struct queue *q;
 
-    seq_puts(seq, "format: segment_type|valid_blocks|bitmaps\n"
-            "segment_type(0:HD, 1:WD, 2:CD, 3:HN, 4:WN, 5:CN)\n");
+	q = queue_get_slot(pn);
+	if (!q)
+		return;
 
-    for (i = 0; i < total_segs; i++) {
-        if (i >= 0 && i < total_segs) {
-            struct seg_entry *se = get_seg_entry(sbi, i);
+	if (len < 0 || len >= (int) sizeof(q->q_buf)) {
+		/* Handle error */
+		return;
+	}
 
-            seq_printf(seq, "%-10d", i);
-            seq_printf(seq, "%d|%-3u|", se->type,
-                        get_valid_blocks(sbi, i, false));
-            for (int j = 0; j < SIT_VBLOCK_MAP_SIZE; j++)
-                seq_printf(seq, " %.2x", se->cur_valid_map[j]);
-            seq_putc(seq, '\n');
-        } else {
-            seq_printf(seq, "Invalid segment index %d\n", i);
-        }
-    }
-    return 0;
+	q->q_len = len;
+	memcpy(q->q_buf, buf, q->q_len);
+	queue_add(&pn->pn_queue, q);
 }

@@ -1,16 +1,21 @@
-static void copy_iovec_hdr(const struct iovec *from, struct iovec *to, size_t len, int iovcount) {
-    int seg = 0;
-    size_t size;
+void EC_GROUP_free(EC_GROUP *group)
+{
+    int ret;
 
-    while (len && seg < iovcount) {
-        size = min(from->iov_len, len);
-        if (size > 0) {
-            to->iov_base = from->iov_base;
-            to->iov_len = size;
-            len -= size;
-        }
-        ++from;
-        ++to;
-        ++seg;
+    if (!group)
+        return;
+
+    ret = group->meth->group_finish(group);
+    if (ret != 1) {
+        // Log the error and continue
+        ERR_print_errors_fp(stderr);
     }
+
+    EC_pre_comp_free(group);
+    BN_MONT_CTX_free(group->mont_data);
+    EC_POINT_free(group->generator);
+    BN_free(group->order);
+    BN_free(group->cofactor);
+    OPENSSL_free(group->seed);
+    OPENSSL_free(group);
 }

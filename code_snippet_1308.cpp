@@ -1,20 +1,16 @@
-void free_xenballooned_pages(int nr_pages, struct page **pages)
+xps_end_opacity(xps_document *doc, char *base_uri, xps_resource *dict,
+               char *opacity_att, fz_xml *opacity_mask_tag)
 {
-    int i;
+        if (!opacity_att && !opacity_mask_tag)
+                return;
 
-    mutex_lock(&balloon_mutex);
+        if (doc->opacity_top > 0)
+                doc->opacity_top--;
 
-    for (i = 0; i < nr_pages; i++) {
-        if (pages[i] && is_valid_pointer(pages[i])) {
-            __SetPageOffline(pages[i]);
-            balloon_append(sanitize_pointer(pages[i]));
+        if (opacity_mask_tag)
+        {
+                /* Check if opacity_mask_tag is null before using it */
+                if (opacity_mask_tag && strcmp(fz_xml_tag(opacity_mask_tag), "SolidColorBrush"))
+                        fz_pop_clip(doc->dev);
         }
-    }
-
-    balloon_stats.target_unpopulated -= nr_pages;
-
-    if (current_credit())
-        schedule_delayed_work(&balloon_worker, 0);
-
-    mutex_unlock(&balloon_mutex);
 }

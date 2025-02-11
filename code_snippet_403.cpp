@@ -1,9 +1,11 @@
-bool BaseMultipleFieldsDateAndTimeInputType::shouldHaveSecondField(const DateComponents& date) const
+fbStore\_a4(FbBits \*bits, const CARD32 \*values, int x, int width, miIndexedPtr indexed)
 {
-    return isSecondFieldRequired(date);
+int i;
+int max\_index = x + width;
+if (max\_index > bits->width) {
+max\_index = bits->width;
 }
-
-bool BaseMultipleFieldsDateAndTimeInputType::isSecondFieldRequired(const DateComponents& date) const
-{
-    return date.second() || date.millisecond();
+for (i = 0; i < max\_index; ++i) {
+Store4(bits, i, READ(values + i)>>28);
+}
 }

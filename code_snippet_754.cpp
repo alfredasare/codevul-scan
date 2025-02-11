@@ -1,8 +1,27 @@
-static void qeth_fill_ipa_cmd_header(struct qeth_card *card,
-				      struct qeth_ipa_cmd *cmd, __u8 command,
-				      enum qeth_prot_versions prot)
-{
-    size_t cmd_size = sizeof(*cmd);
-    memset(cmd, 0, cmd_size);
-    //... rest of the function remains the same...
+const char* DownloadItemImpl::DebugDownloadStateString(DownloadInternalState state) {
+  switch (state) {
+    case INITIAL_INTERNAL:
+      return "INITIAL";
+    case TARGET_PENDING_INTERNAL:
+      return "TARGET_PENDING";
+    case INTERRUPTED_TARGET_PENDING_INTERNAL:
+      return "INTERRUPTED_TARGET_PENDING";
+    case TARGET_RESOLVED_INTERNAL:
+      return "TARGET_RESOLVED";
+    case IN_PROGRESS_INTERNAL:
+      return "IN_PROGRESS";
+    case COMPLETING_INTERNAL:
+      return "COMPLETING";
+    case COMPLETE_INTERNAL:
+      return "COMPLETE";
+    case CANCELLED_INTERNAL:
+      return "CANCELLED";
+    case INTERRUPTED_INTERNAL:
+      return "INTERRUPTED";
+    case RESUMING_INTERNAL:
+      return "RESUMING";
+    case MAX_DOWNLOAD_INTERNAL_STATE:
+      return "MAX_DOWNLOAD_INTERNAL_STATE";
+  }
+  throw std::runtime_error("Unknown download state " + std::to_string(state));
 }

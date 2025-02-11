@@ -1,11 +1,14 @@
-void sn_object_end(void *state)
+static int megasas_dcmd_set_properties(MegasasState *s, MegasasCmd *cmd)
 {
-    StripnullState *_state = NULL;
+    struct mfi_ctrl_props info;
+    size_t dcmd_size = sizeof(info);
 
-    if (state!= NULL) {
-        _state = (StripnullState *)state;
-        if (_state!= NULL) {
-            appendStringInfoCharMacro(_state->strval, '}');
-        }
+    if (cmd->iov_size < dcmd_size) {
+        trace_megasas_dcmd_invalid_xfer_len(cmd->index, cmd->iov_size,
+                                            dcmd_size);
+        return MFI_STAT_INVALID_PARAMETER;
     }
+    dma_buf_write((uint8_t *)&info, dcmd_size, &cmd->qsg, dcmd_size);
+    trace_megasas_dcmd_unsupported(cmd->index, cmd->iov_size);
+    return MFI_STAT_OK;
 }

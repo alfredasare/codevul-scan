@@ -1,22 +1,24 @@
-bool DebuggerAttachFunction::RunAsync() {
-  std::unique_ptr<Attach::Params> params(Attach::Params::Create(*args_));
-  EXTENSION_FUNCTION_VALIDATE(params.get());
+static void *tcp\_seq\_start(struct seq\_file \*seq, loff\_t \*pos)
+{
+ struct tcp\_iter\_state \*st = seq->private;
+ void \*;
+ rc;
 
-  // Validate the target debuggee information
-  if (!IsValidDebuggeeFormat(params->target)) {
-    error_ = ErrorUtils::FormatErrorMessage(
-        keys::kInvalidDebuggeeFormatError, params->target);
-    return false;
-  }
+ if (\*pos && \*pos == st->last\_pos) {
+ rc = tcp\_seek\_last\_pos(seq);
+ if (rc)
+ goto out;
+ }
 
-  CopyDebuggee(&debuggee_, params->target);
-  if (!InitAgentHost())
-    return false;
+ st->state = TCP\_SEQ\_STATE\_LISTENING;
+ st->num = 0;
+ st->bucket = 0;
+ st->offset = 0;
+ rc = \*pos ? tcp\_get\_idx(seq, (size\_t)(*pos - 1)) : SEQ\_START\_TOKEN;
 
-  //... rest of the code remains the same...
+out:
+ st->last\_pos = \*pos;
+ return rc;
 }
 
-bool IsValidDebuggeeFormat(const std::string& target) {
-  const std::set<std::string> allowedFormats = {"format1", "format2", "format3"};
-  return allowedFormats.find(target)!= allowedFormats.end();
-}
+Note: I have casted the \*pos - 1 to size\_t to avoid any potential integer overflow that could lead to buffer overflow.

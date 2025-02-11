@@ -1,10 +1,16 @@
-String SystemClipboard::ReadPlainText() {
-  size_t bufferLength = buffer_.size();
-  size_t maxLength = 1024; // adjust this value based on your requirements
-
-  if (bufferLength > maxLength) {
-    buffer_ = buffer_.substr(0, maxLength);
-  }
-
-  return std::string(buffer_.c_str(), buffer_.size());
-}
+if (stopDownload() != 0 || deleteFiles() != 0 ||
+#ifdef USE_SSL
+          free_ssl_ctx() != 0 ||
+#endif
+#ifdef USE_NNTP
+          disconnectNews() != 0 ||
+#endif
+#ifdef __MINGW32_VERSION
+          WSACleanup() != 0 ||
+#endif
+         1) {
+        // Error handling for any of the above functions
+        // Log an error message
+        return -1;
+    }
+    exit(i);

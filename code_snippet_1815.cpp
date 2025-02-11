@@ -1,32 +1,31 @@
-gx_device_init(gx_device * dev, const gx_device * proto, gs_memory_t * mem, bool internal)
+#define MAX_FILENAME_LENGTH 256
+
+irc_ctcp_dcc_filename_without_quotes (const char *filename)
 {
-    // Validate and sanitize the proto pointer
-    if (proto == NULL || proto->params_size <= 0) {
-        return -1; // error
+    int length;
+    char valid_characters[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.";
+
+    if (strlen(filename) > MAX_FILENAME_LENGTH)
+    {
+        return NULL;
     }
 
-    // Use a whitelist approach to restrict allowed values for params_size
-    if (proto->params_size > GX_MAX_PARAMS_SIZE) {
-        return -1; // error
-    }
+    length = strlen (filename);
+    if (length > 0)
+    {
+        if ((length >= 2) && (filename[0] == '\"') && (filename[length - 1] == '\"'))
+        {
+            for (int i = 1; i < length - 1; i++)
+            {
+                if (strchr(valid_characters, filename[i]) == NULL)
+                {
+                    return NULL;
+                }
+            }
 
-    // Allocate a new buffer for dev
-    dev->params = malloc(proto->params_size);
-    if (dev->params == NULL) {
-        return -1; // error
-    }
-
-    // Copy trusted data into the dev structure
-    if (proto->params_size > 0) {
-        size_t copy_size = proto->params_size;
-        if (copy_size > sizeof(dev->params)) {
-            copy_size = sizeof(dev->params);
+            return weechat_strndup (filename + 1, length - 2);
         }
-        memcpy(dev->params, proto->params, copy_size);
     }
 
-    dev->memory = mem;
-    dev->retained =!internal;
-    rc_init(dev, mem, (internal? 0 : 1));
-    rc_increment(dev->icc_struct);
+    return strdup (filename);
 }

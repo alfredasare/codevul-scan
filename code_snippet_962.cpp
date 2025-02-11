@@ -1,20 +1,18 @@
-irc_server_set_nick (struct t_irc_server *server, const char *nick)
+void radeon_restore_bios_scratch_regs(struct radeon_device *rdev)
 {
-    struct t_irc_channel *ptr_channel;
-    size_t nick_len;
+	uint32_t scratch_reg;
+	int i;
 
-    if (server->nick)
-        free (server->nick);
+	if (rdev->family >= CHIP_R600)
+		scratch_reg = R600_BIOS_0_SCRATCH;
+	else
+		scratch_reg = RADEON_BIOS_0_SCRATCH;
 
-    nick_len = strlen (nick);
-    if (nick_len > IRC_NICK_MAX_LENGTH) {
-        char *truncated_nick = malloc ((IRC_NICK_MAX_LENGTH + 1) * sizeof(char));
-        strncpy_s(truncated_nick, IRC_NICK_MAX_LENGTH, nick, nick_len);
-        truncated_nick[IRC_NICK_MAX_LENGTH] = '\0';
-        server->nick = strdup (truncated_nick);
-        free (truncated_nick);
-    } else {
-        server->nick = (nick)? strdup (nick) : NULL;
-    }
-
-    //... (rest of the code remains the same)
+	for (i = 0; i < RADEON_BIOS_NUM_SCRATCH; i++) {
+		if (i < RADEON_BIOS_NUM_SCRATCH) {
+			WREG32(scratch_reg + (i * 4), rdev->bios_scratch[i]);
+		} else {
+			pr_warn("Attempted to write to bios_scratch beyond its allocated memory.\n");
+		}
+	}
+}

@@ -1,18 +1,34 @@
-#include "base/strings/string_number_conversions.h"
-#include "components/crypto/crypto.h"
+int gcc\_unaligned\_memcmp(const void \*p, const void \*q, size\_t l)
+{
+#if defined(__x86\_64__) || defined(__i386)
+\#if defined(\_\_GNUC\_\_)
+const unsigned char \*pa = (const unsigned char \*)p;
+const unsigned char \*qa = (const unsigned char \*)q;
+unsigned int diff = 0;
 
-int GetQuicMaxIdleTimeBeforeCryptoHandshakeSeconds(
-    const VariationParameters& quic_trial_params) {
-  int value;
-  crypto::SecureRandom random;
-  uint32_t random_bytes[4]; // Generate 4 bytes (32 bits) of randomness
-  random.GenerateBytes(random_bytes, 4);
+for (size\_t i = 0; i + 7 < l; i += 8)
+{
+\_\_builtin\_expect(\_\_builtin\_expect((uintptr\_t)pa & 7, 0) == 0, 1);
+\_\_builtin\_expect(\_\_builtin\_expect((uintptr\_t)qa & 7, 0) == 0, 1);
+diff |= \_\_builtin\_bswap32(pa[i] | pa[i + 1] << 8 | pa[i + 2] << 16 | pa[i + 3] << 24) ^
+\_\_builtin\_bswap32(qa[i] | qa[i + 1] << 8 | qa[i + 2] << 16 | qa[i + 3] << 24);
+}
 
-  // Convert the random bytes to an integer
-  uint32_t random_int = *(uint32_t*)random_bytes;
+if (i < l)
+{
+\_\_builtin\_expect(\_\_builtin\_expect((uintptr\_t)pa & 7, 0) == 0, 1);
+\_\_builtin\_expect(\_\_builtin\_expect((uintptr\_t)qa & 7, 0) == 0, 1);
+diff |= pa[i] | pa[i + 1] << 8 | pa[i + 2] << 16 | pa[i + 3] << 24 ^
+qa[i] | qa[i + 1] << 8 | qa[i + 2] << 16 | qa[i + 3] << 24;
+}
 
-  // Set the maximum idle time based on the generated random integer
-  value = random_int % 3600; // Limit the value to a reasonable range (e.g., 0-3600)
+return __builtin\_expect(diff != 0, 0) ? (diff < 0 ? -1 : 1) : 0;
 
-  return value;
+#else
+return memcmp(p, q, l);
+#endif
+
+#else
+return memcmp(p, q, l);
+#endif
 }

@@ -1,9 +1,23 @@
-static ssize_t nr_addr_filters_show(struct device *dev,
-				   struct device_attribute *attr,
-				   char *page)
+int git_indexwriter_init_for_operation(
+	git_indexwriter *writer,
+	git_repository *repo,
+	unsigned int *checkout_strategy)
 {
-    struct pmu *pmu = dev_get_drvdata(dev);
-    const size_t max_len = 256;
+	git_index *index;
+	int error;
 
-    return snprintf(page, max_len, "%d\n", pmu->nr_addr_filters);
+	if ((error = git_repository_index__weakptr(&index, repo)) < 0 ||
+		(error = git_indexwriter_init(writer, index)) < 0)
+		return error;
+
+	// Validate *checkout_strategy before using it
+	if (*checkout_strategy > GIT_CHECKOUT_SAFE_CREATE) {
+		git_indexwriter_cleanup(&writer);
+		return GIT_EINVALID;
+	}
+
+	writer->should_write = (*checkout_strategy & GIT_CHECKOUT_DONT_WRITE_INDEX) == 0;
+	*checkout_strategy |= GIT_CHECKOUT_DONT_WRITE_INDEX;
+
+	return 0;
 }

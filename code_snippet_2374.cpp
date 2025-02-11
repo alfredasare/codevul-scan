@@ -1,23 +1,16 @@
-bool SVGStyleElement::DidNotifySubtreeInsertionsToDocument() {
-  if (StyleElement::ProcessStyleSheet(GetDocument(), *this) ==
-      StyleElement::kProcessingFatalError)
-    NotifyLoadedSheetAndAllCriticalSubresources(
-        kErrorOccurredLoadingSubresource);
-}
+void XMPChunk::changesAndSize(RIFF_MetaHandler* handler)
+{
+	XMP_Enforce(&handler->xmpPacket != 0);
+	XMP_Enforce(handler->xmpPacket.size() > 0);
 
-bool StyleElement::ProcessStyleSheet(Document* document, const SVGStyleElement& styleElement) {
-  // Validate the style sheet content
-  if (!ValidateStyleSheet(styleElement.GetStyleSheet())) {
-    return StyleElement::kProcessingFatalError;
-  }
-  // Process the validated style sheet
-  return StyleElement::kProcessingSuccess;
-}
+	constexpr uint64_t max_value = std::numeric_limits<uint64_t>::max() - 8;
+	XMP_Validate(handler->xmpPacket.size() < max_value,
+		"Packet size is too large, risk of integer overflow",
+		kXMPErr_InternalFailure);
 
-bool SVGStyleElement::ValidateStyleSheet(const String& stylesheet) {
-  // Implement validation logic to check for malicious content
-  // For example, check for forbidden characters, syntax errors, etc.
-  // Return true if the style sheet is valid, false otherwise
-  // ...
-  return true; // Replace with actual validation logic
+	this->newSize = 8 + handler->xmpPacket.size();
+
+	XMP_Validate(this->newSize <= 0xFFFFFFFFLL, "no single chunk may be above 4 GB", kXMPErr_InternalFailure);
+
+	this->hasChange = true;
 }

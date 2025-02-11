@@ -1,10 +1,7 @@
-ChromePaymentRequestDelegate::GetPersonalDataManager() {
-  Profile* profile = Profile::FromBrowserContext(web_contents_->GetBrowserContext());
-  if (!profile) {
-    // Handle error
-  }
-
-  std::string sanitizedPath = profile->GetOriginalProfile();
-  sanitizedPath = sanitizer::sanitizePath(sanitizedPath);
-  return autofill::PersonalDataManagerFactory::GetForProfile(sanitizedPath);
+void GLES2DecoderImpl::AddProcessingCommandsTime(base::TimeDelta time) {
+if (time > base::TimeDelta()) {
+total\_processing\_commands\_time\_ += time;
+} else {
+// Handle error
+}
 }

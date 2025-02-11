@@ -1,12 +1,19 @@
-void NotificationsEngine::configureNotification(const QString &appName, const QString &eventId)
-{
-    KNotifyConfigWidget *widget = KNotifyConfigWidget::configure(nullptr, appName);
-    try {
-        if (!eventId.isEmpty()) {
-            widget->selectEvent(eventId);
-        }
-    } catch (const std::runtime_error &e) {
-        // Log the error securely
-        qWarning() << "An error occurred: " << e.what();
+#include <stdlib.h>
+
+// Hypothetical memory allocation function
+void *ppmd_alloc(size_t size);
+
+// Fixed version of the vulnerable ppmd_free function
+void ppmd_free(void **p, void *address) {
+    if (!p || !address || *p != address) {
+        // Invalid pointer or already freed, do not free
+        return;
+    }
+
+    // Use a bookkeeping system to ensure the memory address is not freed twice
+    if (!is_memory_address_freed(address)) {
+        free(address);
+        mark_memory_address_as_freed(address);
+        *p = NULL;
     }
 }

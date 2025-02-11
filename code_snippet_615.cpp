@@ -1,13 +1,10 @@
-WebGLRenderingContextBase::WebGLRenderingContextBase(
-    CanvasRenderingContextHost* host,
-    std::unique_ptr<WebGraphicsContext3DProvider> context_provider,
-    bool using_gpu_compositing,
-    const CanvasContextCreationAttributes& requested_attributes,
-    unsigned version)
-    : WebGLRenderingContextBase(
-          ValidateAndSanitizeHost(host), // Validate and sanitize the host object
-          host->GetTopExecutionContext()->GetTaskRunner(TaskType::kWebGL),
-          std::move(context_provider),
-          using_gpu_compositing,
-          requested_attributes,
-          version) {}
+c++
+std::unique_ptr<TracedValue> InspectorMarkLoadEvent::Data(LocalFrame* frame) {
+  ScopedMemoryHandle handle = GetFrameMemoryHandle(frame);
+  if (!handle || !handle.IsValid()) {
+    // Handle error condition, e.g. return an error value or throw an exception.
+  }
+  std::unique_ptr<TracedValue> frame_data = FrameEventData(handle.Get());
+  frame_data->SetString("frame", ToHexString(handle.Get(), handle.GetSize()));
+  return frame_data;
+}

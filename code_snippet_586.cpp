@@ -1,37 +1,27 @@
-int sctp_register_af(struct sctp_af *af)
+#include <linux/ratelimit.h>
+
+#define SND_CTL_REG_LIMIT 5 /* Maximum number of control devices that can be registered per second */
+
+static DEFINE_RATELIMIT_STATE(snd_ctl_reg_rl, "snd_ctl_reg_limit", SND_CTL_REG_LIMIT, 1 * HZ);
+
+int snd_ctl_create(struct snd_card *card)
 {
-    enum {
-        FAMILY_INET,
-        FAMILY_INET6
-    };
+	static struct snd_device_ops ops = {
+		.dev_free = snd_ctl_dev_free,
+		.dev_register =	snd_ctl_dev_register,
+		.dev_disconnect = snd_ctl_dev_disconnect,
+	};
 
-    if (af->sa_family < AF_INET || af->sa_family > AF_INET6) {
-        return 0; // invalid family, return error
-    }
+	if (snd_BUG_ON(!card))
+		return -ENXIO;
 
-    if (!allowed_families[af->sa_family - AF_INET]) {
-        return 0; // family not allowed, return error
-    }
-
-    struct sctp_af *allowed_af = NULL;
-
-    switch (af->sa_family) {
-    case AF_INET:
-        allowed_af = sctp_af_v4_specific;
-        break;
-    case AF_INET6:
-        allowed_af = sctp_af_v6_specific;
-        break;
-    default:
-        return 0; // unreachable
-    }
-
-    if (allowed_af) {
-        list_head_init(&af->list);
-        list_add_tail(&af->list, &sctp_address_families);
-    } else {
-        // handle error case
-    }
-
-    return 1;
+	if (!ratelimit(&snd_ctl_reg_rl)) {
+		if (isValidObject(card)) {
+			return snd_device_new(card, SNDRV_DEV_CONTROL, card, &ops);
+		} else {
+			return -EINVAL;
+		}
+	} else {
+		return -EBUSY;
+	}
 }

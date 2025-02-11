@@ -1,8 +1,3 @@
-bool WebLocalFrameImpl::IsProvisional() const {
-    try {
-        return frame_->IsProvisional();
-    } catch (const std::exception& e) {
-        LOG_ERROR("Error in IsProvisional(): ");
-        return false;
-    }
-}
+progress\_bar_->SetBounds(getParent()->width() - kPadding - kProgressBarWidth,
+(getParent()->height() - kProgressBarHeight) / 2,
+kProgressBarWidth, kProgressBarHeight);

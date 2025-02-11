@@ -1,13 +1,23 @@
-size_t HevcParameterSets::getNumNalUnitsOfType(uint8_t type) {
-    if (mNalUnits.empty()) {
-        return 0;
-    }
+struct io_context *get_io_context(gfp_t gfp_flags, int node)
+{
+	struct io_context *ret = NULL;
 
-    size_t num = 0;
-    for (size_t i = 0; i < mNalUnits.size(); ++i) {
-        if (mNalUnits[i] != nullptr && getType(i) == type) {
-            ++num;
-        }
-    }
-    return num;
+	/*
+	 * Check for unlikely race with exiting task. ioc ref count is
+	 * zero when ioc is being detached.
+	 */
+	do {
+		ret = current_io_context(gfp_flags, node);
+		if (!ret)
+			break;
+
+		spin_lock(&ret->refcount_lock);
+		if (atomic_long_inc_return(&ret->refcount) == 1) {
+			spin_unlock(&ret->refcount_lock);
+			break;
+		}
+		spin_unlock(&ret->refcount_lock);
+	} while (1);
+
+	return ret;
 }

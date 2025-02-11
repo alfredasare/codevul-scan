@@ -1,12 +1,38 @@
-static void pppol2tp_copy_stats(struct pppol2tp_ioc_stats *dest,
-				struct l2tp_stats *stats)
+trap_name_resolved(
+	int			rescode,
+	int			gai_errno,
+	void *			context,
+	const char *		name,
+	const char *		service,
+	const struct addrinfo *	hints,
+	const struct addrinfo *	res
+	)
 {
-	dest->tx_packets = atomic_long_read_relaxed(&stats->tx_packets);
-	dest->tx_bytes = atomic_long_read_relaxed(&stats->tx_bytes);
-	dest->tx_errors = atomic_long_read_relaxed(&stats->tx_errors);
-	dest->rx_packets = atomic_long_read_relaxed(&stats->rx_packets);
-	dest->rx_bytes = atomic_long_read_relaxed(&stats->rx_bytes);
-	dest->rx_seq_discards = atomic_long_read_relaxed(&stats->rx_seq_discards);
-	dest->rx_oos_packets = atomic_long_read_relaxed(&stats->rx_oos_packets);
-	dest->rx_errors = atomic_long_read_relaxed(&stats->rx_errors);
+	settrap_parms *pstp;
+	struct interface *localaddr;
+	sockaddr_u peeraddr;
+
+	pstp = context;
+	if (rescode) {
+		msyslog(LOG_ERR,
+			"giving up resolving trap host %s: %s (%d)",
+			name, gai_strerror(rescode), rescode);
+		free(pstp);
+		return;
+	}
+	if (sizeof(peeraddr) >= res->ai_addrlen) {
+		memset(&peeraddr, 0, sizeof(peeraddr));
+		memcpy(&peeraddr, res->ai_addr, res->ai_addrlen);
+		localaddr = NULL;
+		if (pstp->ifaddr_nonnull)
+			localaddr = findinterface(&pstp->ifaddr);
+		if (NULL == localaddr)
+			localaddr = ANY_INTERFACE_CHOOSE(&peeraddr);
+		if (!ctlsettrap(&peeraddr, localaddr, 0, NTP_VERSION))
+			msyslog(LOG_ERR, "set trap %s -> %s failed.",
+				latoa(localaddr), stoa(&peeraddr));
+	} else {
+		msyslog(LOG_ERR, "Buffer for peer address is too small.");
+	}
+	free(pstp);
 }

@@ -1,15 +1,5 @@
-static void nr_destroy_timer(unsigned long data)
-{
-    struct sock *sk = (struct sock *)data;
-    bh_lock_sock(sk);
+In this updated code, we calculate the length of the `property` string and compare it with the maximum allowed length `QEMU_FDT_MAX_PROP_LEN`. If the combined length of the property name and value exceeds the buffer size, we return an error code. Note that you should define the constant `QEMU_FDT_MAX_PROP_LEN` based on the maximum allowed size of the buffer.
 
-    if (sock_owned_by_user(sk)) {
-        bh_unlock_sock(sk);
-        return; // socket is in use, cannot destroy it
-    }
 
-    sock_hold(sk);
-    nr_destroy_socket(sk);
-    bh_unlock_sock(sk);
-    sock_put(sk);
-}
+int qemu_fdt_setprop_u64(void *fdt, const char *node_path,
+                         const char *property, uint6

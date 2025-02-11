@@ -1,14 +1,18 @@
-void switch_bench(u32 is_on)
-{
-    if (is_on < 0 || is_on > 1) {
-        return;
+#include <optional>
+
+class BpSoundTriggerHwService : public BpInterface<ISoundTriggerHwService> {
+public:
+    BpSoundTriggerHwService(const sp<IBinder>& impl) : BpInterface<ISoundTriggerHwService>(impl) {
+        // Validate the input parameter
+        if (!impl) {
+            throw std::invalid_argument("BpSoundTriggerHwService: IBinder cannot be null");
+        }
+
+        // Manually check for integer overflow
+        int64_t impl_as_int64 = reinterpret_cast<int64_t>(impl.get());
+        if (impl_as_int64 > std::numeric_limits<int32_t>::max() ||
+            impl_as_int64 < std::numeric_limits<int32_t>::min()) {
+            throw std::overflow_error("BpSoundTriggerHwService: IBinder cast caused integer overflow");
+        }
     }
-
-    bench_mode = is_on;
-    display_rti = is_on? 2 : 0;
-    ResetCaption();
-
-    char buffer[64];
-    snprintf(buffer, sizeof(buffer), "GF_OPT_VIDEO_BENCH=%u", is_on);
-    gf_term_set_option(term, buffer);
-}
+};

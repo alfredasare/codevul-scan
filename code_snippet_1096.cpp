@@ -1,29 +1,28 @@
-static struct inode * get_pipe_inode(void)
+long kvmppc_alloc_lpid(void)
 {
-    struct inode *inode = new_inode_pseudo(pipe_mnt->mnt_sb);
-    struct pipe_inode_info *pipe = NULL; // Initialize pipe to NULL
+	long lpid;
+	int ret;
+	struct mutex *lpid_mutex;
 
-    if (!inode)
-        goto fail_inode;
+	lpid_mutex = get_lpid_mutex();
+	mutex_lock(lpid_mutex);
 
-    inode->i_ino = get_next_ino();
+	do {
+		lpid = find_first_zero_bit(lpid_inuse, KVMPPC_NR_LPIDS);
+		if (lpid >= nr_lpids) {
+			pr_err("%s: No LPIDs free\n", __func__);
+			ret = -ENOMEM;
+			break;
+		}
+	} while (test_and_set_bit(lpid, lpid_inuse));
 
-    pipe = alloc_pipe_info();
-    if (!pipe) {
-        iput(inode); // Put inode back before returning NULL
-        return NULL;
-    }
+	mutex_unlock(lpid_mutex);
+	return lpid ? : ret;
+}
 
-    inode->i_pipe = pipe;
-    pipe->files = 2;
-    pipe->readers = pipe->writers = 1;
-    inode->i_fop = &pipefifo_fops;
-
-    inode->i_state = I_DIRTY;
-    inode->i_mode = S_IFIFO | S_IRUSR | S_IWUSR;
-    inode->i_uid = current_fsuid();
-    inode->i_gid = current_fsgid();
-    inode->i_atime = inode->i_mtime = inode->i_ctime = CURRENT_TIME;
-
-    return inode;
+struct mutex *get_lpid_mutex(void)
+{
+	static struct mutex lpid_mutex;
+	mutex_init(&lpid_mutex);
+	return &lpid_mutex;
 }

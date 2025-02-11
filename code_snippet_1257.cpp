@@ -1,21 +1,13 @@
-ModuleExport size_t RegisterSIXELImage(void)
+dbus\_g\_proxy\_manager\_ref(DBusGProxyManager *manager, gpointer data)
 {
-  MagickInfo
-    *entry;
+ g\_assert(manager != NULL);
+ g\_assert(manager->refcount > 0);
 
-  entry = AcquireMagickInfo("SIXEL", "SIXEL", "DEC SIXEL Graphics Format");
-  entry->decoder = (DecodeImageHandler *)ReadSIXELImage;
-  entry->encoder = (EncodeImageHandler *)WriteSIXELImage;
-  entry->magick = (IsImageFormatHandler *)IsSIXEL;
-  entry->flags = CoderAdjoinFlag; 
-  (void)RegisterMagickInfo(entry);
+ g\_mutex\_lock(&(manager->mutex));
 
-  entry = AcquireMagickInfo("SIXEL", "SIX", "DEC SIXEL Graphics Format");
-  entry->decoder = (DecodeImageHandler *)ReadSIXELImage;
-  entry->encoder = (EncodeImageHandler *)WriteSIXELImage;
-  entry->magick = (IsImageFormatHandler *)IsSIXEL;
-  entry->flags = CoderAdjoinFlag; 
-  (void)RegisterMagickInfo(entry);
+ manager->refcount += 1;
 
-  return(MagickImageCoderSignature);
+ g\_mutex\_unlock(&(manager->mutex));
+
+ return manager;
 }

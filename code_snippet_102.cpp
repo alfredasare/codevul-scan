@@ -1,7 +1,8 @@
-ash::LauncherModel* BrowserLauncherItemController::launcher_model() {
-  ash::LauncherController* launcher_controller = launcher_controller();
-  if (!launcher_controller ||!dynamic_cast<ash::LauncherModel*>(launcher_controller->model())) {
-    return nullptr;
-  }
-  return launcher_controller->model();
+ash::LauncherModel& BrowserLauncherItemController::launcher\_model() {
+try {
+return *launcher\_controller()->model();
+} catch (const std::exception& e) {
+// Log the error and handle it appropriately
+}
+return nullopt;
 }

@@ -1,30 +1,25 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+static inline void InsertPixelList(const Quantum pixel, PixelList *pixel_list)
+{
+  size_t
+    signature;
 
-int is_valid_memory_address(void *address) {
-    // implement your validation logic here
-    // for example, check if the address is within a valid memory range
-    return 1; // return 0 if invalid, 1 if valid
-}
+  unsigned short
+    index;
 
-int is_whitelisted_memory_address(void *address) {
-    // implement your whitelisting logic here
-    // for example, check if the address is within a list of allowed addresses
-    return 1; // return 0 if not whitelisted, 1 if whitelisted
-}
+  index = ScaleQuantumToShort(pixel);
 
-void mem_safe_free(void *address) {
-    // implement your memory-safe free function here
-    // for example, use a custom allocator to deallocate memory safely
-}
+  // Check if the index is within bounds
+  if (index >= pixel_list->skip_list.num_nodes)
+  {
+    // Clamp the value to the last index as an example of a graceful error handling mechanism
+    index = pixel_list->skip_list.num_nodes - 1;
+  }
 
-ppmd_free(void *p, void *address) {
-    if (!is_valid_memory_address(address)) {
-        return;
-    }
-    if (!is_whitelisted_memory_address(address)) {
-        return;
-    }
-    mem_safe_free(address);
+  signature = pixel_list->skip_list.nodes[index].signature;
+  if (signature == pixel_list->signature)
+  {
+    pixel_list->skip_list.nodes[index].count++;
+    return;
+  }
+  AddNodePixelList(pixel_list, index);
 }

@@ -1,27 +1,24 @@
-bool PrintWebViewHelper::OnMessageReceived(const IPC::Message& message) {
-  bool handled = true;
-  IPC_BEGIN_MESSAGE_MAP(PrintWebViewHelper, message)
-    IPC_MESSAGE_HANDLER(PrintMsg_PrintPages, OnPrintPages)
-    IPC_MESSAGE_HANDLER(PrintMsg_PrintForSystemDialog, OnPrintForSystemDialog)
-    IPC_MESSAGE_HANDLER(PrintMsg_InitiatePrintPreview, OnInitiatePrintPreview)
-    IPC_MESSAGE_HANDLER(PrintMsg_PrintNodeUnderContextMenu,
-                        OnPrintNodeUnderContextMenu)
-    IPC_MESSAGE_HANDLER(PrintMsg_PrintPreview, OnPrintPreview)
-    IPC_MESSAGE_HANDLER(PrintMsg_PrintForPrintPreview, OnPrintForPrintPreview)
-    IPC_MESSAGE_HANDLER(PrintMsg_PrintingDone, OnPrintingDone)
-    IPC_MESSAGE_HANDLER(PrintMsg_ResetScriptedPrintCount,
-                        ResetScriptedPrintCount)
-    IPC_MESSAGE_HANDLER(PrintMsg_SetScriptedPrintingBlocked,
-                        SetScriptedPrintBlocked)
-    IPC_MESSAGE_HANDLER(PrintMsg_PrintPages, [&] (const IPC::Message& msg) {
-      std::vector<int> pages;
-      if (!msg.ReadVector(pages)) {
-        handled = false;
-      } else if (pages.size() > 100) {
-        handled = false;
-      }
-    })
-    IPC_MESSAGE_UNHANDLED(handled = false)
-    IPC_END_MESSAGE_MAP()
-  return handled;
+c++
+const int MAX_BUFFER_SIZE = 1024; // Choose an appropriate maximum buffer size
+
+bool ConvertFromMacLang(const std::string& macValue, XMP_Uns16 macLang, std::string* utf8Value) {
+    utf8Value->erase();
+    if (macValue.size() > MAX_BUFFER_SIZE || !IsMacLangKnown(macLang)) {
+        return false;
+    }
+
+#if XMP_MacBuild
+    XMP_Uns16 macScript = GetMacScript(macLang);
+    ReconcileUtils::MacEncodingToUTF8(macScript, macLang, (XMP_Uns8*)macValue.c_str(), macValue.size(), utf8Value);
+#elif XMP_UNIXBuild
+    MacRomanToUTF8(macValue, utf8Value);
+#elif XMP_WinBuild
+    UINT winCP = GetWinCP(macLang);
+    ReconcileUtils::WinEncodingToUTF8(winCP, (XMP_Uns8*)macValue.c_str(), macValue.size(), utf8Value);
+#elif XMP_iOSBuild
+    XMP_Uns32 iosEncCF = GetIOSEncodingCF(macLang);
+    ReconcileUtils::IOSConvertEncoding(iosEncCF, kCFStringEncodingUTF8, (XMP_Uns8*)macValue.c_str(), macValue.size(), utf8Value);
+#endif
+
+    return true;
 }

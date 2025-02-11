@@ -1,30 +1,17 @@
-static int sapi_fcgi_ub_write(const char *str, uint str_length TSRMLS_DC)
+int yr_re_ast_create(RE_AST** re_ast)
 {
-    const char *ptr = str;
-    uint remaining = str_length;
-    fcgi_request *request = (fcgi_request*) SG(server_context);
+  *re_ast = (RE_AST*) yr_malloc(sizeof(RE_AST));
 
-    const char *whitelist_chars = "/a-zA-Z0-9_-.";
-    const char *whitelist_dir = "/.";
+  if (*re_ast == NULL)
+    return ERROR_INSUFFICIENT_MEMORY;
 
-    while (remaining > 0) {
-        long ret = fcgi_write(request, FCGI_STDOUT, ptr, remaining);
+  if (sizeof(*re_ast) != sizeof(RE_AST)) {
+    free(*re_ast);
+    return ERROR_INVALID_OPERATION;
+  }
 
-        if (ret <= 0) {
-            php_handle_aborted_connection();
-            return str_length - remaining;
-        }
+  (*re_ast)->flags = 0;
+  (*re_ast)->root_node = NULL;
 
-        if (!strncasecmp(ptr, whitelist_dir, strlen(whitelist_dir))) {
-            ptr += strlen(whitelist_dir);
-            remaining -= strlen(whitelist_dir);
-        } else if (!strpbrk(ptr, whitelist_chars)) {
-            return -1;
-        }
-
-        ptr += ret;
-        remaining -= ret;
-    }
-
-    return str_length;
+  return ERROR_SUCCESS;
 }

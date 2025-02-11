@@ -1,14 +1,33 @@
-CURLcode Curl_nss_connect_nonblocking(struct connectdata *conn,
-                                      int sockindex, bool *done)
+static int ne2000_buffer_full(NE2000State *s)
 {
-  CURLcode ret = nss_verify_cert(conn->ssl_conn, conn->host, conn->port);
-  if (ret!= CURLE_OK) {
-    return ret;
-  }
-  X509_NAME *cert_subject = SSL_get_peer_certificate_info(conn->ssl_conn)->subject;
-  char *cert_hostname = X509_NAME_oneline(cert_subject, NULL, 0);
-  if (strcmp(cert_hostname, conn->host)!= 0) {
-    return CURLE_PEER_FAILED_VERIFICATION;
-  }
-  return nss_connect_common(conn, sockindex, done);
+    int avail, index, boundary;
+    uint8_t *index_ptr, *boundary_ptr;
+
+    index_ptr = (uint8_t *) &index;
+    *index_ptr++ = s->curpag;
+    *index_ptr = 0;
+
+    index <<= 8;
+    if (*index_ptr == 0xFF) {
+        // Handle the case when shift results in an integer overflow
+        return 1;
+    }
+
+    boundary_ptr = (uint8_t *) &boundary;
+    *boundary_ptr++ = s->boundary;
+    *boundary_ptr = 0;
+
+    boundary <<= 8;
+    if (*boundary_ptr == 0xFF) {
+        // Handle the case when shift results in an integer overflow
+        return 1;
+    }
+
+    if (index < boundary)
+        avail = boundary - index;
+    else
+        avail = (s->stop - s->start) - (index - boundary);
+    if (avail < (MAX_ETH_FRAME_SIZE + 4))
+        return 1;
+    return 0;
 }

@@ -1,9 +1,10 @@
-void PDFiumEngine::ZoomUpdated(double new_zoom_level) {
-    CancelPaints();
+void GlobalHistogramAllocator::SetPersistentLocation(const FilePath& location) {
+  base::FilePath full\_path = base::FilePath(location).MakeFullyQualified();
 
-    double old_zoom_level = current_zoom_;
-    current_zoom_ = new_zoom_level;
+  if (!full\_path.IsUnderDirectory(base::FilePath(::argv[0]).DirName())) {
+    LOG(ERROR) << "Invalid location: " << full\_path.value();
+    return;
+  }
 
-    CalculateVisiblePages();
-    UpdateTickMarks();
+  persistent\_location\_ = full\_path;
 }

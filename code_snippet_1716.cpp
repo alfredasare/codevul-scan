@@ -1,25 +1,28 @@
-#include <iostream>
-#include <string>
-#include <openssl/aes.h>
-#include <openssl/rand.h>
+#define MAX_BUFFER_LENGTH 256
 
-void BeginSpecificTrace(const std::string& filter) {
-    // Generate a random key for encryption
-    unsigned char key[32];
-    RAND_bytes(key, 32);
+vcard_init_buffer_response(VCard *card, unsigned char *buf, int len)
+{
+    if (len > MAX_BUFFER_LENGTH) {
+        return NULL;
+    }
 
-    // Create an AES-256-CBC encryption object
-    AES_KEY aes_key;
-    AES_set_encrypt_key(key, 32, &aes_key);
+    VCardResponse *response;
+    VCardBufferResponse *buffer_response;
 
-    // Encrypt the sensitive data
-    unsigned char* encrypted_data = new unsigned char[strlen(event_watch_notification_) + 1];
-    AES_cbc_encrypt((unsigned char*)event_watch_notification_.c_str(), encrypted_data, strlen(event_watch_notification_) + 1, &aes_key, key, AES_ENCRYPT);
-
-    // Set the encrypted data
-    event_watch_notification_ = std::string((char*)encrypted_data, strlen((char*)encrypted_data));
-    delete[] encrypted_data;
-
-    // Set the encryption mode for the TraceLog instance
-    TraceLog::GetInstance()->SetEnabled(TraceConfig(filter, ""), TraceLog::RECORDING_MODE);
+    buffer_response = vcard_get_buffer_response(card);
+    if (buffer_response) {
+        vcard_set_buffer_response(card, NULL);
+        vcard_buffer_response_delete(buffer_response);
+    }
+    buffer_response = vcard_buffer_response_new(buf, len);
+    if (buffer_response == NULL) {
+        return NULL;
+    }
+    response = vcard_response_new_status_bytes(VCARD7816_SW1_RESPONSE_BYTES,
+                                               len > 255 ? 0 : len);
+    if (response == NULL) {
+        return NULL;
+    }
+    vcard_set_buffer_response(card, buffer_response);
+    return response;
 }

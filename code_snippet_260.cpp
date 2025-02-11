@@ -1,15 +1,27 @@
-bool autoneg_timer_set = false;
-
-e1000e_autoneg_resume(E1000ECore *core)
+clear\_config()
 {
-    if (e1000e_have_autoneg(core) &&
-      !(core->phy[0][PHY_STATUS] & MII_SR_AUTONEG_COMPLETE)) {
-        qemu_get_queue(core->owner_nic)->link_down = false;
-        if (!autoneg_timer_set) {
-            timer_mod(core->autoneg_timer, qemu_clock_get_ms(QEMU_CLOCK_VIRTUAL) + 500);
-            autoneg_timer_set = true;
-        }
-    } else if (autoneg_timer_set) {
-        autoneg_timer_set = false;
-    }
+register int i;
+register BUCKET *ptr = NULL;
+register BUCKET *tmp = NULL;
+
+for( i=0; i<TABLESIZE; i++ ) {
+ptr = ConfigTab[i];
+while( ptr != NULL ) {
+tmp = ptr->next;
+FREE( ptr->value );
+ptr->value = NULL;
+FREE( ptr->name );
+ptr->name = NULL;
+FREE( ptr );
+ptr = tmp;
+}
+ConfigTab[i] = NULL;
+}
+if (extra\_info != NULL) {
+delete extra\_info;
+extra\_info = NULL;
+}
+global\_config\_source = "";
+local\_config\_sources.clearAll();
+return;
 }

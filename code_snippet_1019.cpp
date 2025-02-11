@@ -1,9 +1,20 @@
-static int nfs3svc_encode_setaclres(struct svc_rqst *rqstp, __be32 *p,
-                                  struct nfsd3_attrstat *resp)
+static void gdImageVLine(gdImagePtr im, int x, int y1, int y2, int col)
 {
-    pthread_mutex_lock(&lock); // Add a lock to protect the shared resource
-    p = nfs3svc_encode_post_op_attr(rqstp, p, &resp->fh);
-    pthread_mutex_unlock(&lock); // Release the lock
+	if (im && (x >= 0) && (x < im->sx) && (y1 >= 0) && (y1 < im->sy) && (y2 >= 0) && (y2 < im->sy)) {
+		if (im->thick > 1) {
+			int thickhalf = im->thick >> 1;
+			gdImageFilledRectangle(im, x - thickhalf, y1, x + im->thick - thickhalf - 1, y2, col);
+		} else {
+			if (y2 < y1) {
+				int t = y1;
+				y1 = y2;
+				y2 = t;
+			}
 
-    return xdr_ressize_check(rqstp, p);
+			for (;y1 <= y2; y1++) {
+				gdImageSetPixel(im, x, y1, col);
+			}
+		}
+	}
+	return;
 }

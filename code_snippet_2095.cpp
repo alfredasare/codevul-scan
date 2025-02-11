@@ -1,9 +1,10 @@
-int __init udp_offload_init(void)
+static int unix_mknod(struct dentry *dentry, struct path *path, umode_t mode,
+                      struct path *res)
 {
-    int proto = IPPROTO_UDP; 
-    if (proto != IPPROTO_TCP && proto != IPPROTO_UDP && proto != IPPROTO_ICMPV6) {
-        printk(KERN_ERR "Invalid protocol number: %d\n", proto);
-        return -EINVAL;
-    }
-    return inet6_add_offload(&udpv6_offload, proto);
-}
+        int err;
+
+        err = helper_sync_kernel(security_path_mknod, path, dentry, mode, 0);
+        if (!err) {
+                res->mnt = mntget(path->mnt);
+                res->dentry = dget(dentry);
+                err = vfs_mknod(d_inode(path->dentry), dentry, mode,

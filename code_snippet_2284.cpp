@@ -1,20 +1,19 @@
-static struct ath_buf *ath_tx_get_buffer(struct ath_softc *sc)
+CopyInterps(CompatInfo *info, bool needSymbol, enum xkb_match_operation pred,
+            struct collect *collect)
 {
-    struct ath_buf *bf = NULL;
+    SymInterpInfo *si;
+    XkbSymInterpret interp;
 
-    spin_lock_bh(&sc->tx.txbuflock);
-
-    if (unlikely(list_empty(&sc->tx.txbuf))) {
-        spin_unlock_bh(&sc->tx.txbuflock);
-        return NULL;
+    darray_foreach(si, info->interps) {
+        if (si->interp.match == pred &&
+            (si->interp.sym != XKB_KEY_NoSymbol) == needSymbol) {
+            interp = si->interp;
+            interp.symbols = xkb_sym_interp_alloc_copy(interp.symbols);
+            if (!interp.symbols) {
+                // Handle memory allocation failure
+                return;
+            }
+            darray_append(collect->sym_interprets, interp);
+        }
     }
-
-    bf = list_first_entry_or_null(&sc->tx.txbuf, struct ath_buf, list);
-    if (bf) {
-        list_del(&bf->list);
-    }
-
-    spin_unlock_bh(&sc->tx.txbuflock);
-
-    return bf;
 }

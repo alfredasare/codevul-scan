@@ -1,32 +1,13 @@
-void i915_gem_execbuffer_wait_for_flips(struct intel_ring_buffer *ring, u32 flips)
+void address_space_stq_le(AddressSpace *as, hwaddr addr, uint64_t val,
+                   MemTxAttrs attrs, MemTxResult *result)
 {
-    u32 plane, flip_mask;
-    int ret;
-
-    /* Check for any pending flips. As we only maintain a flip queue depth
-     * of 1, we can simply insert a WAIT for the next display flip prior
-     * to executing the batch and avoid stalling the CPU.
-     */
-
-    for (plane = 0; flips >> plane; plane++) {
-        if (((flips >> plane) & 1) == 0)
-            continue;
-
-        if (plane)
-            flip_mask = MI_WAIT_FOR_PLANE_B_FLIP;
-        else
-            flip_mask = MI_WAIT_FOR_PLANE_A_FLIP;
-
-        ret = intel_ring_begin(ring, 2);
-        if (ret != 0) {
-            intel_ring_error_handler(ring, ret);
-            return;
-        }
-
-        intel_ring_emit(ring, MI_WAIT_FOR_EVENT | flip_mask);
-        intel_ring_emit(ring, MI_NOOP);
-        intel_ring_advance(ring);
+    // Validate the input 'addr'
+    if (addr >= as->size) {
+        // Handle the error condition, e.g., return an error code or log an error message
+        return;
     }
 
-    return;
-}
+    // Validate the input 'attrs'
+    if (!isValidAttrs(attrs)) {
+        // Handle the error condition, e.g., return an error code or log an error message
+        return;

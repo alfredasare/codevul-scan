@@ -1,8 +1,1 @@
-void RenderWidgetHostImpl::ViewDestroyed() {
-  CancelKeyboardLock();
-  RejectMouseLockOrUnlockIfNecessary();
-
-  if (view_!= nullptr) {
-    SetView(nullptr);
-  }
-}
+version of the provided vulnerable code, following the recommended changes to address the buffer over-read issue (CWE-190, CVE-2016-9

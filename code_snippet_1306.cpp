@@ -1,18 +1,25 @@
-void DocumentModuleScriptFetcher::Finalize(
-    const WTF::Optional<ModuleScriptCreationParams>& params,
-    const HeapVector<Member<ConsoleMessage>>& error_messages) {
-  NotifyFetchFinished(params, error_messages);
+xfs_vm_releasepage(
+	struct page		*page,
+	gfp_t			gfp_mask)
+{
+	if (!gfp_mask || gfp_mask & ~(GFP_KERNEL | GFP_ATOMIC | GFP_HIGHUSER)) {
+		pr_err("xfs_vm_releasepage: Invalid gfp_mask: 0x%x\n", gfp_mask);
+		return -EINVAL;
+	}
 
-  // Example: Handle errors in a way that does not expose sensitive information
-  for (auto& error_message : error_messages) {
-    if (error_message->hasError()) {
-      std::string sanitizedErrorMessage = sanitizeErrorString(error_message->errorMessage());
-      ConsoleLog::AddText(sanitizedErrorMessage);
-    }
-  }
-}
+	int			delalloc, unwritten;
 
-std::string sanitizeErrorString(const String& errorMessage) {
-  // Implement a mechanism to securely remove sensitive information from the error message
-  return errorMessage.replace("API_KEY", "").replace("SECRET_TOKEN", "");
+	trace_xfs_releasepage(page->mapping->host, page, 0, 0);
+
+	if (PageDirty(page))
+		return 0;
+
+	xfs_count_page_state(page, &delalloc, &unwritten);
+
+	if (WARN_ON_ONCE(delalloc))
+		return 0;
+	if (WARN_ON_ONCE(unwritten))
+		return 0;
+
+	return try_to_free_buffers(page);
 }

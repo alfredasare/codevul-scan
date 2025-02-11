@@ -1,16 +1,11 @@
-BGD_DECLARE(void *) gdImageGd2Ptr (gdImagePtr im, int cs, int fmt, int *size)
+Here's the fixed version of the vulnerable code following the provided recommendation:
+
+
+int xt_register_targets(struct xt_target *target, unsigned int n)
 {
-    void *rv;
-    gdIOCtx *out = gdNewDynamicCtx (2048, NULL);
-    if (out == NULL) return NULL;
+	unsigned int i;
+	int temp_reg_count = 0;
+	int err = 0;
 
-    if (*size > out->buffer_size) {
-        error("Invalid size value");
-        return NULL;
-    }
-
-    _gdImageGd2 (im, out, cs, fmt);
-    rv = gdDPExtractData (out, *size);
-    out->gd_free (out);
-    return rv;
-}
+	for (i = 0; i < n; i++) {
+		err = xt_register_target(&target[i]);

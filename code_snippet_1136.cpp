@@ -1,36 +1,24 @@
-accept_ice_connection (GIOChannel           *source,
-                        GIOCondition          condition,
-                        GsmIceConnectionData *data)
+mm_ssh_gssapi_server_ctx(Gssctxt **ctx, gss_OID goid)
 {
-    IceListenObj    listener;
-     IceConn         ice_conn;
-     IceAcceptStatus status;
-    GsmClient      *client;
-    GsmXsmpServer  *server;
-    GError        *error = NULL;
-    listener = data->listener;
-    server = data->server;
+	Buffer m;
+	OM_uint32 major;
+	size_t goid_length = goid->length;
 
-     g_debug ("GsmXsmpServer: accept_ice_connection()");
+	/* Client doesn't get to see the context */
+	*ctx = NULL;
 
-    ice_conn = IceAcceptConnection (listener, &status);
-     if (status!= IceAcceptSuccess) {
-             g_debug ("GsmXsmpServer: IceAcceptConnection returned %d", status);
-             return TRUE;
-     }
+	buffer_init(&m);
+	if (goid_length > buffer_capacity(&m)) {
+		buffer_free(&m);
+		return (GSS_S_FAILURE); // Return an error if the buffer isn't large enough
+	}
+	buffer_put_string(&m, goid->elements, goid_length);
 
-    client = gsm_xsmp_client_new (ice_conn);
-    if (!client) {
-        g_error_free (error);
-        error = g_error_new (G_IO_ERROR, G_IO_ERROR_FAILED, "Failed to create new client");
-        g_debug ("GsmXsmpServer: %s", error->message);
-        g_error_free (error);
-        return FALSE;
-    }
+	mm_request_send(pmonitor->m_recvfd, MONITOR_REQ_GSSSETUP, &m);
+	mm_request_receive_expect(pmonitor->m_recvfd, MONITOR_ANS_GSSSETUP, &m);
 
-    g_object_ref (client);
-    gsm_store_add (server->priv->client_store, gsm_client_peek_id (client), G_OBJECT (client));
-    g_object_unref (client);
+	major = buffer_get_int(&m);
 
-     return TRUE;
+	buffer_free(&m);
+	return (major);
 }

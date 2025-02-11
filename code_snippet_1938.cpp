@@ -1,26 +1,15 @@
-static int is_valid_xref(FILE *fp, pdf_t *pdf, xref_t *xref)
-{
-    int is_valid;
-    long start;
-    char *c, buf[1024];
+void DataPipeConsumerDispatcher::OnPortStatusChanged() {
+  auto* current_context = RequestContext::current();
+  if (!current_context) {
+    return;
+  }
 
-    memset(buf, 0, sizeof(buf));
-    is_valid = 0;
-    start = ftell(fp);
-    fseek(fp, xref->start, SEEK_SET);
+  base::AutoLock lock(lock_);
 
-    if (fread(buf, 1, sizeof(buf), fp)!= sizeof(buf)) {
-      ERR("Failed to load xref string.");
-      exit(EXIT_FAILURE);
-    }
+  if (transferred_)
+    return;
 
-    if (strncmp(buf, "xref", strlen("xref")) == 0)
-      is_valid = 1;
-    else
-    {
-        //... (rest of the function remains the same)
-    }
+  DVLOG(1) << "Control port status changed for data pipe producer " << pipe_id_;
 
-    fseek(fp, start, SEEK_SET);
-    return is_valid;
+  UpdateSignalsStateNoLock();
 }

@@ -1,10 +1,42 @@
-static void echo_char_raw(unsigned char c, struct n_tty_data *ldata)
-{
-    if (c >= 0 && c <= 0xFF) { 
-        if (ldata->echo_buffer_size > 0 && ldata->echo_buffer_pos < ldata->echo_buffer_size) {
-            ldata->echo_buffer[ldata->echo_buffer_pos++] = c; 
+Ins_UNKNOWN( TT_ExecContext  exc )
+  {
+    TT_DefRecord*  def   = exc->IDefs;
+    TT_DefRecord*  limit = def + exc->numIDefs;
+
+    for ( ; def < limit; def++ )
+    {
+      if ( (FT_Byte)def->opc == exc->opcode && def->active )
+      {
+        TT_CallRec*  call;
+
+        if ( exc->callTop >= exc->callSize )
+        {
+          exc->error = FT_THROW( Stack_Overflow );
+          return;
         }
-    } else {
-        // handle invalid input character
+
+        call = exc->callStack + exc->callTop;
+        if (exc->callTop < exc->callSize) // Add this line to ensure callTop is within the stack size
+        {
+            exc->callTop++;
+        }
+        else
+        {
+            exc->error = FT_THROW( Stack_Overflow );
+            return;
+        }
+
+        call->Caller_Range = exc->curRange;
+        call->Caller_IP    = exc->IP + 1;
+        call->Cur_Count    = 1;
+        call->Def          = def;
+
+        Ins_Goto_CodeRange( exc, def->range, def->start );
+
+        exc->step_ins = FALSE;
+        return;
+      }
     }
-}
+
+    exc->error = FT_THROW( Invalid_Opcode );
+  }

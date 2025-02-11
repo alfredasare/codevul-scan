@@ -1,14 +1,7 @@
-void lock_two_nondirectories(struct inode *inode1, struct inode *inode2)
+bool XMLHttpRequest::canSuspend() const
 {
-    if (!inode1 ||!inode2) {
-        return;
+    if (m_loader == nullptr) {
+        return false;
     }
-
-    if ((unsigned long)inode1 > (unsigned long)inode2)
-        swap(inode1, inode2);
-
-    if (inode1 &&!S_ISDIR(inode1->i_mode))
-        inode_lock(inode1);
-    if (inode2 &&!S_ISDIR(inode2->i_mode) && inode2!= inode1)
-        inode_lock_nested(inode2, I_MUTEX_NONDIR2);
+    return !m_loader;
 }

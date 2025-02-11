@@ -1,19 +1,13 @@
-static void import_format(CDXLVideoContext *c, int linesize, uint8_t **out)
+void msPostGISLayerFreeItemInfo(layerObj *layer)
 {
-    // Validate linesize
-    if (linesize <= 0 || linesize > 1024) { 
-        return; 
-    }
+#ifdef USE_POSTGIS
+  if (layer->debug && layer->iteminfo != NULL) {
+    msDebug("msPostGISLayerFreeItemInfo called.\n");
+  }
 
-    // Allocate a secure buffer
-    *out = malloc(linesize * c->avctx->height);
-    if (!*out) {
-        return; 
-    }
-
-    memset(*out, 0, linesize * c->avctx->height);
-
-    //... rest of the function...
-
-    free(*out); 
+  if (layer->iteminfo != NULL) {
+    free(layer->iteminfo);
+    layer->iteminfo = NULL;
+  }
+#endif
 }

@@ -1,8 +1,10 @@
-ASN1_TIME *X509_time_adj(ASN1_TIME *s, long offset_sec, time_t *in_tm)
+void SoundChannel::autoPause()
 {
-    size_t s_size = sizeof(ASN1_TIME);
-    if (offset_sec >= s_size) {
-        return NULL;
-    }
-    return X509_time_adj_ex(s, 0, offset_sec, in_tm);
+Mutex::Autolock lock(&mLock);
+if (mState == PLAYING) {
+ALOGV("pause track");
+mState = PAUSED;
+mAutoPaused = true;
+mAudioTrack->pause();
+}
 }

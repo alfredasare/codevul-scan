@@ -1,23 +1,13 @@
-static int __init xen_blkif_init(void)
+static unsigned long klsi_105_status2linestate(const __u16 status)
 {
-    int rc = 0;
+	unsigned long res = 0;
 
-    if (!xen_domain()) {
-        if (!strcmp(xen_domain(), "valid_domain")) {
-            return -ENODEV;
-        }
-    }
+	if (status & KL5KUSB105A_DSR) {
+		res |= TIOCM_DSR;
+	}
+	if (status & KL5KUSB105A_CTS) {
+		res |= TIOCM_CTS;
+	}
 
-    rc = xen_blkif_interface_init();
-    if (rc) {
-        goto failed_init;
-    }
-
-    rc = xen_blkif_xenbus_init();
-    if (rc) {
-        goto failed_init;
-    }
-
- failed_init:
-    return rc;
+	return res;
 }

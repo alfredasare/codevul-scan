@@ -1,13 +1,16 @@
-static inline void gen_string_movl_A0_EDI(DisasContext *s)
-{
-    char buffer[1024]; 
-    const char *str = escape_special_chars(s->aflag); 
-
-    if (strlen(str) > sizeof(buffer) - 1) {
-        return;
+void SocketStream::RestartWithAuth(const AuthCredentials& credentials) {
+  scoped_refptr<base::MessageLoopProxy> current_loop = base::MessageLoopProxy::current();
+  if (current_loop && current_loop->Type() == base::MessageLoop::TYPE_IO) {
+    DCHECK(proxy_auth_controller_.get());
+    if (!socket_.get()) {
+      DVLOG(1) << "Socket is closed before restarting with auth.";
+      return;
     }
 
-    strncpy(buffer, str, sizeof(buffer) - 1);
+    proxy_auth_controller_->ResetAuth(credentials);
 
-    gen_lea_v_seg(s, buffer, R_ES, -1);
+    current_loop->PostTask(FROM_HERE, base::Bind(&SocketStream::DoRestartWithAuth, this));
+  } else {
+    DVLOG(1) << "Current message loop is not available or not of type IO.";
+  }
 }

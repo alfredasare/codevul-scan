@@ -1,12 +1,22 @@
-X509_VERIFY_PARAM_get0_peername(X509_VERIFY_PARAM *param)
+static int crypto_init_blkcipher_ops_sync(struct crypto_tfm *tfm)
 {
-    X509_NAME *peername = param->id->peername;
-    unsigned char expected_peername_hash[256];
-    // Calculate the expected peername hash value
-    //...
-    if (X509_NAME_hash(peername)!= expected_peername_hash) {
-        // Handle invalid peer name
-    }
-    // Additional validation checks can be performed here
-    return peername;
+	struct blkcipher_tfm *crt = &tfm->crt_blkcipher;
+	struct blkcipher_alg *alg = &tfm->__crt_alg->cra_blkcipher;
+	unsigned long align = crypto_tfm_alg_alignmask(tfm) + 1;
+	unsigned long addr;
+
+	if (!tfm || !tfm->__crt_alg || !tfm->crt_blkcipher.setkey ||
+	    !tfm->crt_blkcipher.encrypt || !tfm->crt_blkcipher.decrypt)
+		return -EINVAL;
+
+	crt->setkey = setkey;
+	crt->encrypt = alg->encrypt;
+	crt->decrypt = alg->decrypt;
+
+	addr = (unsigned long)crypto_tfm_ctx(tfm);
+	addr = ALIGN(addr, align);
+	addr += ALIGN(tfm->__crt_alg->cra_ctxsize, align);
+	crt->iv = (void *)addr;
+
+	return 0;
 }

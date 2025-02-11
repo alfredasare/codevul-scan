@@ -1,14 +1,9 @@
-static ssize_t proxy_readlink(FsContext *fs_ctx, V9fsPath *fs_path, char *buf, size_t bufsz)
+const char* menu_cache_app_get_generic_name(MenuCacheApp* app)
 {
-    int retval;
-    char formatted_buf[PATH_MAX];
-
-    retval = v9fs_request(fs_ctx->private, T_READLINK, formatted_buf, fs_path, sizeof(formatted_buf));
-    if (retval < 0) {
-        errno = -retval;
-        return -1;
+    if (app != NULL) {
+        return app->generic_name;
+    } else {
+        // Return an error message or handle the error as appropriate
+        return "Invalid menu cache app";
     }
-
-    snprintf(buf, bufsz, "%s", formatted_buf);
-    return strlen(buf);
 }

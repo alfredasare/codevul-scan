@@ -1,32 +1,35 @@
-static struct ext4_dir_entry_tail *get_dirent_tail(struct inode *inode, struct ext4_dir_entry *de)
+TT_UInt32 tt_cmap2_char_index( TT_CMap    cmap,
+                       FT_UInt32  char_code )
 {
-    struct ext4_dir_entry_tail *t;
+  FT_Byte*  table   = cmap->data;
+  TT_UInt32 result  = 0;
+  FT_Byte*  subheader;
 
-    #ifdef PARANOID
-    struct ext4_dir_entry *d, *top;
 
-    d = de;
-    size_t offset = (size_t)de + EXT4_BLOCK_SIZE(inode->i_sb) - sizeof(struct ext4_dir_entry_tail);
-    if (offset > SIZE_MAX - sizeof(struct ext4_dir_entry_tail)) {
-        return NULL;
+  subheader = tt_cmap2_get_subheader( table, char_code );
+  if ( subheader )
+  {
+    FT_Byte*  p   = subheader;
+    FT_UInt   idx = (FT_UInt)(char_code & 0xFF);
+    FT_UInt   start, count;
+    FT_Int    delta;
+    FT_UInt   offset;
+
+
+    start  = TT_NEXT_USHORT( p );
+    count  = TT_NEXT_USHORT( p );
+    delta  = TT_NEXT_SHORT ( p );
+    offset = TT_PEEK_USHORT( p );
+
+    idx -= start;
+    if ( idx < count && offset != 0 )
+    {
+      p  += offset + 2 * idx;
+      idx = TT_PEEK_USHORT( p );
+
+      if ( idx != 0 )
+        result = (TT_UInt32)( idx + delta ) & 0xFFFFU;
     }
-    top = (struct ext4_dir_entry *)((size_t)de + offset);
-
-    while (d < top && d->rec_len) {
-        d = (struct ext4_dir_entry *)((size_t)d + le16_to_cpu(d->rec_len));
-    }
-
-    if (d!= top) {
-        return NULL;
-    }
-
-    t = (struct ext4_dir_entry_tail *)d;
-    #else
-    t = EXT4_DIRENT_TAIL(de, EXT4_BLOCK_SIZE(inode->i_sb));
-    #endif
-
-    if (t->det_reserved_zero1 || le16_to_cpu(t->det_rec_len)!= sizeof(struct ext4_dir_entry_tail) || t->det_reserved_zero2 || t->det_reserved_ft!= EXT4_FT_DIR_CSUM)
-        return NULL;
-
-    return t;
+  }
+  return result;
 }

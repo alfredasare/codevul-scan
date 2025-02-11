@@ -1,33 +1,13 @@
-static bool fm10k_can_reuse_rx_page(struct fm10k_rx_buffer *rx_buffer,
-				    struct page *page,
-				    unsigned int __maybe_unused truesize)
+static struct nd_opt_hdr *ndisc_next_option(struct nd_opt_hdr *cur, struct nd_opt_hdr *end)
 {
-	/* Get the page's modification time */
-	struct timespec64 mod_time = page_file_cache_get_modtime(page);
-
-	/* avoid re-using remote pages */
-	if (unlikely(fm10k_page_is_reserved(page, &mod_time)))
-		return false;
-
-#if (PAGE_SIZE < 8192)
-	/* if we are only owner of page we can reuse it */
-	if (unlikely(page_count(page) != 1))
-		return false;
-
-	/* flip page offset to other buffer */
-	rx_buffer->page_offset ^= FM10K_RX_BUFSZ;
-#else
-	/* move offset up to the next cache line */
-	rx_buffer->page_offset += truesize;
-
-	if (rx_buffer->page_offset > (PAGE_SIZE - FM10K_RX_BUFSZ))
-		return false;
-#endif
-
-	/* Even if we own the page, we are not allowed to use atomic_set()
-	 * This would break get_page_unless_zero() users.
-	 */
-	page_ref_inc(page);
-
-	return true;
+        int type;
+        if (!cur || !end || cur >= end)
+                return NULL;
+        type = cur->nd_opt_type;
+        do {
+                if ((unsigned long)cur + (cur->nd_opt_len << 3) > (unsigned long)end)
+                        return NULL;
+                cur = ((void *)cur) + (cur->nd_opt_len << 3);
+        } while (cur < end && cur->nd_opt_type != type);
+        return cur <= end && cur->nd_opt_type == type ? cur : NULL;
 }

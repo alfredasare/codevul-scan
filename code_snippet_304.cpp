@@ -1,7 +1,2 @@
-void set_error_code(base::PlatformFileError error_code) {
-    if (!IsValidErrorcode(error_code)) {
-        LOG(ERROR) << "Invalid error code: " << error_code;
-        return;
-    }
-    error_code_ = error_code;
-}
+SYSCALL_DEFINE5(recvmmsg, int, fd, struct mmsghdr __user *, mmsg,
+		unsigned int, vlen, unsigned int, flags,

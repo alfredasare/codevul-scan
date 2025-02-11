@@ -1,26 +1,14 @@
-static void parser_reset(struct jv_parser* p) {
-  if ((p->flags & JV_PARSE_STREAMING)) {
-    if (p->path!= NULL) {
-      jv_free(p->path);
+SAPI_API int sapi_register_treat_data(void (*treat_data)(int arg, char *str, zval *destArray TSRMLS_DC) TSRMLS_DC)
+{
+    if (!treat_data || !str || !destArray) {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid or null pointer provided in parameters");
+        return FAILURE;
     }
-    p->path = NULL;
-    p->stacklen = 0;
-  }
-  p->last_seen = JV_LAST_NONE;
-  if (p->output!= NULL) {
-    jv_free(p->output);
-  }
-  p->output = NULL;
-  if (p->next!= NULL) {
-    jv_free(p->next);
-  }
-  p->next = NULL;
-  for (int i = 0; i < p->stackpos; i++) {
-    if (p->stack[i]!= NULL) {
-      jv_free(p->stack[i]);
+
+    if (SG(sapi_started) && EG(in_execution)) {
+        return FAILURE;
     }
-  }
-  p->stackpos = 0;
-  p->tokenpos = 0;
-  p->st = JV_PARSER_NORMAL;
+
+    sapi_module.treat_data = treat_data;
+    return SUCCESS;
 }

@@ -1,36 +1,25 @@
-void ConvertRGB32ToYUV(const uint8* rgbframe, 
-                       uint8* yplane, 
-                       uint8* uplane, 
-                       uint8* vplane, 
-                       int width, 
-                       int height, 
-                       int rgbstride, 
-                       int ystride, 
-                       int uvstride) {
-  static void (*convert_proc)(const uint8*, uint8*, uint8*, uint8*, int, int, int, int, int) = NULL;
-  if (!convert_proc) {
-#if defined(ARCH_CPU_ARM_FAMILY)
-    convert_proc = &ConvertRGB32ToYUV_C;
-#else
-    if (hasSSE2())
-      convert_proc = &ConvertRGB32ToYUV_SSE2;
-    else
-      convert_proc = &ConvertRGB32ToYUV_C;
-#endif
-  }
+TEE_Result tee_svc_copy_from_user(void *kaddr, const void *uaddr, size_t len)
+{
+	TEE_Result res;
+	struct tee_ta_session *s;
+	size_t kaddr_size;
 
-  int x, y;
-  for (y = 0; y < height; y++) {
-    for (x = 0; x < width; x++) {
-      size_t idx = (size_t)(y * ystride) + (x * 3);
-      if (idx >= rgbstride) {
-        printf("Error: Out-of-bounds access at index %zu\n", idx);
-        return;
-      }
-      convert_proc(&rgbframe[idx], &yplane[y * ystride + x],
-                   &uplane[(y / 2) * uvstride + (x % 2)],
-                   &vplane[(y / 2) * uvstride + (x % 2)],
-                   1, 1, 3, ystride, uvstride);
-    }
-  }
+	res = tee_ta_get_current_session(&s);
+	if (res != TEE_SUCCESS)
+		return res;
+
+	kaddr_size = s->ctx->ksize - s->ctx->offset;
+
+	if (len > kaddr_size) {
+		return TEE_ERROR_SHORT_BUFFER;
+	}
+
+	res = tee_mmu_check_access_rights(to_user_ta_ctx(s->ctx),
+					TEE_MEMORY_ACCESS_READ,
+					(uaddr_t)uaddr, len);
+	if (res != TEE_SUCCESS)
+		return res;
+
+	memcpy(kaddr, uaddr, len);
+	return TEE_SUCCESS;
 }

@@ -1,11 +1,8 @@
-__inline int c99_snprintf(char *outBuf, size_t size, const char *format,...) {
-    int count;
-    va_list ap;
+class MyClass {
+private:
+    PendingFrame m_pendingFrame{};
 
-    va_start(ap, format);
-    count = c99_vsnprintf(outBuf, size, format, ap);
-    va_end(ap);
-    va_end(ap); // Ensure ap is properly cleaned up
-
-    return count;
-}
+public:
+    MyClass() : m_pendingFrame() {}
+    ~MyClass() { m_pendingFrame.~PendingFrame(); }
+};

@@ -1,14 +1,29 @@
-static void simple_free_urb(struct urb *urb)
+static void nf_tables_abort_release(struct nft_trans *trans)
 {
-    unsigned long offset = buffer_offset(urb->transfer_buffer);
+	if (!trans)
+		return;
 
-    if (urb->transfer_flags & URB_NO_TRANSFER_DMA_MAP)
-        usb_free_coherent(
-            urb->dev,
-            urb->transfer_buffer_length + offset,
-            urb->transfer_buffer,
-            urb->transfer_dma);
-    else
-        kfree(urb->transfer_buffer);
-    usb_free_urb(urb);
+	switch (trans->msg_type) {
+	case NFT_MSG_NEWTABLE:
+		if (!trans->ctx)
+			break;
+		nf_tables_table_destroy(&trans->ctx);
+		break;
+	case NFT_MSG_NEWCHAIN:
+		if (!trans->ctx.chain)
+			break;
+		nf_tables_chain_destroy(trans->ctx.chain);
+		break;
+	case NFT_MSG_NEWRULE:
+		if (!trans->ctx.rule)
+			break;
+		nf_tables_rule_destroy(&trans->ctx, nft_trans_rule(trans));
+		break;
+	case NFT_MSG_NEWSET:
+		if (!nft_trans_set(trans))
+			break;
+		nft_set_destroy(nft_trans_set(trans));
+		break;
+	}
+	kfree(trans);
 }

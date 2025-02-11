@@ -1,21 +1,33 @@
-void br_multicast_disable_port(struct net_bridge_port *port)
-{
-    if (port == NULL) {
-        printk(KERN_WARNING "Invalid port pointer\n");
-        return;
-    }
+bool BitReaderCore::ReadBitsInternal(int num_bits, uint64_t* out) {
+  DCHECK_GE(num_bits, 0);
 
-    struct net_bridge *br = port->br;
-    struct net_bridge_port_group *pg;
-    struct hlist_node *n;
+  if (num_bits == 0) {
+    *out = 0;
+    return true;
+  }
 
-    spin_lock(&br->multicast_lock);
-    hlist_for_each_entry_safe(pg, n, &port->mglist, mglist)
-        br_multicast_del_pg(br, pg);
+  if (num_bits > nbits_ && !Refill(num_bits)) {
+     nbits_ = 0;
+     reg_ = 0;
+     return false;
+   }
 
-    if (!hlist_unhashed(&port->rlist))
-        hlist_del_init_rcu(&port->rlist);
-    del_timer(&port->multicast_router_timer);
-    del_timer(&port->multicast_query_timer);
-    spin_unlock(&br->multicast_lock);
+  // Check for possible overflow before shifting
+  if (nbits_ - num_bits < 0) {
+    return false;
+  }
+
+  bits_read_ += num_bits;
+
+  if (num_bits == kRegWidthInBits) {
+    *out = reg_;
+    reg_ = 0;
+    nbits_ = 0;
+    return true;
+  }
+
+  *out = reg_ >> (kRegWidthInBits - num_bits);
+  reg_ <<= num_bits;
+  nbits_ -= num_bits;
+  return true;
 }

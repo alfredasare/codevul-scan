@@ -1,17 +1,56 @@
-static int set_password(struct parsed_mount_info *parsed_info, const char *src)
+static char \*iscsi\_check\_valuelist\_for\_support(
+struct iscsi\_param \*param,
+char \*value)
 {
-    char *dst = parsed_info->password;
-    unsigned int i = 0, j = 0;
-    size_t src_len = strlen(src);
+char \*tmp1 = NULL, \*tmp2 = NULL;
+char \*acceptor\_values = NULL, \*proposer\_values = NULL;
+char \*tmp\_acceptor\_values = NULL, \*tmp\_proposer\_values = NULL;
 
-    if (src_len > sizeof(parsed_info->password) - 1) {
-        fprintf(stderr, "Converted password too long!\n");
-        return EX_USAGE;
-    }
+if (!param || !value) {
+return NULL;
+}
 
-    strcpy_s(dst, sizeof(parsed_info->password), src);
+acceptor\_values = param->value;
+proposer\_values = value;
 
-    dst[sizeof(parsed_info->password) - 1] = '\0';
-    parsed_info->got_password = 1;
-    return 0;
+do {
+if (!proposer\_values)
+return NULL;
+tmp\_proposer\_values = proposer\_values;
+tmp1 = strchr(proposer\_values, ',');
+if (tmp1) {
+\*tmp1 = '\0';
+}
+
+acceptor\_values = param->value;
+tmp\_acceptor\_values = acceptor\_values;
+
+do {
+if (!acceptor\_values) {
+if (tmp1)
+\*tmp1 = ',';
+return NULL;
+}
+tmp2 = strchr(acceptor\_values, ',');
+if (tmp2) {
+\*tmp2 = '\0';
+}
+if (!strcmp(acceptor\_values, proposer\_values)) {
+if (tmp2)
+\*tmp2 = ',';
+goto out;
+}
+if (tmp2)
+\*tmp2++ = ',';
+
+acceptor\_values = tmp2;
+} while (acceptor\_values);
+if (tmp1)
+\*tmp1++ = ',';
+
+proposer\_values = tmp1;
+} while (proposer\_values);
+
+out:
+return tmp\_proposer\_values;
 }

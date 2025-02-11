@@ -1,15 +1,11 @@
-pdf_set_usecmap(fz_context *ctx, pdf_cmap *cmap, pdf_cmap *usecmap)
+int ext4_issue_zeroout(struct inode *inode, ext4_lblk_t lblk, ext4_fsblk_t pblk,
+		       ext4_lblk_t len)
 {
-    int i;
-    pdf_cmap *new_cmap = pdf_keep_cmap(ctx, usecmap);
+	if (lblk < 0 || pblk < 0 || len <= 0 || len > (ext4_lblk_t)INT_MAX)
+		return -EINVAL;
 
-    if (cmap->codespace_len == 0)
-    {
-        cmap->codespace_len = new_cmap->codespace_len;
-        for (i = 0; i < new_cmap->codespace_len; i++)
-            cmap->codespace[i] = new_cmap->codespace[i];
-    }
+	if (ext4_encrypted_inode(inode))
+		return ext4_encrypted_zeroout(inode, lblk, pblk, len);
 
-    cmap->usecmap = new_cmap;
-    pdf_drop_cmap(ctx, new_cmap);
+	return sb_issue_zeroout(inode->i_sb, pblk, len, GFP_NOFS);
 }

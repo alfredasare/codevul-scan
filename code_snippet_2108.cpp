@@ -1,11 +1,18 @@
-static int ext2_freeze(struct super_block *sb)
+static int kvm_deassign_ioeventfd(struct kvm *kvm, struct kvm_ioeventfd *args)
 {
-    struct ext2_sb_info *sbi = EXT2_SB(sb);
-    unsigned long remove_count;
+	// Validate args != NULL
+	if (!args) {
+		pr_err("Invalid input: args is NULL\n");
+		return -EINVAL;
+	}
 
-    if ((remove_count = atomic_long_read(&sb->s_remove_count)) > 0) {
-        ext2_sync_fs(sb, 1);
-        return 0;
-    }
-    //...
+	enum kvm_bus bus_idx = ioeventfd_bus_from_flags(args->flags);
+
+	int ret = kvm_deassign_ioeventfd_idx(kvm, bus_idx, args);
+
+	if (bus_idx == KVM_MMIO_BUS && args->len >= 0) {
+		kvm_deassign_ioeventfd_idx(kvm, KVM_FAST_MMIO_BUS, args);
+	}
+
+	return ret;
 }

@@ -1,30 +1,22 @@
-static int rtl8150_ioctl(struct net_device *netdev, struct ifreq *rq, int cmd)
+static void cxusb_d680_dmb_drain_video(struct dvb_usb_device *d)
 {
-    rtl8150_t *dev = netdev_priv(netdev);
-    u16 *data = (u16 *) &rq->ifr_ifru;
-    int res = 0;
-    size_t len = sizeof(rq->ifr_ifru);
+	struct usb_data_stream_properties *p = &d->props.adapter[0].fe[0].stream;
+	const int timeout = 100;
+	const int junk_len = min(p->u.bulk.buffersize, USB_MAX_PACKET_SIZE);
+	u8        *junk;
+	int       rd_count;
 
-    if (len < sizeof(u16) * 4)
-        return -EINVAL; // invalid length
-
-    switch (cmd) {
-    case SIOCDEVPRIVATE:
-        data[0] = dev->phy;
-        break;
-    case SIOCDEVPRIVATE + 1:
-        read_mii_word(dev, dev->phy, (data[1] & 0x1f), &data[3]);
-        break;
-    case SIOCDEVPRIVATE + 2:
-        if (!capable(CAP_NET_ADMIN))
-            return -EPERM;
-        if (len < sizeof(u16) * 3)
-            return -EINVAL; // invalid length
-        write_mii_word(dev, dev->phy, (data[1] & 0x1f), data[2]);
-        break;
-    default:
-        res = -EOPNOTSUPP;
-    }
-
-    return res;
+	/* Discard remaining data in video pipe */
+	junk = kmalloc(junk_len, GFP_KERNEL);
+	if (!junk)
+		return;
+	while (1) {
+		if (usb_bulk_msg(d->udev,
+			usb_rcvbulkpipe(d->udev, p->endpoint),
+			junk, junk_len, &rd_count, timeout) < 0)
+			break;
+		if (!rd_count)
+			break;
+	}
+	kfree(junk);
 }

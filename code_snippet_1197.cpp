@@ -1,17 +1,10 @@
-static inline unsigned int llcp_accept_poll(struct sock *parent)
-{
-    struct nfc_llcp_sock *llcp_sock, *n, *parent_sock;
-    struct sock *sk;
+void NetworkThrottleManagerImpl::MaybeUnblockThrottles() {
+  std::unique_lock<std::mutex> lock( throttle_mutex_ );
 
-    parent_sock = nfc_llcp_sock(parent);
+  RecomputeOutstanding();
 
-    list_for_each_entry_safe(llcp_sock, n, &parent_sock->accept_queue,
-                             accept_queue) {
-        sk = &llcp_sock->sk;
-
-        if (sk->sk_state == LLCP_CONNECTED)
-            return POLLOUT; // Return a generic success message
-    }
-
-    return 0;
+  while (outstanding_throttles_.size() < kActiveRequestThrottlingLimit &&
+         !blocked_throttles_.empty()) {
+    UnblockThrottle(blocked_throttles_.front());
+  }
 }

@@ -1,13 +1,1 @@
-static void re_yy_load_buffer_state(yyscan_t yyscanner) {
-    struct yyguts_t *yyg = (struct yyguts_t *)yyscanner;
-    int n_chars = YY_CURRENT_BUFFER_LVALUE->yy_n_chars;
-    char *text_ptr = YY_CURRENT_BUFFER_LVALUE->yy_buf_pos;
-    FILE *input_file = YY_CURRENT_BUFFER_LVALUE->yy_input_file;
-    char hold_char = *text_ptr;
-
-    yyg->yy_n_chars = n_chars;
-    yyg->yytext_ptr = text_ptr;
-    yyg->yy_c_buf_p = text_ptr;
-    yyin = input_file;
-    yyg->yy_hold_char = hold_char;
-}
+static inline int sock\_sendto(php\_netstream\_data\_t \*sock, const char \*buf, size\_t buflen, int flags, struct sockaddr \*addr, socklen\_t addrlen) { int ret; if (buflen > INT\_MAX) { return -1; } if (addr) { if (addrlen > sizeof(sock->address)) { return -1; } ret = sendto(sock->socket, buf, (int)buflen, flags, addr, (int)addrlen); return (ret == SOCK\_CONN\_ERR) ? -1 : ret; } #ifdef PHP\_WIN32 if (buflen > INT\_MAX) { return -1; } ret = send(sock->socket, buf, (int)buflen, flags); return (ret == SOCK\_CONN\_ERR) ? -1 : ret; #else ret = send(sock->socket, buf, (int)buflen, flags); return (ret == SOCK\_CONN\_ERR) ? -1 : ret; #endif }

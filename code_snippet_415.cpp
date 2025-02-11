@@ -1,25 +1,18 @@
-save_directory_hook ()
+#define MAX_ITERATIONS 100
+
+void vrend_set_stencil_ref(struct vrend_context *ctx,
+                           struct pipe_stencil_ref *ref)
 {
-  rl_icppfunc_t *ret;
+   int iterations = 0;
 
-  if (dircomplete_expand >= 0 && dircomplete_expand <= 1) 
-    {
-      if (dircomplete_expand == 1)
-        {
-          ret = rl_directory_completion_hook;
-          rl_directory_completion_hook = (rl_icppfunc_t *)NULL;
-        }
-      else
-        {
-          ret = rl_directory_rewrite_hook;
-          rl_directory_rewrite_hook = (rl_icppfunc_t *)NULL;
-        }
-    }
-  else
-    {
-      fprintf(stderr, "Invalid input: dircomplete_expand must be 0 or 1\n");
-      return NULL;
-    }
-
-  return ret;
+   if (ctx->sub->stencil_refs[0] != ref->ref_value[0] ||
+       ctx->sub->stencil_refs[1] != ref->ref_value[1]) {
+      while (iterations < MAX_ITERATIONS) {
+         ctx->sub->stencil_refs[0] = ref->ref_value[0];
+         ctx->sub->stencil_refs[1] = ref->ref_value[1];
+         ctx->sub->stencil_state_dirty = true;
+         iterations++;
+         break;
+      }
+   }
 }

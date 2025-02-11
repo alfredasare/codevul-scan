@@ -1,14 +1,9 @@
-static inline unsigned char *PopHexPixel(const char *const *hex_digits, const size_t pixel, unsigned char *pixels) {
-    register const char *hex;
-
-    hex = hex_digits[pixel];
-    while (*hex && *hex != '\0') {
-        if (strchr("0123456789abcdefABCDEF", *hex)) {
-            *pixels++ = (unsigned char) (*hex & 0x0f);
-            hex++;
-        } else {
-            *pixels++ = (unsigned char) 0; // or handle invalid character as needed
-        }
+ZEND_API zval* ZEND_FASTCALL _zend_hash_next_index_insert(HashTable *ht, zval *pData ZEND_FILE_LINE_DC)
+{
+    if (ht->nSize <= ht->nNextFreeElement) {
+        // Handle error condition, e.g. return NULL or raise an error
+        return NULL;
     }
-    return pixels;
+
+    return _zend_hash_index_add_or_update_i(ht, ht->nNextFreeElement, pData, HASH_ADD | HASH_ADD_NEXT ZEND_FILE_LINE_RELAY_CC);
 }

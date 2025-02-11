@@ -1,14 +1,23 @@
-void DidGetGlobalUsage(StorageType type, int64 usage, int64 unlimited_usage) {
-  DCHECK_EQ(this->type(), type);
-  DCHECK_GE(usage, unlimited_usage);
-  quota_status_ = kQuotaStatusUnknown; // Initialize quota_status_ to a default value
-  if (quota_status_!= kQuotaStatusUnknown) {
-    DCHECK(quota_status_!= nullptr); // Check for null pointer dereference
-    if (quota_status_ == kQuotaStatusOk) {
-      //...
+size_t calculated_offset;
+      MagickOffsetType blob_end = image->blob_size - calculated_offset;
+
+      /*
+        Mipmapcount includes the main image, so start from one
+      */
+      for (i = 1; (i < (ssize_t) dds_info->mipmapcount) && w && h; i++)
+      {
+        calculated_offset = ((w + 3) / 4) * ((h + 3) / 4) * texel_size;
+        if (calculated_offset > blob_end) break;
+
+        offset = (MagickOffsetType) calculated_offset;
+
+        if (offset < 0 || offset > image->blob_size)
+        {
+          /* Handle error case */
+        }
+        (void) SeekBlob(image, offset, SEEK_CUR);
+
+        w = DIV2(w);
+        h = DIV2(h);
+      }
     }
-  }
-  global_usage_ = usage;
-  global_unlimited_usage_ = unlimited_usage;
-  CheckCompleted();
-}

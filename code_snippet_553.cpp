@@ -1,36 +1,30 @@
-void post_init_entity_util_avg(struct sched_entity *se)
+static void vfio_msi_disable(struct vfio_pci_device *vdev, bool msix)
 {
-    struct cfs_rq *cfs_rq = cfs_rq_of(se);
-    struct sched_avg *sa = &se->avg;
-    long cpu_scale = 0; // Initialize cpu_scale to a safe value
-    const long MAX_CPU_SCALE = 1000; // Define a secure and well-defined constant
+	struct pci_dev *pdev = vdev->pdev;
+	int i;
 
-    // Validate input to cpu_scale
-    if (cpu_scale < 0 || cpu_scale > MAX_CPU_SCALE) {
-        // Handle error or reject invalid input
-        return;
-    }
+	if (vdev->num_ctx > INT_MAX - sizeof(vdev->ctx[0])) {
+		pr_err("Integer overflow detected in loop counter\n");
+		return;
+	}
 
-    long cap = (long)(cpu_scale - cfs_rq->avg.util_avg) / 2;
+	for (i = 0; i < vdev->num_ctx; i++) {
+		vfio_virqfd_disable(&vdev->ctx[i].unmask);
+		vfio_virqfd_disable(&vdev->ctx[i].mask);
+	}
 
-    if (cap > 0) {
-        if (cfs_rq->avg.util_avg!= 0) {
-            sa->util_avg  = cfs_rq->avg.util_avg * se->load.weight;
-            sa->util_avg /= (cfs_rq->avg.load_avg + 1);
+	vfio_msi_set_block(vdev, 0, vdev->num_ctx, NULL, msix);
 
-            if (sa->util_avg > cap)
-                sa->util_avg = cap;
-        } else {
-            sa->util_avg = cap;
-        }
-    }
+	pci_free_irq_vectors(pdev);
 
-    if (entity_is_task(se)) {
-        struct task_struct *p = task_of(se);
-        if (p->sched_class!= &fair_sched_class) {
-            /*... */
-        }
-    }
+	/*
+	 * Both disable paths above use pci_intx_for_msi() to clear DisINTx
+	 * via their shutdown paths.  Restore for NoINTx devices.
+	 */
+	if (vdev->nointx)
+		pci_intx(pdev, 0);
 
-    attach_entity_cfs_rq(se);
+	vdev->irq_type = VFIO_PCI_NUM_IRQS;
+	vdev->num_ctx = 0;
+	kfree(vdev->ctx);
 }

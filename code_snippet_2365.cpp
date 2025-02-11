@@ -1,16 +1,19 @@
-static struct ifsock *find_iface(struct sockaddr *sa)
-{
-    struct ifsock *ifs;
-    struct sockaddr_in *addr = (struct sockaddr_in *)sa;
-    struct ifsock *tmp;
+void FileAPIMessageFilter::OnOpen(
+    int request_id, const GURL& origin_url, fileapi::FileSystemType type,
+    int64 requested_size, bool create) {
+  DCHECK(BrowserThread::CurrentlyOn(BrowserThread::IO));
+  context_->OpenFileSystem(origin_url, type, create, base::Bind(
+      &FileAPIMessageFilter::DidOpenFileSystem, this, request_id, type));
+}
 
-    if (!sa)
-        return NULL;
-
-    LIST_FOREACH_SAFE(ifs, &il, link, tmp) {
-        if (ifs->addr.sin_addr.s_addr == addr->sin_addr.s_addr)
-            return ifs;
+void FileAPIMessageFilter::DidOpenFileSystem(
+    int request_id, fileapi::FileSystemType type, bool result, const base::FilePath& path) {
+  if (result) {
+    if (type == fileapi::kFileSystemTypeTemporary) {
+      RecordAction(UserMetricsAction("OpenFileSystemTemporary"));
+    } else if (type == fileapi::kFileSystemTypePersistent) {
+      RecordAction(UserMetricsAction("OpenFileSystemPersistent"));
     }
-
-    return NULL;
+  }
+  // Handle other aspects of the DidOpenFileSystem call here...
 }

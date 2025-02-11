@@ -1,17 +1,37 @@
-static bool might_cancel_static = false;
-
-static void timerfd_setup_cancel(struct timerfd_ctx *ctx, int flags)
+static void btif_read_le_key(const uint8_t key_type, const size_t key_len, bt_bdaddr_t bd_addr,
+                             const uint8_t addr_type, const bool add_key, bool *device_added, bool *key_found)
 {
-    if ((ctx->clockid == CLOCK_REALTIME || 
-         ctx->clockid == CLOCK_REALTIME_ALARM) &&
-        (flags & TFD_TIMER_ABSTIME) && (flags & TFD_TIMER_CANCEL_ON_SET)) {
-        if (!might_cancel_static) {
-            might_cancel_static = true;
-            spin_lock(&cancel_lock);
-            list_add_rcu(&ctx->clist, &cancel_list);
-            spin_unlock(&cancel_lock);
+    assert(device_added);
+    assert(key_found);
+
+    if (key_len >= sizeof(buffer))
+    {
+        // Return or log an error here, as the input length is too large
+        return;
+    }
+
+    char buffer[100];
+    memset(buffer, 0, sizeof(buffer));
+
+    if (btif_storage_get_ble_bonding_key(&bd_addr, key_type, buffer, key_len) == BT_STATUS_SUCCESS)
+    {
+        if (add_key)
+        {
+            BD_ADDR bta_bd_addr;
+            bdcpy(bta_bd_addr, bd_addr.address);
+
+            if (!*device_added)
+            {
+                BTA_DmAddBleDevice(bta_bd_addr, addr_type, BT_DEVICE_TYPE_BLE);
+                *device_added = true;
+            }
+
+            char bd_str[20] = {0};
+            BTIF_TRACE_DEBUG("%s() Adding key type %d for %s", __func__,
+                             key_type, bdaddr_to_string(&bd_addr, bd_str, sizeof(bd_str)));
+            BTA_DmAddBleKey(bta_bd_addr, (tBTA_LE_KEY_VALUE *)buffer, key_type);
         }
-    } else if (might_cancel_static) {
-        timerfd_remove_cancel(ctx);
+
+        *key_found = true;
     }
 }

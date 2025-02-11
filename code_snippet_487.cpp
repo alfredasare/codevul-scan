@@ -1,15 +1,18 @@
-void ExtensionService::UnloadAllExtensions() {
-  std::map<std::string, std::unique_ptr<crypto::Key>> extension_keys;
-  for (auto& extension : extensions_) {
-    auto key = crypto::generateKey(); 
-    extension_keys[extension->getId()] = std::make_unique<crypto::Key>(key);
+const std::set<std::string> kAllowedMethods = {"POST"};
+
+std::string TestURLLoader::TestBasicPOST() {
+  pp::URLRequestInfo request(instance_);
+  request.SetURL("/echo");
+
+  // Check if the request method is in the allowed methods set
+  if (kAllowedMethods.find(request.GetMethod()) == kAllowedMethods.end()) {
+    throw std::invalid_argument("Invalid request method. Allowed: POST.");
   }
-  
-  profile_->GetExtensionSpecialStoragePolicy()->RevokeRightsForAllExtensions(extension_keys);
-  
-  extensions_.clear();
-  disabled_extensions_.clear();
-  terminated_extension_ids_.clear();
-  terminated_extensions_.clear();
-  extension_runtime_data_.clear();
+
+  // Set the request method to POST, as it has been validated
+  request.SetMethod("POST");
+  std::string postdata("postdata");
+  request.AppendDataToBody(postdata.data(),
+                           static_cast<uint32_t>(postdata.length()));
+  return LoadAndCompareBody(request, postdata);
 }

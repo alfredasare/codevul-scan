@@ -1,7 +1,8 @@
-uint32_t GPMF_DeviceID(GPMF_stream *ms)
+Strinsert\_charp(Str s, int pos, const char \*p)
 {
-    if (!ms) {
-        return GPMF_ERROR_NULL_POINTER;
-    }
-    return ms->device_id;
+STR\_LENGTH\_CHECK(s);
+int i = 0;
+while (pos < s->length && i < strlen(p)) {
+Strinsert\_char(s, pos++, p[i++]);
+}
 }

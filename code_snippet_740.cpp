@@ -1,35 +1,6 @@
-static_track_group_handler(vector_t *strvec)
-{
-    element e;
-    static_track_group_t *tg;
-    char* gname;
-    const char* allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_";
-
-    if (!strvec)
-        return;
-
-    if (vector_count(strvec)!= 2) {
-        report_config_error(CONFIG_GENERAL_ERROR, "track_group must have a name - skipping");
-        skip_block(true);
-        return;
-    }
-
-    gname = strvec_slot(strvec, 1);
-
-    // Validate user input
-    if (strlen(gname) > 64 || strspn(gname, allowed_chars)!= strlen(gname)) {
-        report_config_error(CONFIG_GENERAL_ERROR, "Invalid group name");
-        skip_block(true);
-        return;
-    }
-
-    // Escape special characters
-    gname = (char*)str_replace(gname, "&", "&amp;");
-    gname = (char*)str_replace(gname, "<", "&lt;");
-    gname = (char*)str_replace(gname, ">", "&gt;");
-
-    // Use a secure storage mechanism
-    hash_table_insert(vrrp_data->static_track_groups, gname, &e);
-
-    alloc_static_track_group(gname);
+unlock(&ctx->release_mutex);
 }
+
+Please note that the ellipsis (...) in the `aesni_lrw_init_tfm()` function represents the existing initialization code, which you should keep intact. The added code initializes a mutex named `release_mutex` in the `aesni_lrw_ctx` structure.
+
+In the updated `lrw_aesni_exit_tfm()` function, the mutex is locked before calling `lrw_free_table()`, ensuring that no other thread can access or modify `lrw_table` during its release. After `lrw_free_table()` has been called, the mutex is unlocked, allowing other threads to safely access `lrw_table` again.

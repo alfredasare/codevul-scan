@@ -1,8 +1,15 @@
-static void __bnep_unlink_session(struct bnep_session *s)
+gx_dc_pattern2_can_overlap(const gx_device_color *pdevc)
 {
-    spin_lock_irq(&bnep_session_list_lock);
-    if (!list_empty(&s->list)) {
-        list_del(&s->list);
+    gs_pattern2_instance_t * pinst;
+
+    if (pdevc && pdevc->type == &gx_dc_pattern2) {
+        pinst = (gs_pattern2_instance_t *)pdevc->ccolor.pattern;
+        switch (pinst->templat.Shading->head.type) {
+            case 3: case 6: case 7:
+                return true;
+            default:
+                return false;
+        }
     }
-    spin_unlock_irq(&bnep_session_list_lock);
+    return false;
 }

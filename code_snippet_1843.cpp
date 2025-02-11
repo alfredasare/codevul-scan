@@ -1,20 +1,5 @@
-static int listen(struct socket *sock, int len)
-{
-    struct sock *sk = sock->sk;
-    int res;
+#include <duktape.h>
 
-    lock_sock(sk);
-
-    if (sock->state!= SS_UNCONNECTED)
-    {
-        res = -EGENERAL_ERROR;
-    }
-    else
-    {
-        sock->state = SS_LISTENING;
-        res = 0;
-    }
-
-    release_sock(sk);
-    return res;
+void js_dup(duk_context *ctx) {
+    duk_copy(ctx, -1);
 }

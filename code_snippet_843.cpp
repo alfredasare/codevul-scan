@@ -1,17 +1,22 @@
-static void DSA_get0_key(const DSA *d, const BIGNUM **pub_key, const BIGNUM **priv_key)
+static int addFillStyle(SWFShape shape, SWFFillStyle fill)
 {
-    if (d == NULL || d->pub_key == NULL || d->priv_key == NULL) {
-        *pub_key = NULL;
-        *priv_key = NULL;
-        return;
-    }
+	int i;
+	
+	// Check if there's enough space before accessing the array
+	if (shape->nFills % STYLE_INCREMENT == 0 && shape->nFills != 0) {
+		int size = (shape->nFills + STYLE_INCREMENT) * sizeof(SWFFillStyle);
+		shape->fills = (SWFFillStyle*)realloc(shape->fills, size);
+	}
 
-    if (sizeof(BIGNUM) > sizeof(**pub_key)) {
-        *pub_key = NULL;
-        *priv_key = NULL;
-        return;
-    }
+	for (i = 0; i < shape->nFills; ++i) {
+		if (SWFFillStyle_equals(fill, shape->fills[i]))
+			return i;
+	}
 
-    *pub_key = d->pub_key;
-    *priv_key = d->priv_key;
+	if (shape->isEnded)
+		return -1;
+
+	shape->fills[shape->nFills] = fill;
+	++shape->nFills;
+	return shape->nFills;
 }

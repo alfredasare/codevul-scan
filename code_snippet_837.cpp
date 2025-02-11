@@ -1,21 +1,18 @@
-XineramaTryClientEventsResult(ClientPtr client,
-                              GrabPtr grab, Mask mask, Mask filter)
-{
-    if (!IsValidClient(client) || client == serverClient || client->clientGone) {
-        return 0; // Return immediately if client is invalid or gone
-    }
+int32_t ImageDataNaClBackend::GetSharedMemory(int* handle,
+                                           uint32_t* byte_count) {
+ const uint64_t skiaBitmapSize = skia_bitmap_.getSize();
 
-    if (!IsValidGrab(grab)) {
-        return -1; // Return immediately if grab is invalid
-    }
+ if (skiaBitmapSize > std::numeric_limits<uint32_t>::max()) {
+ return PP_ERROR_BADARGUMENT;
+ }
 
-    if (!SameClient(grab, client)) {
-        return -1; // Return immediately if grab is not the same client
-    }
-
-    if ((filter == CantBeFiltered) || (mask & filter)) {
-        return 1;
-    }
-
-    return 0;
+ *byte_count = skiaBitmapSize;
+#if defined(OS_POSIX)
+ *handle = shared_memory_->handle().fd;
+#elif defined(OS_WIN)
+ *handle = reinterpret_cast<int>(shared_memory_->handle());
+#else
+#error "Platform not supported."
+#endif
+ return PP_OK;
 }

@@ -1,23 +1,16 @@
-bool address_space_access_valid(AddressSpace *as, hwaddr addr, int len, bool is_write)
+static char *find_field(char *nf, char *of)
 {
-    MemoryRegion *mr;
-    hwaddr l, xlat;
+	if (nf == NULL) {
+		fprintf(stderr, "Null pointer error: nf is null\n");
+		return NULL;
+	}
 
-    while (len > 0) {
-        l = len;
-        mr = address_space_translate(as, addr, &xlat, &l, is_write);
-        if (!memory_access_is_direct(mr, is_write)) {
-            if (l > len) {
-                len = l;
-            }
-            l = memory_access_size(mr, l, addr);
-            if (!memory_region_access_valid(mr, xlat, l, is_write)) {
-                return false;
-            }
-        }
+	if (of == NULL) {
+		fprintf(stderr, "Null pointer error: of is null\n");
+		return NULL;
+	}
 
-        len -= l;
-        addr += l;
-    }
-    return true;
+	if (nf)
+		return nf;
+	return of;
 }

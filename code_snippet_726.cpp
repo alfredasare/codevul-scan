@@ -1,44 +1,26 @@
-static int kvm_dev_ioctl_create_vm(unsigned long type)
+int sctp_register_af(struct sctp_af *af)
 {
-    int r;
-    struct kvm *kvm;
-    struct file *file;
+	if (!af) {
+		pr_err("AF pointer cannot be NULL\n");
+		return -EINVAL;
+	}
 
-    kvm = kvm_create_vm(type);
-    if (IS_ERR(kvm)) {
-        return PTR_ERR(kvm);
-    }
+	switch (af->sa_family) {
+	case AF_INET:
+		if (sctp_af_v4_specific)
+			return 0;
+		sctp_af_v4_specific = af;
+		break;
+	case AF_INET6:
+		if (sctp_af_v6_specific)
+			return 0;
+		sctp_af_v6_specific = af;
+		break;
+	default:
+		return 0;
+	}
 
-    r = kvm_coalesced_mmio_init(kvm);
-    if (r < 0) {
-        kvm_put_kvm(kvm);
-        return r;
-    }
-
-    r = get_unused_fd_flags(O_CLOEXEC);
-    if (r < 0) {
-        kvm_put_kvm(kvm);
-        return r;
-    }
-
-    file = anon_inode_getfile("kvm-vm", &kvm_vm_fops, kvm, O_RDWR);
-    if (IS_ERR(file)) {
-        put_unused_fd(r);
-        r = PTR_ERR(file);
-        kvm_put_kvm(kvm);
-        return r;
-    }
-
-    // Rest of the code...
-
-    if (kvm_create_vm_debugfs(kvm, r) < 0) {
-        fput(file);
-        kvm_put_kvm(kvm);
-        return -ENOMEM;
-    }
-
-    kvm_uevent_notify_change(KVM_EVENT_CREATE_VM, kvm);
-
-    fd_install(r, file);
-    return r;
+	INIT_LIST_HEAD(&af->list);
+	list_add_tail(&af->list, &sctp_address_families);
+	return 1;
 }

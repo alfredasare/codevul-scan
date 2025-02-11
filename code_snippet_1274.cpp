@@ -1,14 +1,20 @@
-void PDFiumEngine::OnPartialDocumentLoaded() {
-  file_access_.m_FileLen = doc_loader_.document_size();
-  if (!fpdf_availability_) {
-    fpdf_availability_ = FPDFAvail_Create(&file_availability_, &file_access_);
-    DCHECK(fpdf_availability_);
-  }
+static void free_pg_vec(struct pgv *pg_vec, unsigned int order,
+                        unsigned int len)
+{
+        if (!pg_vec) {
+                pr_err("Null pg_vec pointer passed to free_pg_vec\n");
+                return;
+        }
 
-  if (!fpdf_availability_ ||!FPDFAvail_IsLinearized(fpdf_availability_)) {
-    doc_loader_.RequestData(0, doc_loader_.document_size());
-    return;
-  }
-
-  LoadDocument();
+        for (unsigned int i = 0; i < len; i++) {
+                if (pg_vec[i].buffer) {
+                        if (is_vmalloc_addr(pg_vec[i].buffer))
+                                vfree(pg_vec[i].buffer);
+                        else
+                                free_pages((unsigned long)pg_vec[i].buffer,
+                                           order);
+                        pg_vec[i].buffer = NULL;
+                }
+        }
+        kfree(pg_vec);
 }

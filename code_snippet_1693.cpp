@@ -1,41 +1,44 @@
-void net_tx_pkt_init(struct NetTxPkt **pkt, PCIDevice *pci_dev, uint32_t max_frags, bool has_virt_hdr)
+int inflate()
 {
-    struct NetTxPkt *p = NULL;
-    GError *error = NULL;
+ int e;                /* last block flag */
+ int r;                /* result code */
+ unsigned h;           /* maximum struct huft's malloc'ed */
 
-    p = g_malloc0(sizeof *p);
-    if (p == NULL) {
-        error = g_error_new(G_ERROR, "Failed to allocate memory");
-        g_error_free(error);
-        return;
-    }
+ /* initialize window, bit buffer */
+ wp = 0;
+ bk = 0;
+ bb = 0;
 
-    p->pci_dev = pci_dev;
+ /* decompress until the last block */
+ h = 0;
+ do {
+ hufts = 0;
+ if ((r = inflate\_block(&e)) != 0)
+ return r;
+ if (hufts > h)
+ h = hufts;
+ } while (!e);
 
-    p->vec = g_malloc((sizeof *p->vec) * (max_frags + NET_TX_PKT_PL_START_FRAG));
-    if (p->vec == NULL) {
-        error = g_error_new(G_ERROR, "Failed to allocate memory");
-        g_error_free(error);
-        g_free(p);
-        return;
-    }
+ /* Undo too much lookahead. The next read will be byte aligned so we
+ * can discard unused bits in the last meaningful byte.
+ */
+ while (bk >= 8) {
+ bk -= 8;
+ inptr--;
+ }
 
-    p->raw = g_malloc((sizeof *p->raw) * max_frags);
-    if (p->raw == NULL) {
-        error = g_error_new(G_ERROR, "Failed to allocate memory");
-        g_error_free(error);
-        g_free(p->vec);
-        g_free(p);
-        return;
-    }
+ /* trim output buffer to its actual size before returning it */
+ trim\_output\_buffer(wp);
 
-    p->max_payload_frags = max_frags;
-    p->max_raw_frags = max_frags;
-    p->has_virt_hdr = has_virt_hdr;
-    p->vec[NET_TX_PKT_VHDR_FRAG].iov_base = &p->virt_hdr;
-    p->vec[NET_TX_PKT_VHDR_FRAG].iov_len = p->has_virt_hdr? sizeof p->virt_hdr : 0;
-    p->vec[NET_TX_PKT_L2HDR_FRAG].iov_base = &p->l2_hdr;
-    p->vec[NET_TX_PKT_L3HDR_FRAG].iov_base = &p->l3_hdr;
+ /* flush out slide */
+ flush\_output(wp);
 
-    *pkt = p;
+ /* return success */
+ Trace ((stderr, "<%u> ", h));
+ return 0;
+}
+
+void trim\_output\_buffer(unsigned char \*start, unsigned char \*end) {
+ size\_t len = end - start;
+ memmove(start, start, len);
 }

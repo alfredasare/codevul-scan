@@ -1,26 +1,25 @@
-htmlReadFile(const char *filename, const char *encoding, int options)
+#include <filesystem>
+namespace fs = std::filesystem;
+
+static void testInterfaceEmptyMethodMethod(const v8::FunctionCallbackInfo<v8::Value>& info)
 {
-    htmlParserCtxtPtr ctxt;
-    size_t filename_len = strlen(filename);
-    const size_t MAX_FILENAME_LENGTH = 256; // Define the maximum allowed length
+    TestInterfaceNode* impl = V8TestInterfaceNode::toImpl(info.Holder());
 
-    // Allocate memory for the filename parameter
-    char *filename_ptr = malloc(filename_len + 1);
+    // Get user input
+    std::string userInput = info[0]->ToString();
 
-    // Copy the filename string into the allocated memory
-    strcpy(filename_ptr, filename);
+    // Construct the final path
+    fs::path intendedDir("/path/to/intended/directory");
+    fs::path filePath = intendedDir / userInput;
 
-    // Validate the filename length
-    if (filename_len >= MAX_FILENAME_LENGTH) {
-        // Handle error or truncate the filename
-        filename_len = MAX_FILENAME_LENGTH - 1;
-        filename_ptr[filename_len] = '\0';
+    // Sanitize the file path
+    fs::path sanitizedPath = fs::canonical(filePath);
+
+    // Ensure the sanitized path is within the intended directory
+    if (sanitizedPath.is_relative() && (sanitizedPath.parent_path() == intendedDir)) {
+        v8SetReturnValueFast(info, impl->testInterfaceEmptyMethod(sanitizedPath), impl);
+    } else {
+        // Return an error or handle the invalid path accordingly
+        v8SetReturnValueFast(info, v8::Null(), impl);
     }
-
-    xmlInitParser();
-    ctxt = htmlCreateFileParserCtxt(filename_ptr, encoding);
-    if (ctxt == NULL)
-        return (NULL);
-    free(filename_ptr); // Free allocated memory
-    return (htmlDoRead(ctxt, NULL, NULL, options, 0));
 }

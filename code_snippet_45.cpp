@@ -1,15 +1,31 @@
-static int jpc_dec_cp_setfromqcx(jpc_dec_cp_t *cp, jpc_dec_ccp_t *ccp, jpc_qcxcp_t *compparms, int flags)
+static int jpc_dec_cp_setfromqcx(jpc_dec_cp_t *cp, jpc_dec_ccp_t *ccp,
+                                  jpc_qcxcp_t *compparms, int flags)
 {
-    size_t bandno;
+    int bandno;
 
     /* Eliminate compiler warnings about unused variables. */
     cp = 0;
 
-    if ((flags & JPC_QCC) ||!(ccp->flags & JPC_QCC)) {
+    if ((flags & JPC_QCC) || !(ccp->flags & JPC_QCC)) {
         ccp->flags |= flags | JPC_QSET;
+
+        // Add length checks
+        if (compparms->numstepsizes > ccp->numstepsizes) {
+            return -1; // or any other error handling mechanism
+        }
+
+        if (compparms->numguard > ccp->numguardbits) {
+            return -1; // or any other error handling mechanism
+        }
+
+        if (compparms->qntsty > ccp->qsty) {
+            return -1; // or any other error handling mechanism
+        }
+
         for (bandno = 0; bandno < compparms->numstepsizes; ++bandno) {
             ccp->stepsizes[bandno] = compparms->stepsizes[bandno];
         }
+
         ccp->numstepsizes = compparms->numstepsizes;
         ccp->numguardbits = compparms->numguard;
         ccp->qsty = compparms->qntsty;

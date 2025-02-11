@@ -1,48 +1,29 @@
-PrintFlush()
+static int base64decode_block(unsigned char *target, const char *data, size_t data_size)
 {
-  char *sanitized_string = sanitize_string(curr->w_string);
-  display = curr->w_pdisplay;
-  if (display && printcmd)
-    {
-      int r;
-      while (*sanitized_string!= '\0')
-	{
-	  r = write(display->d_printfd, sanitized_string, 1);
-	  if (r <= 0)
-	    {
-	      WMsg(curr, errno, "printing aborted");
-	      close(display->d_printfd);
-	      display->d_printfd = -1;
-	      break;
-	    }
-	  sanitized_string++;
+	int w1, w2, w3, w4;
+	int i;
+	size_t n;
+	if (!data || (data_size <= 0)) {
+		return 0;
 	}
-    }
-  else if (display && curr->w_stringp > curr->w_string)
-    {
-      AddCStr(D_PO);
-      AddStrn(sanitized_string, strlen(sanitized_string));
-      AddCStr(D_PF);
-      Flush(3);
-    }
-  curr->w_stringp = curr->w_string;
-}
-
-char *sanitize_string(char *str)
-{
-  char *new_str = malloc(strlen(str) + 1);
-  int i = 0;
-  for (; str[i]!= '\0'; i++)
-    {
-      if (str[i] == '/' || str[i] == '\\')
-	{
-	  new_str[i] = '_';
+	n = 0;
+	i = 0;
+	while (n < data_size-3) {
+		w1 = base64_table[(int)data[n]];
+		if (w1 == -1) break; // Error handling: exit the loop if w1 is not a valid Base64 character
+		w2 = base64_table[(int)data[n+1]];
+		if (w2 != -1) {
+			target[i++] = (char)((w1*4 + (w2 >> 4)) & 255);
+		}
+		w3 = base64_table[(int)data[n+2]];
+		if (w3 != -1) {
+			target[i++] = (char)((w2*16 + (w3 >> 2)) & 255);
+		}
+		w4 = base64_table[(int)data[n+3]];
+		if (w4 != -1) {
+			target[i++] = (char)((w3*64 + w4) & 255);
+		}
+		n+=4;
 	}
-      else
-	{
-	  new_str[i] = str[i];
-	}
-    }
-  new_str[i] = '\0';
-  return new_str;
+	return i;
 }

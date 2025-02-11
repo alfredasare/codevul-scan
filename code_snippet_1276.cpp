@@ -1,19 +1,22 @@
-void rds_tcp_tune(struct socket *sock)
-{
-    struct sock *sk = sock->sk;
-    struct net *net = sock_net(sk);
-    struct rds_tcp_net *rtn = net_generic(net, rds_tcp_netid);
+/* Validate the input */
+	if (IS_ERR_OR_NULL(loginuid)) {
+		pr_err("Invalid loginuid\n");
+		return -EINVAL;
+	}
 
-    rds_tcp_nonagle(sock);
+	oldloginuid = audit_get_loginuid(current);
+	oldsessionid = audit_get_sessionid(current);
 
-    lock_sock(sk);
-    if (rtn->sndbuf_size > 0) {
-        sk->sk_sndbuf = rtn->sndbuf_size;
-        sk->sk_userlocks |= SOCK_SNDBUF_LOCK;
-    }
-    if (rtn->rcvbuf_size > 0) {
-        sk->sk_rcvbuf = rtn->rcvbuf_size;
-        sk->sk_userlocks |= SOCK_RCVBUF_LOCK;
-    }
-    release_sock(sk);
-}
+	rc = audit_set_loginuid_perm(loginuid);
+	if (rc)
+		goto out;
+
+	/* are we setting or clearing? */
+	if (uid_valid(loginuid))
+		sessionid = (unsigned int)atomic_inc_return(&session_id);
+
+	task->sessionid = sessionid;
+	task->loginuid = loginuid;
+out:
+	audit_log_set_loginuid(oldloginuid, loginuid, oldsessionid, sessionid, rc);
+	return rc;

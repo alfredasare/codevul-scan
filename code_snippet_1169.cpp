@@ -1,28 +1,17 @@
-sctp_disposition_t sctp_sf_t5_timer_expire(struct net *net,
-					   const struct sctp_endpoint *ep,
-					   const struct sctp_association *asoc,
-					   const sctp_subtype_t type,
-					   void *arg,
-					   sctp_cmd_seq_t *commands)
+static EHCIQueue *ehci_alloc_queue(EHCIState *ehci, uint32_t addr, int async)
 {
-	struct sctp_chunk *reply = NULL;
+    EHCIQueueHead *head = async ? &ehci->aqueues : &ehci->pqueues;
+    EHCIQueue *q = g_malloc0(sizeof(*q));
 
-	pr_debug("%s: timer T5 expired\n", __func__);
+    if (!q) {
+        return NULL;
+    }
 
-	SCTP_INC_STATS(net, SCTP_MIB_T5_SHUTDOWN_GUARD_EXPIREDS);
-
-	reply = sctp_make_abort(asoc, NULL, 0);
-	if (!reply) {
-		sctp_add_cmd_sf(commands, SCTP_CMD_SET_SK_ERR, SCTP_ERROR(ENOMEM));
-		return SCTP_DISPOSITION_NOMEM;
-	}
-
-	sctp_add_cmd_sf(commands, SCTP_CMD_REPLY, SCTP_CHUNK(reply));
-	sctp_add_cmd_sf(commands, SCTP_CMD_SET_SK_ERR, SCTP_ERROR(ETIMEDOUT));
-	sctp_add_cmd_sf(commands, SCTP_CMD_ASSOC_FAILED, SCTP_PERR(SCTP_ERROR_NO_ERROR));
-
-	SCTP_INC_STATS(net, SCTP_MIB_ABORTEDS);
-	SCTP_DEC_STATS(net, SCTP_MIB_CURRESTAB);
-
-	return SCTP_DISPOSITION_DELETE_TCB;
+    q->ehci = ehci;
+    q->qhaddr = addr;
+    q->async = async;
+    QTAILQ_INIT(&q->packets);
+    QTAILQ_INSERT_HEAD(head, q, next);
+    trace_usb_ehci_queue_action(q, "alloc");
+    return q;
 }

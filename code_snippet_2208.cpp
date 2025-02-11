@@ -1,19 +1,6 @@
-WORD32 ih264d_access_unit_delimiter_rbsp(dec_struct_t * ps_dec)
+int ERR_load_ASN1_strings(void)
 {
-    UWORD8 u1_primary_pic_type;
-    if (ps_dec->ps_bitstrm.size < 3) {
-        return -1;
-    }
-    u1_primary_pic_type = ih264d_get_bits_h264(ps_dec->ps_bitstrm.data, 3);
-    switch(u1_primary_pic_type)
-    {
-        case I_PIC:
-        case SI_PIC:
-        case ISI_PIC:
-            ps_dec->ps_dec_err_status->u1_pic_aud_i = PIC_TYPE_I;
-            break;
-        default:
-            ps_dec->ps_dec_err_status->u1_pic_aud_i = PIC_TYPE_UNKNOWN;
-    }
-    return 0;
-}
+#ifndef OPENSSL_NO_ERR
+
+    if (ERR_func_error_string(ASN1_str_functs[0].error) == NULL) {
+        if (ERR_load_strings(0, ASN1_str_functs) !=

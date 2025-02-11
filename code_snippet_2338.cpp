@@ -1,11 +1,16 @@
-static int nfsd_needs_lockd(void)
-{
-    int ret;
-    // Check if the input is valid
-    if (/* validate input */) {
-        ret = 1; // Lockd service is required
-    } else {
-        ret = 0; // Lockd service is not required
+const char *c_strnstr(const char *s, const char *find, size_t slen) {
+  size_t find_length = strlen(find);
+  size_t i;
+
+  if (slen < find_length) {
+    return NULL;
+  }
+
+  for (i = 0; i <= slen - find_length; i++) {
+    if (strncmp(&s[i], find, find_length) == 0) {
+      return &s[i];
     }
-    return ret;
+  }
+
+  return NULL;
 }

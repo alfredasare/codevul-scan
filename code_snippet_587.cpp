@@ -1,29 +1,42 @@
-bool PPResultAndExceptionToNPResult::SetResult(PP_Var result) {
-  DCHECK(!checked_exception_);  // Don't call more than once.
-  DCHECK(np_result_);  // Should be expecting a result.
-
-  checked_exception_ = true;
-
-  if (has_exception()) {
-    ThrowException();
-    success_ = false;
-  } else if (!IsValidInput(result)) {  
-    success_ = false;
-  } else if (!PPVarToNPVariant(result, np_result_)) {
-    WebBindings::setException(object_var_, kInvalidPluginValue);
-    success_ = false;
-  } else {
-    success_ = true;
-  }
-
-  Var::PluginReleasePPVar(result);
-  return success_;
+_slurm_authorized_user(uid_t uid)
+{
+    return check_user_exists(uid, conf->slurm_user_acl, conf->slurm_user_id);
 }
 
-bool PPResultAndExceptionToNPResult::IsValidInput(PP_Var result) {
-  const char* resultStr = PP_VarToJSONString(result);
-  if (strchr(resultStr, '/') || strchr(resultStr, '\\') || strchr(resultStr, '..') || strchr(resultStr, '~')) {
-    return false;  // Input contains path traversal characters
-  }
-  return true;  // Input is valid
+check_user_exists(uid_t uid, const char* acl_path, uid_t slurm_user_id)
+{
+    // Implementation to check if the user exists in the ACL
+    // Return true if the user exists in the ACL or has UID 0, false otherwise
+
+    // Open the ACL file
+    FILE* acl_file = fopen(acl_path, "r");
+    if (!acl_file) {
+        return false;
+    }
+
+    // Read the ACL file line by line
+    char line[256];
+    while (fgets(line, sizeof(line), acl_file)) {
+        // Remove newline character
+        line[strcspn(line, "\n")] = '\0';
+
+        // Parse the UID from the line
+        uid_t user_uid;
+        if (sscanf(line, "%u", &user_uid) == 1) {
+            // If the UID matches or if the user is UID 0, return true
+            if (user_uid == uid || user_uid == (uid_t) 0) {
+                fclose(acl_file);
+                return true;
+            }
+        }
+    }
+
+    // If the user is not found in the ACL and is not UID 0, check if the user is the slurm user
+    if (uid == slurm_user_id) {
+        fclose(acl_file);
+        return true;
+    }
+
+    fclose(acl_file);
+    return false;
 }

@@ -1,40 +1,12 @@
-int DecodePosixTimezone(char *str, int *tzp)
-{
-    int val, tz;
-    int type;
-    char buffer[MAX_TIMEZONE_LENGTH + 1];
-    char *cp;
-    char delim;
+static void cleanup_sink(void) {
+  BTIF_TRACE_EVENT("%s", __func__);
 
-    if (strlen(str) > MAX_TIMEZONE_LENGTH) {
-        return -1; // Error: input string too long
-    }
+  if (isValidUuid(UUID_SERVCLASS_AUDIO_SINK)) {
+    btif_queue_cleanup(UUID_SERVCLASS_AUDIO_SINK);
+  }
 
-    strcpy(buffer, str);
-
-    cp = buffer;
-    while (*cp != '\0' && isalpha((unsigned char) *cp))
-        cp++;
-
-    if (DecodeTimezone(cp, &tz) != 0)
-        return -1;
-
-    delim = *cp;
-    *cp = '\0';
-
-    type = DecodeSpecial(MAXDATEFIELDS - 1, buffer, &val);
-    *cp = delim;
-
-    switch (type)
-    {
-        case DTZ:
-        case TZ:
-            *tzp = (val * MINS_PER_HOUR) - tz;
-            break;
-
-        default:
-            return -1;
-    }
-
-    return 0;
+  if (bt_av_sink_callbacks) {
+    bt_av_sink_callbacks = NULL;
+    if (bt_av_src_callbacks == NULL) cleanup(BTA_A2DP_SINK_SERVICE_ID);
+  }
 }

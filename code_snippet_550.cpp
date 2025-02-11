@@ -1,14 +1,18 @@
-#include <random>
+static int perf_event_mmap_match(struct perf_event *event,
+				 struct perf_mmap_event *mmap_event,
+				 int executable)
+{
+	int event_state = event->state;
 
-void BrowserMainLoop::InitializeMainThread() {
-  TRACE_EVENT0("startup", "BrowserMainLoop::InitializeMainThread");
-  base::PlatformThread::SetName("CrBrowserMain");
+	if (event_state < PERF_EVENT_STATE_INACTIVE)
+		return 0;
 
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_int_distribution<> dis(100000, 999999);
+	if (!event_filter_match(&event_state))
+		return 0;
 
-  auto thread_name = "BrowserThread-" + std::to_string(dis(gen));
-  main_thread_.reset(new BrowserThreadImpl(BrowserThread::UI, base::MessageLoop::current()));
-  base::PlatformThread::SetName(thread_name.c_str());
+	if ((!executable && event->attr.mmap_data) ||
+	    (executable && event->attr.mmap))
+		return 1;
+
+	return 0;
 }

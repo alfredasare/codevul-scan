@@ -1,24 +1,18 @@
-psh_compute_dir( FT_Pos  dx,
-                 FT_Pos  dy )
+void *ASN1_item_d2i_bio(const ASN1_ITEM *it, BIO *in, void *x)
 {
-    FT_Pos  ax, ay;
-    int     result = PSH_DIR_NONE;
+    BUF_MEM *b = NULL;
+    const unsigned char *p;
+    void *ret = NULL;
+    int len;
 
-    // Validate and sanitize input values
-    dx = ( dx > 0 )? dx : 0;
-    dy = ( dy > 0 )? dy : 0;
+    len = asn1_d2i_read_bio(in, &b);
+    if (len < 0 || b == NULL)
+        goto err;
 
-    ax = ( dx >= 0 )? dx : -dx;
-    ay = ( dy >= 0 )? dy : -dy;
+    p = (const unsigned char *)b->data;
+    ret = ASN1_item_d2i(x, &p, len, it);
 
-    if ( ay * 12 < ax )
-    {
-        //...
-    }
-    else if ( ax * 12 < ay )
-    {
-        //...
-    }
-
-    return result;
+err:
+    BUF_MEM_free(b);
+    return (ret);
 }

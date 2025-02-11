@@ -1,14 +1,10 @@
-int kvm_set_cr3(struct kvm_vcpu *vcpu, unsigned long cr3)
-{
-    if (!is_valid_cr3(cr3)) {
-        return 1; // Invalid CR3 value
-    }
+class AudioNode {
+private:
+    std::unique_ptr<HandlerType> handler_{std::make_unique<HandlerType>()};
 
-    if (cr3 == kvm_read_cr3(vcpu) &&!pdptrs_changed(vcpu)) {
-        kvm_mmu_sync_roots(vcpu);
-        kvm_make_request(KVM_REQ_TLB_FLUSH, vcpu);
-        return 0;
+public:
+    void setChannelInterpretation(const String& interpretation,
+                                 ExceptionState& exception_state) {
+        handler_->SetChannelInterpretation(interpretation, exception_state);
     }
-
-    //... (rest of the function remains the same)
-}
+};

@@ -1,8 +1,5 @@
-void cJSON_AddItemToObject(cJSON *object, const char *string, cJSON *item) {
-    if (!item) return;
-    if (item->string) cJSON_free(item->string);
-
-    item->string = cJSON_strdup(string);
-
-    cJSON_AddItemToArray(object, item);
+size_t Parcel::ipcDataSize() const
+{
+    const size_t maxSize = std::numeric_limits<size_t>::max();
+    return (mDataSize > mDataPos && mDataSize <= maxSize ? mDataSize : maxSize);
 }

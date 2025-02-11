@@ -1,22 +1,50 @@
-static ssize_t vfs_pwrite_fn(void *file, const void *buf, size_t len, off_t offset)
+ppp_push(struct ppp *ppp)
 {
-    struct files_struct *fsp = (struct files_struct *)file;
-    size_t max_len = PAGE_SIZE; // adjust the max_len according to your system's requirements
+	struct list_head *list;
+	struct channel *pch;
+	struct sk_buff *skb = ppp->xmit_pending;
 
-    if (len > max_len) {
-        return -EOVERFLOW;
-    }
+	if (!skb)
+		return;
 
-    if (offset < 0 || offset > fsp->file_size) {
-        return -EINVAL;
-    }
+	list = &ppp->channels;
+	if (list_empty(list)) {
+		/* nowhere to send the packet, just drop it */
+		ppp->xmit_pending = NULL;
+		kfree_skb(skb);
+		return;
+	}
 
-    char buffer[max_len];
-    ssize_t result = 0;
+	if ((ppp->flags & SC_MULTILINK) == 0) {
+		/* not doing multilink: send it down the first channel */
+		list = list->next;
+		pch = list_entry(list, struct channel, clist);
 
-    if (len > 0) {
-        result = memcpy(buffer, buf, len);
-    }
+		spin_lock_bh(&pch->downl);
+		if (pch->chan) {
+			int ret;
+			ret = pch->chan->ops->start_xmit(pch->chan, skb);
+			if (ret)
+				ppp->xmit_pending = skb;
+			else
+				kfree_skb(skb);
+		} else {
+			/* channel got unregistered */
+			kfree_skb(skb);
+			ppp->xmit_pending = NULL;
+		}
+		spin_unlock_bh(&pch->downl);
+		return;
+	}
 
-    return SMB_VFS_PWRITE(fsp, buffer, result, offset);
+#ifdef CONFIG_PPP_MULTILINK
+	/* Multilink: fragment the packet over as many links
+	   as can take the packet at the moment. */
+	if (!ppp_mp_explode(ppp, skb)) {
+		kfree_skb(skb);
+		ppp->xmit_pending = NULL;
+	}
+#endif /* CONFIG_PPP_MULTILINK */
+
+	ppp->xmit_pending = NULL;
 }

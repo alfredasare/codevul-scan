@@ -1,12 +1,8 @@
-u32 fscrypt_fname_encrypted_size(const struct inode *inode, u32 ilen)
-{
-    int padding = 32; // default padding size
-    struct fscrypt_info *ci = inode->i_crypt_info;
-
-    if (ci) {
-        padding = 4 << (ci->ci_flags & FS_POLICY_FLAGS_PAD_MASK);
+void serveconnection(CLIENT *client) {
+    // Validate inputs
+    if (!client || !client->server || !client->server->prerun || !client->exportname || !client->net || !client->server->postrun) {
+        return;
     }
 
-    ilen = max(ilen, (u32)FS_CRYPTO_BLOCK_SIZE);
-    return round_up(ilen, ALIGNMENT_PADDING_SIZE);
-}
+    if (do_run(client->server->prerun, client->exportname)) {
+        exit(EXIT_FAILURE);

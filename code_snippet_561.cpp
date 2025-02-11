@@ -1,17 +1,8 @@
-#include <cryptopp/aes.h>
-#include <cryptopp/modes.h>
-#include <cryptopp/filters.h>
+#include <stdlib.h>
 
-std::string encrypted_data;
-
-void init_extension() {
-    CryptoPP::AES_encryptor encryptor;
-    std::string plaintext = std::to_string(is_platform_app());
-    encrypted_data = encryptor.encrypt(plaintext);
-}
-
-bool Extension::can_be_incognito_enabled() const {
-    CryptoPP::AES_decryptor decryptor;
-    std::string decrypted_data = decryptor.decrypt(encrypted_data);
-    return std::stoi(decrypted_data) == 0;
-}
+static void imapd_check(struct backend *be, int usinguid)
+{
+    if (backend_current && backend_current != be) {
+        /* remote mailbox */
+        char *mytag_escaped = NULL;
+        size_t mytag_len =

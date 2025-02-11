@@ -1,28 +1,31 @@
-bool asn1_read_BOOLEAN_context(struct asn1_data *data, bool *v, int context)
+static void predictor_decode_stereo_3950(APEContext *ctx, int count)
 {
-    uint8_t tmp = 0;
-    int rc = 0;
+    APEPredictor *p = &ctx->predictor;
+    int32_t *decoded0 = ctx->decoded[0];
+    int32_t *decoded1 = ctx->decoded[1];
 
-    rc = asn1_start_tag(data, ASN1_CONTEXT_SIMPLE(context));
-    if (rc!= 0) {
-        return false;
+    ape_apply_filters(ctx, ctx->decoded[0], ctx->decoded[1], count);
+
+    while (count--) {
+        /* Predictor Y */
+        *decoded0 = predictor_update_filter(p, *decoded0, 0, YDELAYA, YDELAYB,
+                                            YADAPTCOEFFSA, YADAPTCOEFFSB);
+        decoded0++;
+        *decoded1 = predictor_update_filter(p, *decoded1, 1, XDELAYA, XDELAYB,
+                                            XADAPTCOEFFSA, XADAPTCOEFFSB);
+        decoded1++;
+
+        /* Combined */
+        p->buf++;
+
+        /* Have we filled the history buffer? */
+        if (p->buf == p->historybuffer + HISTORY_SIZE) {
+            size_t bytesToCopy = p->buf - p->historybuffer;
+            if (bytesToCopy > PREDICTOR_SIZE * sizeof(*p->historybuffer)) {
+                bytesToCopy = PREDICTOR_SIZE * sizeof(*p->historybuffer);
+            }
+            memmove(p->historybuffer, p->buf, bytesToCopy);
+            p->buf = p->historybuffer;
+        }
     }
-
-    rc = asn1_read_uint8(data, &tmp);
-    if (rc!= 0) {
-        return false;
-    }
-
-    if (tmp == 0xFF) {
-        *v = true;
-    } else {
-        *v = false;
-    }
-
-    rc = asn1_end_tag(data);
-    if (rc!= 0) {
-        return false;
-    }
-
-    return true;
 }

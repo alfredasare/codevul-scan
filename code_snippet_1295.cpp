@@ -1,11 +1,27 @@
-void InputEngine::GetRulebasedKeypressCountForTesting(GetRulebasedKeypressCountForTestingCallback callback) {
-  auto& context = channel_receivers_.current_context();
-  auto& engine = context.get()->engine;
+void nf_nat_masquerade_ipv4_register_notifier(void)
+{
+	struct net *net;
+	int refcount;
 
-  if (!std::is_pointer_v<std::decay_t<decltype(callback)>> ||!callback) {
-    throw std::runtime_error("Invalid callback object");
-  }
+	rcu_read_lock();
+	net = rcu_dereference(global_net);
+	refcount = atomic_read(&masquerade_notifier_refcount);
+	rcu_read_unlock();
 
-  std::function<void(int)> wrapped_callback = [callback](int result) { callback(result); };
-  wrapped_callback.Run(engine? engine->process_key_count() : -1);
+	/* check if the notifier was already set */
+	if (refcount > 0)
+		return;
+
+	/* Acquire the RCU read lock again before registering notifiers */
+	rcu_read_lock();
+
+	/* Register for device down reports */
+	register_netdevice_notifier(&masq_dev_notifier);
+	/* Register IP address change reports */
+	register_inetaddr_notifier(&masq_inet_notifier);
+
+	/* Update the refcount after registering the notifiers */
+	rcu_read_lock();
+	atomic_set(&masquerade_notifier_refcount, 1);
+	rcu_read_unlock();
 }

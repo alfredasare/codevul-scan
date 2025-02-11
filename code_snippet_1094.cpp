@@ -1,22 +1,28 @@
-static int afiucv_hs_callback_synfin(struct sock *sk, struct sk_buff *skb)
+int ion_phys(struct ion_client *client, struct ion_handle *handle,
+	     ion_phys_addr_t *addr, size_t *len)
 {
-    struct iucv_sock *iucv = iucv_sk(sk);
+	struct ion_buffer *buffer;
+	int ret;
 
-    if (!iucv)
-        goto out;
-    if (sk->sk_state!= IUCV_BOUND)
-        goto out;
+	mutex_lock(&client->lock);
+	if (!ion_handle_validate(client, handle)) {
+		mutex_unlock(&client->lock);
+		return -EINVAL;
+	}
 
-    try {
-        bh_lock_sock(sk);
-        sk->sk_state = IUCV_DISCONN;
-        sk->sk_state_change(sk);
-        bh_unlock_sock(sk);
-    } catch (const std::exception& e) {
-        syslog(LOG_ERR, "Error handling SYNFIN event: %s", e.what());
-    }
+	buffer = handle->buffer;
 
-out:
-    kfree_skb(skb);
-    return 0;
+	if (!buffer->heap->ops->phys) {
+		pr_err("%s: ion_phys is not implemented by this heap (name=%s, type=%d).\n",
+			__func__, buffer->heap->name, buffer->heap->type);
+		mutex_unlock(&client->lock);
+		return -ENODEV;
+	}
+	ret = mutex_unlock(&client->lock);
+	if (ret != 0) {
+		// Error handling for mutex_unlock failure
+		return ret;
+	}
+	ret = buffer->heap->ops->phys(buffer->heap, buffer, addr, len);
+	return ret;
 }

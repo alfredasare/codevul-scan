@@ -1,14 +1,20 @@
-static int _ffs_name_dev(struct ffs_dev *dev, const char *name)
-{
-    struct ffs_dev *existing;
+class RenderFrameImpl {
+ public:
+  //...
+  mutex mtx_;  // Add a mutex to protect access to web_user_media_client_.
 
-    existing = _ffs_do_find_dev(name);
-    if (existing) {
-        existing = NULL;  // Set existing to NULL to indicate it's no longer valid
-        return -EBUSY;
-    }
+ private:
+  MediaStreamDeviceObserver* GetMediaStreamDeviceObserver();
+  std::unique_ptr<WebUserMediaClient> web_user_media_client_;
+  //...
+};
 
-    dev->name = name;
+MediaStreamDeviceObserver* RenderFrameImpl::GetMediaStreamDeviceObserver() {
+  std::lock_guard<mutex> lock(mtx_);  // Lock the mutex before accessing web_user_media_client_.
 
-    return 0;
+  if (!web_user_media_client_)
+    InitializeUserMediaClient();
+  return web_user_media_client_
+             ? web_user_media_client_->media_stream_device_observer()
+             : nullptr;
 }

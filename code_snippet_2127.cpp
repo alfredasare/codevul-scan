@@ -1,11 +1,23 @@
-void OBJerr(int err_code, int reason)
+static int install_session_keyring(struct key *keyring)
 {
-    switch (err_code) {
-        case OBJ_F_OBJ_NID2OBJ:
-            printf("Error occurred during nid2obj operation\n");
-            break;
-        default:
-            printf("Unknown error occurred\n");
-            break;
-    }
+	struct cred *new;
+	int ret;
+
+	if (!keyring)
+		return -EINVAL;
+
+	if (keyring->type != KEY_RING_SESSION_KEYRING)
+		return -EINVAL;
+
+	new = prepare_creds();
+	if (!new)
+		return -ENOMEM;
+
+	ret = install_session_keyring_to_cred(new, keyring);
+	if (ret < 0) {
+		abort_creds(new);
+		return ret;
+	}
+
+	return commit_creds(new);
 }

@@ -1,8 +1,9 @@
-void OfflinePageModelImpl::ClearStorageIfNeeded(const ClearStorageCallback& callback) {
-  if (!storage_manager_) {
-    storage_manager_ = std::make_unique<OfflinePageStorageManager>(this, GetPolicyController(), archive_manager_.get());
-  }
-  if (storage_manager_) {
-    storage_manager_->ClearPagesIfNeeded(callback);
-  }
+void kvm_vcpu_request_scan_ioapic(struct kvm *kvm)
+{
+	struct kvm_ioapic *ioapic = kvm->arch.vioapic;
+
+	if (!ioapic)
+		return;
+
+	kvm_make_scan_ioapic_request(kvm);
 }

@@ -1,19 +1,12 @@
-static void __sk_destruct(struct rcu_head *head)
-{
-    struct sock *sk = container_of(head, struct sock, sk_rcu);
-    struct sk_filter *filter;
-
-    if (sk->sk_destruct)
-        sk->sk_destruct(sk);
-
-    filter = rcu_access_pointer(sk->sk_filter);
-    if (filter && atomic_read(&sk->sk_wmem_alloc) == 0) {
-        sk_filter_uncharge(sk, filter);
-        RCU_INIT_POINTER(sk->sk_filter, NULL);
+c++
+status_t CameraSource::isCameraColorFormatSupported(const CameraParameters& params) {
+    if (params.get(CameraParameters::KEY_VIDEO_FRAME_FORMAT).isEmpty()) {
+        return BAD_VALUE;
     }
 
-    if (filter) {
-        sk->sk_filter = NULL; // Set the pointer to NULL after use
+    mColorFormat = getColorFormat(params.get(CameraParameters::KEY_VIDEO_FRAME_FORMAT));
+    if (mColorFormat == -1 || mColorFormat >= NUM_COLOR_FORMATS) {
+        return BAD_VALUE;
     }
-
-    //... (rest of the code remains the same)
+    return OK;
+}

@@ -1,21 +1,20 @@
-static int getSocketType(char* name) {
-    int type = -1;
-    uint i;
+#include <stdint.h>
 
-    /* match name with known socket type */
-    for(i=0; i<sizeof(socketTypes)/sizeof(socket_type); ++i) {
-        if(!strcmp(socketTypes[i].name, name) ) {
-            type = socketTypes[i].type;
-            break;
+gettime1900d(void)
+{
+	struct timeval tv;
+	gettimeofday(&tv, NULL); /* never fails */
+
+        /* Calculate fractional part using a larger data type */
+        long long fractional_part = (int64_t)(1.0e-6 * tv.tv_usec);
+
+        /* Check for overflow */
+        if ((time_t)(tv.tv_sec + fractional_part/1000000 + OFFSET_1900_1970) < tv.tv_sec) {
+                /* Handle error */
+                /* ... */
+                return -1;
         }
-    }
 
-    /* whine if no match was found. */
-    if (type == -1) {
-        char buffer[256]; // buffer to store the error message
-        snprintf(buffer, sizeof(buffer), "unknown type %s", name);
-        errmsg.LogError(0, NO_ERRCODE, buffer);
-    }
-
-    return type;
+	G.cur_time = tv.tv_sec + fractional_part/1000000 + OFFSET_1900_1970;
+	return G.cur_time;
 }

@@ -1,10 +1,13 @@
-uint32_t UuidToProcId(const effect_uuid_t *uuid)
+#include <random>
+
+uint32_t tcpr_random(uint32_t *seed)
 {
-    size_t i;
-    for (i = 0; i < PREPROC_NUM_EFFECTS; i++) {
-        if (strcmp(uuid->uuid, sUuidToPreProcTable[i]->uuid) == 0) {
-            break;
-        }
-    }
-    return i;
+  std::random_device rd;
+  std::mt19937 gen(rd() * time(0) + rd());
+  std::uniform_int_distribution<> dis(0, 0xFFFFF);
+
+  uint32_t result = dis(gen);
+  *seed = gen();
+
+  return result;
 }

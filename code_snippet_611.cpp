@@ -1,29 +1,12 @@
-void fst_rx_config(struct fst_port_info *port)
-{
-    int i;
-    int pi;
-    unsigned int offset;
-    unsigned long flags;
-    struct fst_card_info *card;
+const unsigned long max_identifier = 1000; // Replace with the appropriate max value
 
-    pi = port->index;
-    card = port->card;
-
-    if (pi >= NUM_RX_BUFFER ||!rxDescrRing[pi]) {
-        printk(KERN_ERR "Invalid rxDescrRing index");
-        return -EINVAL;
+void InspectorNetworkAgent::ScriptImported(unsigned long identifier,
+                                           const String& source_string) {
+    // Perform range checking on the identifier
+    if (identifier >= max_identifier || identifier < 0) {
+        // Handle the error, e.g., return an error or throw an exception
+        return;
     }
-
-    spin_lock_irqsave(&card->card_lock, flags);
-    for (i = 0; i < NUM_RX_BUFFER; i++) {
-        offset = BUF_OFFSET(rxBuffer[pi][i][0]);
-
-        FST_WRW(card, rxDescrRing[pi][i].ladr, (u16) offset);
-        FST_WRB(card, rxDescrRing[pi][i].hadr, (u8) (offset >> 16));
-        FST_WRW(card, rxDescrRing[pi][i].bcnt, cnv_bcnt(LEN_RX_BUFFER));
-        FST_WRW(card, rxDescrRing[pi][i].mcnt, LEN_RX_BUFFER);
-        FST_WRB(card, rxDescrRing[pi][i].bits, DMA_OWN);
-    }
-    port->rxpos = 0;
-    spin_unlock_irqrestore(&card->card_lock, flags);
+    resources_data_->SetResourceContent(IdentifiersFactory::RequestId(identifier),
+                                      source_string);
 }

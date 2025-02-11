@@ -1,30 +1,7 @@
-class ThreadHeapStats {
-public:
-    ThreadHeapStats() :
-        allocated_space_(0),
-        allocated_object_size_(0),
-        object_size_at_last_gc_(0),
-        marked_object_size_(0),
-        marked_object_size_at_last_complete_sweep_(0),
-        wrapper_count_(0),
-        wrapper_count_at_last_gc_(0),
-        collected_wrapper_count_(0),
-        partition_alloc_size_at_last_gc_(0),
-        estimated_marking_time_per_byte_(0.0) {}
-
-    ~ThreadHeapStats() {
-        allocated_space_ = 0;
-        allocated_object_size_ = 0;
-        object_size_at_last_gc_ = 0;
-        marked_object_size_ = 0;
-        marked_object_size_at_last_complete_sweep_ = 0;
-        wrapper_count_ = 0;
-        wrapper_count_at_last_gc_ = 0;
-        collected_wrapper_count_ = 0;
-        partition_alloc_size_at_last_gc_ = 0;
-        estimated_marking_time_per_byte_ = 0.0;
-    }
-
-private:
-    //... other member variables...
-};
+GtkPrinter* default_printer() {
+  if (default_printer_ == NULL) {
+    g_print("Error: default_printer_ is not initialized\n");
+    return NULL;
+  }
+  return default_printer_;
+}

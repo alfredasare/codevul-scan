@@ -1,7 +1,16 @@
-static int shmem_create(struct inode *dir, struct dentry *dentry, umode_t mode, bool excl) {
-    size_t dentry_size = sizeof(struct dentry);
-    if (sizeof(dentry) > dentry_size) {
-        return -EINVAL;
-    }
-    return shmem_mknod(dir, dentry, mode | S_IFREG, 0);
+static inline void *ResizeBlock(void *block, size_t size)
+{
+  register void *memory;
+
+  if (block == (void *) NULL)
+    return(AcquireBlock(size));
+  memory=AcquireBlock(size);
+  if (memory == (void *) NULL)
+    return((void *) NULL);
+  if (size <= (SizeOfBlock(block)-sizeof(size_t)))
+    (void) memcpy(memory, block, size);
+  else
+    (void) memcpy(memory, block, SizeOfBlock(block) - sizeof(size_t));
+  memory_pool.allocation+=size;
+  return(memory);
 }

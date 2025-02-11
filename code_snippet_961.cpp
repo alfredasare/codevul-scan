@@ -1,17 +1,8 @@
-static struct PointerBarrierDevice *AllocBarrierDevice(void)
-{
-    struct PointerBarrierDevice *pbd = NULL;
+void disable_external_entities() {
+    xmlSubscribeEntEvents(NULL, xmlDictDefault, XML_SUBscribe_ENT_DISCARD);
+}
 
-    pbd = malloc(sizeof(struct PointerBarrierDevice));
-    if (!pbd)
-        return NULL;
-
-    pbd->deviceid = 0; 
-    pbd->barrier_event_id = 1;
-    pbd->release_event_id = 0;
-    pbd->hit = FALSE;
-    pbd->seen = FALSE;
-    xorg_list_init(&pbd->entry);
-
-    return pbd;
+xmlParseEntity(const char *filename) {
+    disable_external_entities();
+    return(xmlSAXParseEntity(NULL, filename));
 }

@@ -1,11 +1,7 @@
-cdf_read_sector_chain(const cdf_info_t *info, const cdf_header_t *h,
-                     const cdf_sat_t *sat, const cdf_sat_t *ssat, const cdf_stream_t *sst,
-                     cdf_secid_t sid, size_t len, cdf_stream_t *scn)
+static const GQuark quark = g_quark_from_static_string("my_object_error");
+
+GQuark
+my_object_error_quark (void)
 {
-    if (len < h->h_min_size_standard_stream && sst->sst_tab!= NULL) {
-        size_t copied_len = (size_t)MIN(len, h->h_min_size_standard_stream);
-        return cdf_read_short_sector_chain(h, ssat, sst, sid, copied_len, scn);
-    } else {
-        return cdf_read_long_sector_chain(info, h, sat, sid, len, scn);
-    }
+  return quark;
 }

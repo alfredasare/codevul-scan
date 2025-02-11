@@ -1,13 +1,17 @@
-GURL SiteInstanceImpl::DetermineProcessLockURL(BrowserContext* browser_context, const GURL& url) {
-  if (!url.is_valid()) {
-    return GURL();
-  }
+c++
+void SendTouch(RenderWidgetHostViewAndroid* view,
+             ui::MotionEvent::Action action,
+             gfx::Point point) {
+  DCHECK(action >= ui::MotionEvent::Action::DOWN &&
+         action < ui::MotionEvent::Action::CANCEL);
 
-  size_t pos = url.spec().find_last_of('/');
-  if (pos == std::string::npos) {
-    return GURL();
-  }
-
-  GURL process_lock_url = SiteInstanceImpl::GetSiteForURL(browser_context, GURL(url.spec().substr(0, pos)), false /* should_use_effective_urls */);
-  return process_lock_url;
+  ui::MotionEventAndroid::Pointer p(0, point.x(), point.y(), 10, 0, 0, 0, 0);
+  JNIEnv* env = base::android::AttachCurrentThread();
+  auto time_ms = (ui::EventTimeForNow().SinceEpoch().InMilliseconds() -
+                 base::Time::Now().SinceEpoch().InMilliseconds());
+  ui::MotionEventAndroid touch(
+      env, nullptr, 1.f, 0, 0, 0, time_ms,
+      ui::MotionEventAndroid::GetAndroidAction(action), 1, 0, 0, 0, 0, 0, 0,
+      0, false, &p, nullptr);
+  view->OnTouchEvent(touch);
 }

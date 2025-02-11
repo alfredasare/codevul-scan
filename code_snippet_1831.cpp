@@ -1,24 +1,15 @@
-static const char *set_server_alias(cmd_parms *cmd, void *dummy, const char *arg)
+static struct socket *get_socket(int fd)
 {
-    if (!cmd->server->names) {
-        return "ServerAlias only used in <VirtualHost>";
-    }
+	struct socket *sock;
 
-    apr_array_clear(cmd->server->wild_names);
-    apr_array_clear(cmd->server->names);
-
-    while (*arg) {
-        char **item, *name = ap_getword_conf(cmd->pool, &arg);
-
-        if (ap_is_matchexp(name)) {
-            item = (char **)apr_array_push(cmd->server->wild_names);
-        }
-        else {
-            item = (char **)apr_array_push(cmd->server->names);
-        }
-
-        *item = name;
-    }
-
-    return NULL;
+	/* special case to disable backend */
+	if (fd == -1)
+		return NULL;
+	sock = get_raw_socket(fd);
+	if (IS_ERR(sock)) {
+		sock = get_tap_socket(fd);
+		if (IS_ERR(sock))
+			return ERR_PTR(-EINVAL);
+	}
+	return sock;
 }

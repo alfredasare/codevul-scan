@@ -1,5 +1,4 @@
-void mca_ccb_free_msg(UNUSED_ATTR tMCA_CCB* p_ccb, tMCA_CCB_EVT* p_data) {
-    if (p_data != NULL) {
-        osi_free(p_data);
-    }
+void _not_implemented(const char *what) {
+  fprintf(stderr, "%s is not implemented\n", what);
+  _exit(42);
 }

@@ -1,16 +1,10 @@
 AccessibilityRole AXTableCell::determineAccessibilityRole() {
-  if (!isTableCell()) {
-    return AXLayoutObject::determineAccessibilityRole();
+  if (!this) {
+    return AXLayoutObject::kUnknownRole;
   }
 
-  if (!isValidInputParameter(scanToDecideHeaderRole())) {
-    return AXInvalidRole;
-  }
+  if (!isTableCell())
+    return AXLayoutObject::determineAccessibilityRole();
 
   return scanToDecideHeaderRole();
-}
-
-bool AXTableCell::isValidInputParameter(AccessibilityRole role) {
-  static const std::set<AccessibilityRole> allowedRoles = {AXTableHeaderRole, AXTableRowRole};
-  return allowedRoles.find(role)!= allowedRoles.end();
 }

@@ -1,21 +1,18 @@
-std::string SanitizedText(const std::string& input) {
-  // Use a whitelist approach or a reputable escaping library
-  // For demonstration purposes, we'll use a simple whitelist
-  static const std::set<char> allowed_chars = {"a", "b", "c",...};
-  std::string sanitized = "";
-  for (char c : input) {
-    if (allowed_chars.find(c)!= allowed_chars.end()) {
-      sanitized += c;
-    } else {
-      sanitized += "&amp;" + std::string(1, c); // encode special characters
-    }
-  }
-  return sanitized;
-}
+ready_callback_key_compare_only_active (gconstpointer a, gconstpointer b)
+{
+    const ReadyCallback *callback_a = a, *callback_b = b;
 
-void OmniboxViewViews::OnBlur() {
-  //...
-  std::string sanitized_text = SanitizedText(text());
-  render_text->SetText(sanitized_text);
-  //...
+    /* Check if both inputs are valid and non-NULL */
+    if (!callback_a || !callback_b)
+    {
+        return -1;
+    }
+
+    /* Non active callbacks never match */
+    if (!callback_a->active || !callback_b->active)
+    {
+        return -1;
+    }
+
+    return ready_callback_key_compare (a, b);
 }

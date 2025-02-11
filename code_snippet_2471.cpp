@@ -1,25 +1,24 @@
-static unsigned long hi3660_stub_clk_recalc_rate(struct clk_hw *hw,
-						   unsigned long parent_rate)
-{
-	struct hi3660_stub_clk *stub_clk = to_stub_clk(hw);
-	void __iomem *reg_ptr;
+class ImageBitmapLoader : public base::RefCounted<ImageBitmapLoader> {
+ public:
+  explicit ImageBitmapLoader(scoped_refptr<base::SingleThreadTaskRunner> task_runner);
 
-	/*
-	 * LPM3 writes back the CPU frequency in shared SRAM so read
-	 * back the frequency.
-	 */
-	if ((unsigned long)freq_reg < (unsigned long)frequency_reg_start ||
-	    (unsigned long)freq_reg > (unsigned long)frequency_reg_end) {
-		/* Handle invalid frequency register address */
-		return 0;
-	}
+  // ...
 
-	reg_ptr = ioremap_cache(freq_reg, 0);
-	if (IS_ERR(reg_ptr)) {
-		return 0;
-	}
+ private:
+  friend class base::RefCounted<ImageBitmapLoader>;
+  base::WeakPtrFactory<ImageBitmapLoader> weak_ptr_factory_;
+  // ...
+};
 
-	stub_clk->rate = readl(reg_ptr) * MHZ;
-	iounmap(reg_ptr);
-	return stub_clk->rate;
+void ImageBitmapFactories::ImageBitmapLoader::ScheduleAsyncImageBitmapDecoding(
+    DOMArrayBuffer* array_buffer) {
+  auto task_runner = Thread::Current()->GetTaskRunner();
+  weak_ptr_factory_.Init(this);
+  background_scheduler::PostOnBackgroundThread(
+      FROM_HERE,
+      CrossThreadBind(
+          &ImageBitmapFactories::ImageBitmapLoader::DecodeImageOnDecoderThread,
+          weak_ptr_factory_.GetWeakPtr(), std::move(task_runner),
+          WrapCrossThreadPersistent(array_buffer), options_->premultiplyAlpha(),
+          options_->colorSpaceConversion()));
 }

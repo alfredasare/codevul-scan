@@ -1,29 +1,19 @@
-int dtls_construct_hello_verify_request(SSL *s)
-{
-    unsigned int len;
-    unsigned char *buf;
+unsigned long __user *nm = NULL;
+unsigned long nr_bits, alloc_size;
+nodemask_t bm;
+int bits_matched;
 
-    buf = (unsigned char *)s->init_buf->data;
+nr_bits = min_t(unsigned long, maxnode-1, MAX_NUMNODES);
+alloc_size = ALIGN(nr_bits, BITS_PER_LONG) / 8;
 
-    if (s->ctx->app_gen_cookie_cb == NULL ||
-        s->ctx->app_gen_cookie_cb(s, ossl_random_bytes(&s->d1->cookie, s->d1->cookie_len),
-                                  &(s->d1->cookie_len)) == 0 ||
-        s->d1->cookie_len > 255) {
-        SSLerr(SSL_F_DTLS_CONSTRUCT_HELLO_VERIFY_REQUEST,
-               SSL_R_COOKIE_GEN_CALLBACK_FAILURE);
-        ossl_statem_set_error(s);
-        return 0;
-    }
-
-    len = dtls_raw_hello_verify_request(&buf[DTLS1_HM_HEADER_LENGTH],
-                                        s->d1->cookie, s->d1->cookie_len);
-
-    dtls1_set_message_header(s, DTLS1_MT_HELLO_VERIFY_REQUEST, len, 0, len);
-    len += DTLS1_HM_HEADER_LENGTH;
-
-    /* number of bytes to write */
-    s->init_num = len;
-    s->init_off = 0;
-
-    return 1;
+if (nmask) {
+	bits_matched = compat_get_bitmap(nodes_addr(bm), nmask, nr_bits);
+	if (bits_matched != nr_bits)
+		return -EINVAL;
+	nm = compat_alloc_user_space(alloc_size);
+	err |= copy_to_user(nm, nodes_addr(bm), alloc_size);
 }
+
+if (err)
+	return -EFAULT;
+return sys_mbind(start, len, mode, nm, nr_bits+1, flags);

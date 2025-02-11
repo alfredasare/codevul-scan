@@ -1,7 +1,9 @@
-void lines_too_long(const char *filename) {
-  char sanitized_filename[256];
-  sanitized_filename[0] = '\0';
-  strcat(sanitized_filename, "lines_too_long_");
-  strcat(sanitized_filename, filename);
-  fatal("Lines in file %s are too long", sanitized_filename);
+#define MAX_TX_CANDIDATES_SIZE 1000 // Define this value according to your system's specifications.
+
+static inline bool RuleMatchCandidateTxArrayHasSpace(const DetectEngineThreadCtx *det_ctx,
+                                                       const uint32_t need)
+{
+    if ((det_ctx->tx_candidates_size >= need) && (need <= MAX_TX_CANDIDATES_SIZE))
+        return 1;
+    return 0;
 }

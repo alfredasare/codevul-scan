@@ -1,24 +1,11 @@
-int ssl3_do_compress(SSL *ssl)
-{
-#ifndef OPENSSL_NO_COMP
-    int i;
-    SSL3_RECORD *wr;
+#include <regex>
 
-    wr = &(ssl->s3->wrec);
-    i = COMP_compress_block(ssl->compress, wr->data,
-                            SSL3_RT_MAX_COMPRESSED_LENGTH,
-                            wr->input, (int)wr->length);
+const std::regex kAllowedHosts("^(chrome-ui\\.(?:settings|extensions|bookmarks))$");
+const std::string kAllowedScheme("chrome-ui");
 
-    // Check return value and ensure proper null termination
-    if (i >= 0 && i < SSL3_RT_MAX_COMPRESSED_LENGTH) {
-        wr->data[i] = '\0'; // Add null terminator
-    } else {
-        return (0);
-    }
-
-    wr->length = i;
-
-    wr->input = wr->data;
-#endif
-    return (1);
+bool IsURLAllowedInIncognito(const GURL& url) {
+  if (url.scheme() != kAllowedScheme || !std::regex_match(url.host(), kAllowedHosts)) {
+    return false;
+  }
+  return true;
 }

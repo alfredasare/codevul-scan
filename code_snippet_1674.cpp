@@ -1,6 +1,26 @@
-static void dentry_lru_add(struct dentry *dentry)
+static XHCIEPContext *xhci_alloc_epctx(XHCIState *xhci,
+                                       unsigned int slotid,
+                                       unsigned int epid)
 {
-    if (!dentry_on_dcache_lru(dentry)) {
-        d_lru_add(dentry);
+    XHCIEPContext *epctx;
+    int i;
+
+    epctx = g_new0(XHCIEPContext, 1);
+    epctx->xhci = xhci;
+    epctx->slotid = slotid;
+    epctx->epid = epid;
+
+    for (i = 0; i < ARRAY_SIZE(epctx->transfers); i++) {
+        epctx->transfers[i].xhci = xhci;
+        epctx->transfers[i].slotid = slotid;
+        epctx->transfers[i].epid = epid;
+        usb_packet_init(&epctx->transfers[i].packet);
     }
+    epctx->kick_timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, xhci_ep_kick_timer, epctx);
+
+    /* Add the following lines before the 'return epctx;' statement */
+    g_signal_connect(epctx->kick_timer, "destroy",
+        G_CALLBACK(g_object_unref), &epctx->kick_timer);
+
+    return epctx;
 }

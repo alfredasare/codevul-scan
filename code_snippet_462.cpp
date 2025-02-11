@@ -1,25 +1,14 @@
-void ResourceDispatcherHostImpl::DidReceiveResponse(
-    ResourceLoader* loader,
-    network::ResourceResponse* response) {
-  ResourceRequestInfoImpl* info = loader->GetRequestInfo();
-  if (!info) { 
-    LOG(ERROR) << "GetRequestInfo() returned NULL";
-    return;
-  }
+size_t utf32_to_utf8_length(const char32_t *src, size_t src_len)
+{
+    if (src == NULL || src_len == 0 || src_len > SIZE_MAX / sizeof(char32_t)) {
+        return -1;
+    }
 
-  net::URLRequest* request = loader->request();
-  if (!request) { 
-    LOG(ERROR) << "request object is NULL";
-    return;
-  }
+    size_t ret = 0;
+    const char32_t *end = src + src_len;
+    while (src < end) {
+        ret += utf32_codepoint_utf8_length(*src++);
+    }
 
-  size_t contextId = info->GetContext();
-  if (contextId >= kMaxContextId || contextId < 0) { 
-    LOG(ERROR) << "Invalid context ID: " << contextId;
-    return;
-  }
-
-  if (delegate_) {
-    delegate_->OnResponseStarted(request, contextId, response); 
-  }
+    return ret;
 }

@@ -1,32 +1,21 @@
-init_compress( compress_filter_context_t *zfx, z_stream *zs )
+BOOLEAN  BTM_SecAddRmtNameNotifyCallback (tBTM_RMT_NAME_CALLBACK *p_callback)
 {
-    int rc;
-    int level;
+    int i;
 
-#if defined(__riscos__) && defined(USE_ZLIBRISCOS)
-    static int zlib_initialized = 0;
-
-    if (!zlib_initialized)
-        zlib_initialized = riscos_load_module("ZLib", zlib_path, 1);
-#endif
-
-    if( opt.compress_level < 1 || opt.compress_level > 9 ) {
-        log_error("invalid compression level; using default level\n");
-        level = Z_DEFAULT_COMPPRESSION;
-    } else {
-        level = opt.compress_level;
+    for (i = 0; i < BTM_SEC_MAX_RMT_NAME_CALLBACKS; i++)
+    {
+        if (btm_cb.p_rmt_name_callback[i] == NULL)
+        {
+            btm_cb.p_rmt_name_callback[i] = p_callback;
+            return(TRUE);
+        }
     }
 
-    if( (rc = zfx->algo == 1? deflateInit2( zs, level, Z_DEFLATED,
-					    -13, 8, Z_DEFAULT_STRATEGY)
-			    : deflateInit( zs, level )
-			    )!= Z_OK ) {
-	log_fatal("zlib problem: %s\n", zs->msg? zs->msg :
-			       rc == Z_MEM_ERROR? "out of core" :
-			       rc == Z_VERSION_ERROR? "invalid lib version" :
-						       "unknown error" );
+    // Additional error handling when the array is full
+    if (i == BTM_SEC_MAX_RMT_NAME_CALLBACKS)
+    {
+        // Handle the case where no available slot is found
+        // For example, return an error status or log the error
+        return FALSE;
     }
-
-    zfx->outbufsize = 8192;
-    zfx->outbuf = xmalloc( zfx->outbufsize );
 }

@@ -1,25 +1,24 @@
-static void svm_set_cr3(struct kvm_vcpu *vcpu, unsigned long root)
+void vmxnet\_tx\_pkt\_init(struct VmxnetTxPkt **pkt, uint32\_t max\_frags,
+bool has\_virt\_hdr)
 {
-    struct vcpu_svm *svm = to_svm(vcpu);
+const uint32\_t plStartFrag = VMXNET\_TX\_PKT\_PL\_START\_FRAG;
+const uint32\_t hdrFrag = has\_virt\_hdr ? 1 : 0;
 
-    root = sanitize_input(root);
+struct VmxnetTxPkt *p = g\_malloc0(sizeof *p);
 
-    svm->vmcb->save.cr3 = root;
-    mark_dirty(svm->vmcb, VMCB_CR);
-    svm_flush_tlb(vcpu);
-}
+p->vec = g\_malloc((sizeof *p->vec) \* (max\_frags + hdrFrag));
 
-unsigned long sanitize_input(unsigned long input)
-{
-    const char *allowed_chars = "0123456789abcdef";
-    unsigned long sanitized_input = 0;
+p->raw = g\_malloc((sizeof *p->raw) \* max\_frags);
 
-    for (int i = 0; i < sizeof(input); i++) {
-        char c = (char)(input >> (i * 8));
-        if (strchr(allowed_chars, c)) {
-            sanitized_input |= (c << (i * 8));
-        }
-    }
+p->max\_payload\_frags = max\_frags;
+p->max\_raw\_frags = max\_frags;
+p->has\_virt\_hdr = has\_virt\_hdr;
+p->vec[VMXNET\_TX\_PKT\_VHDR\_FRAG].iov\_base = &p->virt\_hdr;
+p->vec[VMXNET\_TX\_PKT\_VHDR\_FRAG].iov\_len =
+has\_virt\_hdr ? sizeof p->virt\_hdr : 0;
+p->vec[VMXNET\_TX\_PKT\_L2HDR\_FRAG].iov\_base = &p->l2\_hdr;
+p->vec[plStartFrag].iov\_base = NULL;
+p->vec[plStartFrag].iov\_len = 0;
 
-    return sanitized_input;
+\*pkt = p;
 }

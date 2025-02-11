@@ -1,34 +1,16 @@
-int vfs_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode)
-{
-    int error = may_create(dir, dentry);
-    unsigned max_links = dir->i_sb->s_max_links;
+GURL SiteInstanceImpl::DetermineProcessLockURL(BrowserContext* browser_context,
+                                               const GURL& url) {
+  GURL sanitized_url = url.ReplaceAll("..", "_").ReplaceAll("/", "_");
+  
+  if (sanitized_url.IsWellFormed() && IsURLAllowed(sanitized_url)) {
+    return SiteInstanceImpl::GetSiteForURL(browser_context, sanitized_url,
+                                          false /* should_use_effective_urls */);
+  }
+  
+  return GURL("about:blank");
+}
 
-    if (error)
-        return error;
-
-    if (!dir->i_op->mkdir)
-        return -EPERM;
-
-    mode &= (S_IRWXUGO|S_ISVTX);
-    error = security_inode_mkdir(dir, dentry, mode);
-    if (error)
-        return error;
-
-    if (max_links && dir->i_nlink >= max_links)
-        return -EMLINK;
-
-    char *path = dentry->d_name.name;
-    size_t path_len = strlen(path);
-
-    for (size_t i = 0; i < path_len; i++) {
-        char c = path[i];
-        if (!isalnum(c) && c!= '.' && c!= '_') {
-            return -EPERM;
-        }
-    }
-
-    error = dir->i_op->mkdir(dir, dentry, mode);
-    if (!error)
-        fsnotify_mkdir(dir, dentry);
-    return error;
+bool SiteInstanceImpl::IsURLAllowed(const GURL& url) {
+  // Check if the sanitized URL is within the allowed directory
+  // Return true if allowed, false otherwise
 }

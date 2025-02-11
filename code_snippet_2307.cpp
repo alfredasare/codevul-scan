@@ -1,14 +1,30 @@
-php
-PHP_FUNCTION(imagerotate)
-{
-    //... (rest of the function remains the same until this point)
+bool SetExtendedFileAttribute(const char* path,
+                               const char* name,
+                               const char* value,
+                               size_t value_size,
+                               int flags) {
+  // Validate the path input to prevent directory traversal attacks
+  constexpr char valid_path_chars[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.";
+  for (const char* c = path; *c != '\0'; ++c) {
+    bool is_valid_char = false;
+    for (const char* vc = valid_path_chars; *vc != '\0'; ++vc) {
+      if (*c == *vc) {
+        is_valid_char = true;
+        break;
+      }
+    }
+    if (!is_valid_char) {
+      DPLOG(ERROR) << "Invalid path: " << path;
+      return false;
+    }
+  }
 
-    im_dst = gdImageRotateInterpolated(im_src, (const float)degrees, color);
-
-    // Use zend_string_* functions to ensure safe memory access
-    char* dst_data = (char*)zend_string_get_data(im_dst->image);
-    int dst_width = im_dst->width;
-    int dst_height = im_dst->height;
-
-    // Rest of the function remains the same
+  base::ScopedBlockingCall scoped_blocking_call(base::BlockingType::MAY_BLOCK);
+  int result = setxattr(path, name, value, value_size, flags);
+  if (result) {
+    DPLOG(ERROR) << "Could not set extended attribute " << name << " on file "
+                 << path;
+    return false;
+  }
+  return true;
 }

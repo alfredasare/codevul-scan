@@ -1,34 +1,24 @@
-Project_x( EXEC_OP_ FT_Pos  dx,
-           FT_Pos  dy )
-{
-    if (!isValidInput(dx)) {
-        return -1;
-    }
-
-    dx = sanitizeInput(dx);
-    FT_UNUSED_EXEC = 0;
-    return dx;
+void AutoFillManager::OnFormSubmitted(const FormData& form) {
+if (!IsFormDataSafe(form)) return;
+tab\_contents_->autocomplete\_history\_manager()->OnFormSubmitted(form);
+if (!IsAutoFillEnabled()) return;
+if (tab\_contents_->profile()->IsOffTheRecord()) return;
+if (!form.user\_submitted) return;
+FormStructure submitted\_form(form);
+if (!submitted\_form.ShouldBeParsed(true)) return;
+DeterminePossibleFieldTypesForUpload(&submitted\_form);
+LogMetricsAboutSubmittedForm(form, &submitted\_form);
+UploadFormData(submitted\_form);
+if (!submitted\_form.IsAutoFillable(true)) return;
+ImportFormData(submitted\_form);
 }
 
-bool isValidInput(FT_Pos dx) {
-    const char* allowedChars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    int length = strlen(dx);
-    for(int i = 0; i < length; i++) {
-        if(strchr(allowedChars, dx[i]) == NULL) {
-            return false;
-        }
-    }
-    return true;
-}
-
-FT_Pos sanitizeInput(FT_Pos dx) {
-    char sanitized[100]; // assuming a maximum length of 100
-    int j = 0;
-    for(int i = 0; i < strlen(dx); i++) {
-        if(dx[i]!= '/' && dx[i]!= '\\' && dx[i]!= '.' && dx[i]!= '..') {
-            sanitized[j++] = dx[i];
-        }
-    }
-    sanitized[j] = '\0';
-    return atoi(sanitized);
+bool AutoFillManager::IsFormDataSafe(const FormData& form) {
+// Perform validation and sanitization checks here.
+// For example, check if the form data is from a trusted source,
+// if the size of the form data is within acceptable limits,
+// or if the form data contains expected fields and values.
+// If the form data passes all checks, return true.
+// Otherwise, return false.
+// ...
 }

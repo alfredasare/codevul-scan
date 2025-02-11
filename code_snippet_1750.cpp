@@ -1,19 +1,10 @@
-void kvm_lapic_sync_from_vapic(struct kvm_vcpu *vcpu)
+exp_build_l4proto_sctp(const struct nf_conntrack *ct, struct nethdr *n, int a)
 {
-    u32 data;
-    void *vapic;
+	struct nfct_attr_grp_port grp = {0};
+	size_t size = sizeof(struct nfct_attr_grp_port);
 
-    if (test_bit(KVM_APIC_PV_EOI_PENDING, &vcpu->arch.apic_attention))
-        apic_sync_pv_eoi_from_guest(vcpu, vcpu->arch.apic);
+	if (size > a)
+		size = a;
 
-    if (!test_bit(KVM_APIC_CHECK_VAPIC, &vcpu->arch.apic_attention))
-        return;
-
-    vapic = kmap_atomic(vcpu->arch.apic->vapic_page);
-    data = *(u32 *)(vapic + offset_in_page(vcpu->arch.apic->vapic_addr));
-    kunmap_atomic(vapic);
-
-    apic_set_tpr(vcpu->arch.apic, data & 0xff);
-
-    kunmap_atomic(vcpu->arch.apic->vapic_page);
+	ct_build_group(ct, ATTR_GRP_ORIG_PORT, n, size, &grp);
 }

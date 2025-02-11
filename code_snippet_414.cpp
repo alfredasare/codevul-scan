@@ -1,4 +1,6 @@
-void cleanup_exit(int i) {
-    cleanup_socket();
-    exit(i);
+void Element::setMinimumSizeForResizing(const LayoutSize& size)
+{
+    if (!hasRareData() || (size != defaultMinimumSizeForResizing() && !(size > maxAllowedSize)))
+        return;
+    ensureElementRareData()->setMinimumSizeForResizing(size);
 }

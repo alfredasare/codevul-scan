@@ -1,31 +1,32 @@
-class BrowserViewRenderer {
-public:
-    ~BrowserViewRenderer() {
-        CancelFallbackTick();
-    }
+static void __sk_destruct(struct rcu_head *head)
+{
+	struct sock *sk = container_of(head, struct sock, sk_rcu);
+	struct sk_filter *filter;
 
-    void PostInvalidateWithFallback() {
-        client_->PostInvalidate();
+	if (sk->sk_destruct)
+		sk->sk_destruct(sk);
 
-        bool throttle_fallback_tick = (is_paused_ &&!clear_view_) || (attached_to_window_ &&!window_visible_);
+	filter = rcu_dereference_check(sk->sk_filter,
+				       atomic_read(&sk->sk_wmem_alloc) == 0);
+	if (filter) {
+		sk_filter_uncharge(sk, filter);
+		RCU_INIT_POINTER(sk->sk_filter, NULL);
+	}
+	sk_filter_free(filter);
 
-        if (throttle_fallback_tick || fallback_tick_pending_) return;
+	if (rcu_access_pointer(sk->sk_reuseport_cb))
+		reuseport_detach_sock(sk);
 
-        DCHECK(post_fallback_tick_.IsCancelled());
-        DCHECK(fallback_tick_fired_.IsCancelled());
+	sock_disable_timestamp(sk, SK_FLAGS_TIMESTAMP);
 
-        post_fallback_tick_.Reset(base::Bind(&BrowserViewRenderer::PostFallbackTick, base::Unretained(this)));
-        ui_task_runner_->PostTask(FROM_HERE, post_fallback_tick_.callback());
-        fallback_tick_pending_ = true;
+	if (atomic_read(&sk->sk_omem_alloc))
+		pr_debug("%s: optmem leakage (%d bytes) detected\n",
+			 __func__, atomic_read(&sk->sk_omem_alloc));
 
-        if (fallback_tick_pending_) {
-            post_fallback_tick_.Cancel();
-        }
-    }
-
-private:
-    void CancelFallbackTick() {
-        post_fallback_tick_.Cancel();
-        fallback_tick_pending_ = false;
-    }
-};
+	if (sk->sk_peer_cred)
+		put_cred(sk->sk_peer_cred);
+	put_pid(sk->sk_peer_pid);
+	if (likely(sk->sk_net_refcnt))
+		put_net(sock_net(sk));
+	sk_prot_free(sk->sk_prot_creator, sk);
+}

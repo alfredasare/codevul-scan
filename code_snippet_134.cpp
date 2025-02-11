@@ -1,12 +1,10 @@
-void RenderFlexibleBox::removeChild(RenderObject* child)
-{
-    if (!child ||!child->isValid()) {
+GLvoid StubGLVertexAttribPointer(GLuint indx, GLint size, GLenum type,
+                                 GLboolean normalized, GLsizei stride,
+                                 const void* ptr) {
+    if (stride > INT_MAX) {
+        // Handle error: stride value exceeds maximum allowed value
         return;
     }
-    QString childPath = child->getPath();
-    if (!childPath.startsWith(m_validDirectoryPath)) {
-        return;
-    }
-    RenderBlock::removeChild(child);
-    m_intrinsicSizeAlongMainAxis.remove(child);
+
+    glVertexAttribPointer(indx, size, type, normalized, (GLsizei)stride, ptr);
 }

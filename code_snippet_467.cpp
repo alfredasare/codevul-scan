@@ -1,37 +1,7 @@
-enum mrb_gc_state {
-    MRB_GC_STATE_ROOT,
-    MRB_GC_STATE_MARK,
-    MRB_GC_STATE_SWEEP,
-    // Add more states as needed
-};
-
-incremental_gc(mrb_state *mrb, mrb_gc *gc, size_t limit)
-{
-  switch (gc->state) {
-  case MRB_GC_STATE_ROOT:
-    root_scan_phase(mrb, gc);
-    gc->state = MRB_GC_STATE_MARK;
-    flip_white_part(gc);
-    return 0;
-  case MRB_GC_STATE_MARK:
-    if (gc->gray_list) {
-      return incremental_marking_phase(mrb, gc, limit);
-    }
-    else {
-      final_marking_phase(mrb, gc);
-      prepare_incremental_sweep(mrb, gc);
-      return 0;
-    }
-  case MRB_GC_STATE_SWEEP: {
-     size_t tried_sweep = 0;
-     tried_sweep = incremental_sweep_phase(mrb, gc, limit);
-     if (tried_sweep == 0)
-       gc->state = MRB_GC_STATE_ROOT;
-     return tried_sweep;
-  }
-  default:
-    /* unknown state */
-    mrb_assert(0);
-    return 0;
-  }
+bool ChromeContentRendererClient::IsExtensionInstalled(const std::string& extension_id) {
+  return extension_dispatcher_->extensions()->Contains(extension_id);
 }
+
+// In the calling code
+std::string adblock_plus_id = "cfhdojbkjhnklbpkdaibdccddilifddb";
+bool adblock_plus_installed = IsExtensionInstalled(adblock_plus_id);

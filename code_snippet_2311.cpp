@@ -1,10 +1,9 @@
-static int numa_maps_open(struct inode *inode, struct file *file,
-                          const struct seq_operations *ops)
+int sk\_filter(struct sock \*sk, struct sk\_buff \*skb)
 {
-    size_t size = sizeof(struct numa_maps_private);
-    // Validate the size parameter
-    if (size < MIN_BUFFER_SIZE || size > MAX_BUFFER_SIZE) {
-        return -EINVAL;
-    }
-    return proc_maps_open(inode, file, ops, size);
-}
+	int err;
+	struct sk\_filter \*filter;
+
+	/*
+	 * If the skb was allocated from pfmemalloc reserves, only
+	 * allow SOCK\_MEMALLOC sockets to use it as this socket is
+	 * helping free memory

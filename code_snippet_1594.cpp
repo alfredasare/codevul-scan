@@ -1,20 +1,20 @@
-static int em_fnstsw(struct x86_emulate_ctxt *ctxt)
+void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
+			    struct net_device *dev, const u8 *mac_addr,
+			    struct station_info *sinfo, gfp_t gfp)
 {
-    u16 fsw;
-    u32 cr0;
+	struct sk_buff *msg;
+	int required_size = sizeof(struct nlmsghdr) + sizeof(struct genlmsghdr) +
+			    NL80211_STA_INFO_MAX_SIZE;
 
-    // Clear FPU control word
-    asm volatile("fstsw %0" : "+m"(fsw));
-    fsw = 0xFFFF; 
+	msg = nlmsg_new(required_size, gfp);
+	if (!msg)
+		return;
 
-    if (ctxt->ops->get_cr(ctxt, 0) & (X86_CR0_TS | X86_CR0_EM)) 
-        return emulate_nm(ctxt);
+	if (nl80211_send_station(msg, 0, 0, 0, dev, mac_addr, sinfo) < 0) {
+		nlmsg_free(msg);
+		return;
+	}
 
-    ctxt->ops->get_fpu(ctxt);
-    asm volatile("fnstsw %0" : "+m"(fsw));
-    ctxt->ops->put_fpu(ctxt);
-
-    ctxt->dst.val = fsw;
-
-    return X86EMUL_CONTINUE;
+	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
+				nl80211_mlme_mcgrp.id, gfp);
 }

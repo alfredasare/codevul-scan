@@ -1,11 +1,18 @@
-mac_deinit (digest_hd_st * td, opaque * res, int ver)
-{
-  if (ver >= GNUTLS_TLS12)  /* TLS 1.2 and above */
-    {                           /* Modern cryptographic algorithm */
-      _gnutls_aes256_cbc_deinit (td, res);
+QuicAsyncStatus QuicClientPromisedInfo::FinalValidation() {
+  if (client_request_delegate_ &&
+      client_request_delegate_->CheckVary(*client_request_headers_, *request_headers_, *response_headers_)) {
+    QuicSpdyStream* stream = session_->GetPromisedStream(id_);
+    if (!stream) {
+      QUIC_BUG << "missing promised stream" << id_;
     }
-  else
-    {
-      _gnutls_hmac_deinit (td, res);
+    QuicClientPushPromiseIndex::Delegate* delegate = client_request_delegate_;
+    session_->DeletePromised(this);
+    if (delegate) {
+      delegate->OnRendezvousResult(stream);
     }
+    return QUIC_SUCCESS;
+  } else {
+    Reset(QUIC_PROMISE_VARY_MISMATCH);
+    return QUIC_FAILURE;
+  }
 }

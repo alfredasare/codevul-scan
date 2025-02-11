@@ -1,16 +1,21 @@
-static bool check_underflow(const struct ip6t_entry *e)
+int kvm_read_guest_atomic(struct kvm *kvm, gpa_t gpa, void *data,
+                           unsigned long len)
 {
-    const struct xt_entry_target *t;
-    int verdict;
+	int r;
+	unsigned long addr;
+	gfn_t gfn = gpa >> PAGE_SHIFT;
+	int offset = offset_in_page(gpa);
 
-    if (!unconditional(&e->ipv6))
-        return false;
-    t = ip6t_get_target_c(e);
-    if (strcmp(t->u.user.name, XT_STANDARD_TARGET)!= 0)
-        return false;
-    verdict = ((struct xt_standard_target *)t)->verdict;
-    if (verdict < 0) {
-        verdict = 0;
-    }
-    return verdict == NF_DROP || verdict == NF_ACCEPT;
+	if (!access_ok(VERIFY_READ, data, len))
+		return -EFAULT;
+
+	addr = gfn_to_hva(kvm, gfn);
+	if (kvm_is_error_hva(addr))
+		return -EFAULT;
+
+	r = copy_from_user(data, (void __user *)addr + offset, len);
+	if (r)
+		return -EFAULT;
+
+	return 0;
 }

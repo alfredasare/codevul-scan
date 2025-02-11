@@ -1,26 +1,26 @@
-struct ssh *ssh = active_state;			/* XXX */
-struct monitor *mon;
-
-mon = xcalloc(1, sizeof(*mon));
-monitor_openfds(mon, 1);
-
-if (options.compression) {
-    mon->m_zback = mm_create(NULL, MM_MEMSIZE);
-    mon->m_zlib = mm_create(mon->m_zback, 20 * MM_MEMSIZE);
-    const char *path = "/path/to/restricted/directory/compression_file";
-    int fd;
-
-    if (strchr(path, '/') || strchr(path, '\\')) {
-        error("Invalid path: %s", path);
-        return;
-    }
-
-    fd = open(path, O_RDONLY);
-    if (fd == -1) {
-        error("Failed to open file: %s", path);
-        return;
-    }
-
-    ssh_packet_set_compress_hooks(ssh, mon->m_zlib, (ssh_packet_comp_alloc_func *)mm_zalloc, (ssh_packet_comp_free_func *)mm_zfree);
+MagickExport void AcquireNextImage(const ImageInfo \*image\_info, Image \*image,
+ExceptionInfo \*exception)
+{
+ assert(image != (Image \*) NULL);
+ assert(image->signature == MagickCoreSignature);
+ if (image->debug != MagickFalse)
+ (void) LogMagickEvent(TraceEvent,GetMagickModule(),"%s",image->filename);
+ image->next=AcquireImage(image\_info,exception);
+ if (GetNextImageInList(image) == (Image \*) NULL)
+ return;
+ size\_t filename\_length = strlen(image\_info->filename);
+ if (filename\_length >= MagickPathExtent)
+ {
+ // Handle error case, e.g. by logging an error message and returning early
+ }
+ else
+ {
+ strncpy(GetNextImageInList(image)->filename, image\_info->filename,
+ filename\_length + 1);
+ }
+ DestroyBlob(GetNextImageInList(image));
+ image->next->blob=ReferenceBlob(image->blob);
+ image->next->endian=image->endian;
+ image->next->scene=image->scene+1;
+ image->next->previous=image;
 }
-return mon;

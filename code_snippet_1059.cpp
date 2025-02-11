@@ -1,20 +1,30 @@
-static __u16 convert_ace_to_cifs_ace(struct cifs_posix_ace *cifs_ace,
-				     const posix_acl_xattr_entry *local_ace)
+fz_set_default_output_intent(fz_context *ctx, fz_default_colorspaces *default_cs, fz_colorspace *cs)
 {
-	__u16 rc = 0; /* 0 = ACL converted ok */
+	fz_drop_colorspace(ctx, default_cs->oi);
+	default_cs->oi = fz_keep_colorspace(ctx, cs);
 
-	cifs_ace->cifs_e_perm = le16_to_cpu(local_ace->e_perm);
-	cifs_ace->cifs_e_tag =  le16_to_cpu(local_ace->e_tag);
-
-	if (local_ace->e_id == cpu_to_le32(-1)) {
-		/* Set default value for cifs_uid */
-		cifs_ace->cifs_uid = cpu_to_le64(-1);
-	} else if (local_ace->e_id < 0 || local_ace->e_id > U32_MAX) {
-		/* Return error or set default value if e_id is out of range */
-		return EINVAL;
-	} else {
-		cifs_ace->cifs_uid = uto64_to_le64(le32_to_cpu(local_ace->e_id));
+	switch (cs->n)
+	{
+	case 1:
+		if ((default_cs->gray = fz_device_gray(ctx)) != NULL)
+		{
+			fz_drop_colorspace(ctx, default_cs->gray);
+			default_cs->gray = fz_keep_colorspace(ctx, cs);
+		}
+		break;
+	case 3:
+		if ((default_cs->rgb = fz_device_rgb(ctx)) != NULL)
+		{
+			fz_drop_colorspace(ctx, default_cs->rgb);
+			default_cs->rgb = fz_keep_colorspace(ctx, cs);
+		}
+		break;
+	case 4:
+		if ((default_cs->cmyk = fz_device_cmyk(ctx)) != NULL)
+		{
+			fz_drop_colorspace(ctx, default_cs->cmyk);
+			default_cs->cmyk = fz_keep_colorspace(ctx, cs);
+		}
+		break;
 	}
-
-	return rc;
 }

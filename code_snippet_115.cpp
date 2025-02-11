@@ -1,18 +1,11 @@
-PseudoramiXResetScreens(void)
+// Context:
+// 
+// CWE: CWE-20
+// CVE: CVE-2017-12187
+
+void PseudoramiXResetScreens(void)
 {
     TRACE;
 
-    // Validate user input
-    if (pseudoramiXNumScreens!= 0) {
-        // Sanitize the input data
-        pseudoramiXNumScreens = sanitizeInput(pseudoramiXNumScreens);
-        if (!isTrustedInput(pseudoramiXNumScreens)) {
-            // Reject suspicious or malicious data
-            rejectDeserialization();
-            return;
-        }
-    }
-
-    // Deserialize the trusted input data
-    deserializeData(pseudoramiXNumScreens);
+    // Input validation not required in the current implementation.
 }

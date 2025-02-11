@@ -1,16 +1,16 @@
-bool ThreadSafeMatch(const Vector<UChar, inlineCapacity>& vector, const QualifiedName& qname) {
-  std::string_view localName = qname.LocalName().Impl();
-  localName = SanitizeLocalName(localName);
-  return EqualIgnoringNullity(vector, localName);
+void ServiceWorkerPaymentInstrument::OnCanMakePaymentEventSkipped(
+    ValidateCanMakePaymentCallback callback) {
+  can_make_payment_result_ = true;
+  has_enrolled_instrument_result_ = false;
+  auto shared_this = std::shared_ptr<ServiceWorkerPaymentInstrument>(this);
+  base::ThreadTaskRunnerHandle::Get()->PostTask(
+      FROM_HERE,
+      base::BindOnce(std::move(callback), shared_this, can_make_payment_result_));
 }
 
-std::string SanitizeLocalName(const std::string_view& name) {
-  static const std::set<char> allowedChars = {'a', 'b',...}; // Define allowed characters
-  std::string sanitizedName;
-  for (char c : name) {
-    if (allowedChars.count(c) > 0) {
-      sanitizedName += c;
-    }
-  }
-  return sanitizedName;
+void ValidateCanMakePayment(
+    const std::shared_ptr<ServiceWorkerPaymentInstrument>& payment_instrument,
+    bool can_make_payment,
+    bool has_enrolled_instrument) {
+  // ...
 }

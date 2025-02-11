@@ -1,15 +1,8 @@
-u32 hid_field_extract(const struct hid_device *hid, u8 *report,
-                     unsigned offset, unsigned n)
+static int kvm_vm_ioctl_set_memory_region(struct kvm *kvm,
+					  struct kvm_userspace_memory_region *mem)
 {
-    if (n > 32) {
-        hid_warn(hid, "hid_field_extract() called with n (%d) > 32! (%s)\n",
-                 n, current->comm);
-        n = 32; // cap at 32
-    } else if (n < 1) {
-        hid_warn(hid, "hid_field_extract() called with n (%d) < 1! (%s)\n",
-                 n, current->comm);
-        return 0; // return 0 on invalid input
-    }
+	if (mem->slot >= KVM_USER_MEM_SLOTS || mem->slot < 0)
+		return -EINVAL;
 
-    return __extract(report, offset, n);
+	return kvm_set_memory_region(kvm, mem);
 }

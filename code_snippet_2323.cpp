@@ -1,15 +1,4 @@
-void EVP_DecodeInit(EVP_ENCODE_CTX *ctx)
+static __init int init_posix_timers(void)
 {
-    if (ctx != NULL)
-    {
-        ctx->num = 0;
-        ctx->length = 0;
-        ctx->line_num = 0;
-        ctx->expect_nl = 0;
-    }
-    else
-    {
-        // Log error or throw exception
-        // Return error code or exit program
-    }
-}
+	posix_timers_cache = kmem_cache_create("posix_timers_cache",
+					sizeof (struct k_itimer), sizeof(size_t), SLAB_PANIC,

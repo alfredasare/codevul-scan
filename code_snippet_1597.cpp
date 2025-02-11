@@ -1,7 +1,6 @@
-gsf_infile_tar_finalize (GObject *obj)
-{
-    GsfInfileTar *tar = GSF_INFILE_TAR (obj);
-    memset(tar->children, 0, sizeof(tar->children)); 
-    g_array_free (tar->children, TRUE);
-    parent_class->finalize (obj);
-}
+// Limit master_volume within the array bounds
+master_volume = (master_volume < sizeof(_WM_lin_volume) / sizeof(_WM_lin_volume[0])) ? master_volume : (sizeof(_WM_lin_volume) / sizeof(_WM_lin_volume[0])) - 1;
+
+_WM_MasterVolume = _WM_lin_volume[master_volume];
+
+return (0);

@@ -1,16 +1,24 @@
-code:
-
-
-static inline void pegasus_reset_wol(struct net_device *dev)
+void post\_init\_entity\_util\_avg(struct sched\_entity *se)
 {
-    struct ethtool_wolinfo wol;
-    size_t wol_size = sizeof wol;
+ struct cfs\_rq *cfs\_rq = NULL;
+ struct sched\_avg *sa = NULL;
+ long cpu\_scale = 0;
+ long cap = 0;
 
-    if (wol_size > sizeof wol) {
-        pr_err("Error: Insufficient buffer space\n");
-        return;
-    }
+if (!se) {
+pr\_err("Error: se is NULL\n");
+return;
+}
 
-    memset(&wol, 0, wol_size);
-    (void) pegasus_set_wol(dev, &wol);
+cfs\_rq = cfs\_rq\_of(se);
+if (!cfs\_rq) {
+pr\_err("Error: cfs\_rq is NULL\n");
+return;
+}
+
+sa = &se->avg;
+cpu\_scale = arch\_scale\_cpu\_capacity(NULL, cpu\_of(rq\_of(cfs\_rq)));
+cap = (long)(cpu\_scale - cfs\_rq->avg.util\_avg) / 2;
+
+...
 }

@@ -1,9 +1,12 @@
-void pdf_tos_save(fz_context *ctx, pdf_text_object_state *tos, fz_matrix save[2])
+static ssize_t k90_show_current_profile(struct device *dev,
+					struct device_attribute *attr,
+					char *buf)
 {
-    if ((tos->tm.x < 0 || tos->tm.x > 100) || (tos->tm.y < 0 || tos->tm.y > 100)) {
-        fz_error(ctx, "Invalid input value");
-        return;
-    }
-    save[0] = tos->tm;
-    save[1] = tos->tlm;
-}
+	int ret;
+	struct usb_interface *usbif = to_usb_interface(dev->parent);
+	struct usb_device *usbdev = interface_to_usbdev(usbif);
+	int current_profile;
+	char data[8];
+
+	ret = usb_control_msg(usbdev, usb_rcvctrlpipe(usbdev, 0),
+			      K90_REQUEST_STATUS,

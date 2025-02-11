@@ -1,11 +1,20 @@
-void __init taskstats_init_early(void)
+static const char* inspectorFilesBasePath()
 {
-    unsigned int i;
-    char *format_string = "%d"; // Safe format string
+    const gchar* environmentPath = g_getenv("WEBKIT_INSPECTOR_PATH");
 
-    taskstats_cache = KMEM_CACHE(taskstats, SLAB_PANIC);
-    for_each_possible_cpu(i) {
-        INIT_LIST_HEAD(&(per_cpu(listener_array, i).list));
-        rwsem_init(&(per_cpu(listener_array, i).sem), format_string);
+    if (environmentPath && g_str_has_prefix(environmentPath, "..") && g_file_test(environmentPath, G_FILE_TEST_IS_DIR))
+    {
+        g_printerr("Error: Directory traversal pattern detected in environment variable\n");
+        return NULL;
     }
+
+    const gchar* validatedPath = g_environ_get_value("WEBKIT_INSPECTOR_PATH", environmentPath);
+
+    if (validatedPath && g_file_test(validatedPath, G_FILE_TEST_IS_DIR))
+        return validatedPath;
+
+    static const char* inspectorFilesPath = DATA_DIR""G_DIR_SEPARATOR_S
+                                            "webkitgtk-"WEBKITGTK_API_VERSION_STRING""G_DIR_SEPARATOR_S
+                                            "webinspector"G_DIR_SEPARATOR_S;
+    return inspectorFilesPath;
 }

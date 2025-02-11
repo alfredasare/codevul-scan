@@ -1,7 +1,10 @@
-bool BluetoothRemoteGATTServer::RemoveFromActiveAlgorithms(ScriptPromiseResolver* resolver) {
-    if (!m_activeAlgorithms.contains(resolver)) {
-        throw std::runtime_error("Resolver not found in active algorithms");
-    }
-    m_activeAlgorithms.remove(resolver);
-    return true;
+c++
+virtual void SetUp() {
+  std::unique_ptr<FullscreenTestBrowserWindow> window{new FullscreenTestBrowserWindow};
+  if (!window) {
+    throw std::bad_alloc();
+  }
+
+  set_window(window.get());
+  BrowserWithTestWindowTest::SetUp();
 }

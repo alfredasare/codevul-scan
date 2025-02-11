@@ -1,28 +1,20 @@
-static int vhost_net_release(struct inode *inode, struct file *f)
-{
-    struct vhost_net *n = f->private_data;
-    struct socket *tx_sock;
-    struct socket *rx_sock;
-
-    vhost_net_stop(n, &tx_sock, &rx_sock);
-    if (n->dev)
-        vhost_net_flush_safe(n);
-    vhost_dev_stop(&n->dev);
-    vhost_dev_cleanup(&n->dev, false);
-    vhost_net_vq_reset(n);
-    if (tx_sock)
-        fput(tx_sock->file);
-    if (rx_sock)
-        fput(rx_sock->file);
-    /* Make sure no callbacks are outstanding */
-    synchronize_rcu_bh();
-    kfree(n->dev.vqs);
-    kfree(n);
-    return 0;
+GURL GetFeedUrl(net::TestServer* server, const std::string& feed\_page,
+bool direct\_url, std::string extension\_id) {
+// Validate extension\_id
+if (extension\_id.length() > kMaxExtensionIdLength ||
+std::any\_of(extension\_id.begin(), extension\_id.end(),
+[&kAllowedChars](char c) { return kAllowedChars.find(c) == kAllowedChars.end(); })) {
+// Input validation failed, handle error appropriately (e.g., return an error GURL, throw an exception, etc.)
+return GURL();
 }
 
-void vhost_net_flush_safe(struct vhost_net *n)
-{
-    // Flush the buffers safely
-    //...
+GURL feed\_url = server->GetURL(feed\_page);
+if (direct\_url) {
+return GURL(std::string(chrome::kExtensionScheme) +
+chrome::kStandardSchemeSeparator +
+extension\_id + std::string(kSubscribePage) + std::string("?") +
+feed\_url.spec() + std::string("&synchronous"));
+} else {
+return GURL(feed\_url.spec());
+}
 }

@@ -1,18 +1,23 @@
-static int ape_read_close(AVFormatContext * s)
+int nlmsg_parse(struct nlmsghdr *nlh, int hdrlen, struct nlattr *tb[],
+                int maxtype, struct nla_policy *policy)
 {
-    APEContext *ape = s->priv_data;
+        if (!nlmsg_valid_hdr(nlh, hdrlen))
+                return -NLE_MSG_TOOSHORT;
 
-    ape->frames = av_malloc(sizeof(*ape->frames));
-    ape->seektable = av_malloc(sizeof(*ape->seektable));
+        for (int i = 0; i < nla_len(nlh, hdrlen); i++) {
+                struct nlattr *attr = nla_find(tb, i);
+                if (!attr)
+                        continue;
 
-    if (!ape->frames ||!ape->seektable) {
-        av_freep(&ape->frames);
-        av_freep(&ape->seektable);
-        return -1;
-    }
+                if (attr->nla_type > maxtype) {
+                        pr_warn("nlmsg_parse: Invalid attribute type %d, max type is %d\n",
+                                attr->nla_type, maxtype);
+                        return -EINVAL;
+                }
 
-    av_freep(&ape->frames);
-    av_freep(&ape->seektable);
+                if (nla_parse(tb, maxtype, nla_data(attr), nla_len(attr), policy) < 0)
+                        return -EINVAL;
+        }
 
-    return 0;
+        return 0;
 }

@@ -1,11 +1,10 @@
-new_msg_register_opaque_type (u_int32_t seqnum, u_char ltype, u_char otype)
+64 kvm\_dr6\_fixed(struct kvm\_vcpu *vcpu)
 {
-    struct msg_register_opaque_type rmsg;
-
-    rmsg.lsatype = ltype;
-    rmsg.opaquetype = otype;
-    memset (&rmsg.pad, 0, sizeof (rmsg.pad) - 1);
-    rmsg.pad[sizeof(rmsg.pad) - 1] = '\0';
-
-    return msg_new (MSG_REGISTER_OPAQUETYPE, &rmsg, seqnum, sizeof (struct msg_register_opaque_type));
+return DR6\_FIXED\_1 | (guest\_cpuid\_has\_rtm(vcpu) ? 0 : DR6\_RTM);
 }
+
+"/pre>
+
+Fixed code snippet:
+
+The fixed code calculates the final value of `fixed` in a single expression, avoiding the TOCTOU race condition. The ternary operator checks if `guest_cpuid_has_rtm(vcpu)` is false, and if so, adds `DR6_RTM` to the result.

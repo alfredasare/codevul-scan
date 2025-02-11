@@ -1,10 +1,8 @@
-void grubfs_bind_io(RIOBind *iob, ut64 _delta) {
-    bio = iob;
-    delta = _delta;
-
-    if (iob->size >= sizeof(ut64)) {
-        memcpy(iob->buffer, &_delta, sizeof(ut64));
-    } else {
-        printf("Error: Buffer too small\n");
-    }
+static struct ovl\_entry\* ovl\_alloc\_entry(void)
+{
+struct ovl\_entry \*entry = kzalloc(sizeof(struct ovl\_entry), GFP\_KERNEL);
+if (!entry) {
+return NULL;
+}
+return entry;
 }

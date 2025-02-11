@@ -1,12 +1,11 @@
-void usb_serial_console_disconnect(struct usb_serial *serial)
+void NotificationsEngine::configureNotification(const QString &appName, const QString &eventId)
 {
-    if (serial->port[0] == usbcons_info.port && serial!= NULL &&!is_serial_put(serial)) {
-        usb_serial_console_exit();
-        usb_serial_put(serial);
+    if (appName.isEmpty()) {
+        return;
     }
-}
 
-int is_serial_put(struct usb_serial *serial)
-{
-    return (serial == NULL || serial->flags & USB_SERIAL_FLAG_PUT);
+    KNotifyConfigWidget *widget = KNotifyConfigWidget::configure(nullptr, appName);
+    if (widget && !eventId.isEmpty()) {
+        widget->selectEvent(eventId);
+    }
 }

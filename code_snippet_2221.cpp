@@ -1,9 +1,8 @@
-static inline void eth_pulse_irq(struct xlx_ethlite *s)
+chunk_grow(chunk_t *chunk, size_t sz)
 {
-    if (s && s->regs) {
-        if (R_TX_GIE0 < ARRAY_SIZE(s->regs) &&
-            s->regs[R_TX_GIE0] & GIE_GIE) {
-            qemu_irq_pulse(s->irq);
-        }
-    }
-}
+    off_t offset;
+    size_t memlen_orig = chunk->memlen;
+    tor_assert(sz > chunk->memlen);
+
+    // Allocate a new chunk with the maximum of requested size or double the current size
+    size_t new_size = (sz > (chunk->memlen *

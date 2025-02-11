@@ -1,19 +1,24 @@
-static int edge_calc_num_ports(struct usb_serial *serial,
-			       struct usb_serial_endports *epds)
+#include <linux/mutex.h>
+
+static DEFINE_MUTEX(shmem_create_mutex);
+
+static int shmem_create(struct inode *dir, struct dentry *dentry, umode_t mode,
+                        bool excl)
 {
-    struct device *dev = &serial->interface->dev;
-    unsigned char num_ports = serial->type->num_ports;
+    int ret;
+    struct dentry *existing_dentry;
 
-    /* Make sure we have the required endpoints when in download mode. */
-    if (serial->interface->cur_altsetting->desc.bNumEndpoints > USB_ENDPOINT_MAX) {
-        pr_err(dev, "required endpoints missing\n");
-        return -ENODEV;
+    mutex_lock(&shmem_create_mutex);
+
+    existing_dentry = lookup_one_len(dentry->d_name.name, dir, dentry->d_name.len);
+    if (existing_dentry) {
+        mutex_unlock(&shmem_create_mutex);
+        return -EEXIST;
     }
 
-    if (epds->num_bulk_in < num_ports || epds->num_bulk_out < num_ports || epds->num_interrupt_in < 1) {
-        pr_err(dev, "required endpoints missing\n");
-        return -ENODEV;
-    }
+    ret = shmem_mknod(dir, dentry, mode | S_IFREG, 0);
 
-    return num_ports;
+    mutex_unlock(&shmem_create_mutex);
+
+    return ret;
 }

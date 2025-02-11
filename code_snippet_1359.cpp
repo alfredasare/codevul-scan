@@ -1,10 +1,7 @@
-void NavigationController::DiscardTransientEntry() {
-  if (transient_entry_index_ == -1) {
-    entries_.clear();
-    return;
-  }
-  entries_.erase(entries_.begin() + transient_entry_index_);
-  if (last_committed_entry_index_ > transient_entry_index_)
-    last_committed_entry_index_--;
-  transient_entry_index_ = -1;
+void user_free_preparse(struct key_preparsed_payload *prep)
+{
+ if (prep && prep->payload.data[0]) {
+ kzfree(prep->payload.data[0]);
+ prep->payload.data[0] = NULL;
+ }
 }

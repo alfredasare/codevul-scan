@@ -1,35 +1,22 @@
-void iov_iter_advance(struct iov_iter *i, size_t bytes)
-{
-    BUG_ON(i->count < bytes);
-
-    if (likely(i->nr_segs == 1)) {
-        i->iov_offset += bytes;
-        i->count -= bytes;
-    } else {
-        const struct iovec *iov = i->iov;
-        size_t base = i->iov_offset;
-        unsigned long nr_segs = i->nr_segs;
-
-        if (unlikely(iov == NULL)) {
-            return; // or log an error, depending on the desired behavior
-        }
-
-        while (bytes || unlikely(i->count &&!iov->iov_len)) {
-            int copy;
-
-            copy = min(bytes, iov->iov_len - base);
-            BUG_ON(!i->count || i->count < copy);
-            i->count -= copy;
-            bytes -= copy;
-            base += copy;
-            if (iov->iov_len == base) {
-                iov++;
-                nr_segs--;
-                base = 0;
-            }
-        }
-        i->iov = iov;
-        i->iov_offset = base;
-        i->nr_segs = nr_segs;
+void ID3::Iterator::getString(String8 *id, String8 *comment, size_t maxIdLength, size_t maxCommentLength) const {
+    getstring(id, false, maxIdLength);
+    if (comment != NULL) {
+        getstring(comment, true, maxCommentLength);
     }
+}
+
+void ID3::Iterator::getstring(String8 *id, bool isComment, size_t maxLength) const {
+    // Validate input length
+    if (maxLength > id->capacity()) {
+        throw std::out_of_range("Input length exceeds destination buffer capacity");
+    }
+
+    // Implement input validation and buffer copying using the maxLength parameter
+    size_t lengthToCopy = std::min(sourceDataLength, maxLength);
+    std::copy(sourceData.begin(), sourceData.begin() + lengthToCopy, id->data());
+
+    // Update the destination buffer's length
+    id->set_length(lengthToCopy);
+
+    // ...
 }

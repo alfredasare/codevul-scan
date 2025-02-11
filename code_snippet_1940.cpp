@@ -1,18 +1,9 @@
-const AtomicString& ScreenOrientation::orientation(Screen& screen)
-{
-    ScreenOrientation& screenOrientation = ScreenOrientation::from(screen);
-    if (!screenOrientation.document()) {
-        return orientationToString(blink::WebScreenOrientationPortraitPrimary);
-    }
-    ScreenOrientationController& controller = ScreenOrientationController::from(*screenOrientation.document());
-    blink::WebScreenOrientation orientationValue = controller.orientation();
-    if (!isValidOrientation(orientationValue)) {
-        return orientationToString(blink::WebScreenOrientationPortraitPrimary);
-    }
-    return orientationToString(orientationValue);
-}
-
-bool isValidOrientation(blink::WebScreenOrientation orientation) {
-    return orientation >= blink::WebScreenOrientationPortrait && 
-           orientation <= blink::WebScreenOrientationLandscapeSecondary;
+InputMethodLibrary* CrosLibrary::GetInputMethodLibrary() {
+  InputMethodLibrary* lib = input\_method\_lib.\_GetDefaultImpl(use\_stub\_impl_);
+  if (lib != nullptr) {
+    return lib;
+  } else {
+    // Handle the error, e.g., return an error code or throw an exception.
+    return nullptr;
+  }
 }

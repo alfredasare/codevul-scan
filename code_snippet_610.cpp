@@ -1,11 +1,6 @@
-inline bool PopupContainer::isRTL() const
-{
-    Q_ASSERT(m_listBox->m_popupClient);
-    Q_ASSERT(m_listBox->m_popupClient->menuStyle());
-    
-    if (m_listBox->m_popupClient->menuStyle()->textDirection() >= RTL) {
-        return true;
-    }
-    
-    return false;
+c++
+void AutofillDialogViews::UpdateSection(DialogSection section) {
+  if (section >= DialogSection::MIN_VALUE && section <= DialogSection::MAX_VALUE) {
+    UpdateSectionImpl(section, true);
+  }
 }

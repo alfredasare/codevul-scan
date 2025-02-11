@@ -1,8 +1,43 @@
-static void print_version(void)
-{
-    char buffer[256];
-    const char *allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.";
-    snprintf(buffer, sizeof(buffer), "psensor-server %s\n" "Copyright (C) %s jeanfi@gmail.com\n" "License GPLv2: GNU GPL version 2 or later <http://www.gnu.org/licenses/old-licenses/gpl-2.0.html>\n" "This is free software: you are free to change and redistribute it.\n" "There is NO WARRANTY, to the extent permitted by law.\n", VERSION, "2010-2012");
+NOINLINE void MaybeTriggerAsanError(const GURL& url) {
+  const std::set<std::string> kAllowedCrashTypes = {
+      "/heap-overflow",
+      "/heap-underflow",
+      "/use-after-free"
+#if defined(SYZYASAN)
+      , "/corrupt-heap-block",
+          "/corrupt-heap"
+#endif
+  };
 
-    printf(buffer);
+  const char kCrashDomain[] = "crash";
+
+  if (!url.DomainIs(kCrashDomain))
+    return;
+
+  if (!url.has_path())
+    return;
+
+  std::string crash_type(url.path());
+
+  if (kAllowedCrashTypes.find(crash_type) == kAllowedCrashTypes.end())
+    return;
+
+  auto it = kAllowedCrashTypes.find(crash_type);
+  switch (*it) {
+    case "/heap-overflow":
+      base::debug::AsanHeapOverflow();
+      break;
+    case "/heap-underflow":
+      base::debug::AsanHeapUnderflow();
+      break;
+    case "/use-after-free":
+      base::debug::AsanHeapUseAfterFree();
+#if defined(SYZYASAN)
+    case "/corrupt-heap-block":
+      base::debug::AsanCorruptHeapBlock();
+      break;
+    case "/corrupt-heap":
+      base::debug::AsanCorruptHeap();
+#endif
+  }
 }

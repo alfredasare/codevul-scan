@@ -1,16 +1,27 @@
-static inline void queue_me(struct futex_q *q, struct futex_hash_bucket *hb)
-{
-    int prio;
-    struct plist_node *node;
+bool TraceEventTestFixture::FindNonMatchingValue(const std::string& key,
+                                                const std::string& value) {
+  std::vector<JsonKeyValue> key_values = {
+    {key, value, IS_NOT_EQUAL},
+    {"", "", IS_EQUAL}
+  };
+  return FindMatchingTraceEntry(key_values);
+}
 
-    spin_lock(&hb->lock);
-    prio = min(current->normal_prio, MAX_RT_PRIO);
-    node = plist_node_init(&q->list, prio);
-    spin_unlock(&hb->lock);
+bool TraceEventTestFixture::FindMatchingTraceEntry(const std::vector<JsonKeyValue>& key_values) {
+  json_object* object = /* get json object */;
 
-    #ifdef CONFIG_DEBUG_PI_LIST
-    q->list.plist.spinlock = &hb->lock;
-    #endif
-    plist_add(&q->list, &hb->chain);
-    q->task = current;
+  for (const auto& key_value : key_values) {
+    json_object* iter;
+    if (json_object_object_get_ex(object, key_value.key.c_str(), &iter)) {
+      if (json_is_string(iter) && !strcmp(json_string_get_text(iter), key_value.value.c_str())) {
+        if (key_value.comparison == IS_NOT_EQUAL) {
+          return false;
+        }
+      } else if (key_value.comparison == IS_EQUAL) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }

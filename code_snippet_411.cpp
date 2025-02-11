@@ -1,18 +1,15 @@
-acpi_map_lookup(acpi_physical_address phys, acpi_size size)
+static void get_id3_tag(AVFormatContext *s, int len)
 {
-    struct acpi_ioremap *map;
+    ID3v2ExtraMeta *id3v2_extra_meta = NULL;
 
-    // Check if phys and size are within valid range
-    if (phys < 0 || size <= 0) {
-        return NULL; // invalid input
+    ff_id3v2_read(s, ID3v2_DEFAULT_MAGIC, &id3v2_extra_meta, len);
+    if (!id3v2_extra_meta) {
+        // Handle the error here, such as by logging a message or returning early
+        return;
     }
 
-    list_for_each_entry_rcu(map, &acpi_ioremaps, list) {
-        if (map->phys <= phys &&
-            phys + size <= map->phys + map->size) {
-            return map;
-        }
-    }
+    ff_id3v2_parse_apic(s, &id3v2_extra_meta);
+    ff_id3v2_parse_chapters(s, &id3v2_extra_meta);
 
-    return NULL;
+    ff_id3v2_free_extra_meta(&id3v2_extra_meta);
 }

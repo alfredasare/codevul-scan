@@ -1,9 +1,19 @@
-static struct dentry *ovl_mount(struct file_system_type *fs_type, int flags,
-				const char *dev_name, void *raw_data)
+const char *bson_iter_symbol (const bson_iter_t *iter, /* IN */
+                              uint32_t *length)        /* OUT */
 {
-	if (!fs_type ||!fs_type->name ||!fs_type->mount) {
-		return ERR_PTR(-EINVAL);
-	}
+   const char *ret = NULL;
+   uint32_t ret_length = 0;
 
-	return mount_nodev(fs_type, flags, raw_data, ovl_fill_super);
+   BSON_ASSERT (iter);
+
+   if (ITER_TYPE (iter) == BSON_TYPE_SYMBOL) {
+      ret = (const char *) (iter->raw + iter->d2);
+      ret_length = bson_iter_utf8_len(iter);
+   }
+
+   if (length) {
+      *length = ret_length;
+   }
+
+   return ret;
 }

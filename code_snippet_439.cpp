@@ -1,35 +1,42 @@
-vrrp_gnotify_master_handler(vector_t *strvec)
+static int dm\_wait\_for\_completion(struct mapped\_device \*md, long task\_state)
 {
-    vrrp_sgroup_t *vgroup = LIST_TAIL_DATA(vrrp_data->vrrp_sync_group);
-    if (vgroup->script_master) {
-        report_config_error(CONFIG_GENERAL_ERROR, "vrrp group %s: notify_master script already specified - ignoring %s", vgroup->gname, FMT_STR_VSLOT(strvec, 1));
-        return;
-    }
-    char *script = set_vrrp_notify_script(strvec, 0);
-    if (!script) {
-        return;
-    }
-    vgroup->script_master = script;
-    vgroup->notify_exec = true;
-}
+ static DEFINE\_SPINLOCK(completion\_lock);
+ static unsigned int calls\_per\_sec = 0;
+ unsigned int current\_time = get\_jiffies\_64();
+ unsigned int elapsed\_time = current\_time - last\_check\_time;
+ unsigned int allowed\_calls = MAX\_CALLS\_PER\_SEC \* elapsed\_time / HZ;
+ unsigned int ret;
 
-char *set_vrrp_notify_script(vector_t *strvec, int len)
-{
-    char script[256]; // Assuming a maximum script length of 256 bytes
-    size_t script_len;
+ spin\_lock(&completion\_lock);
+ calls\_per\_sec += 1;
+ spin\_unlock(&completion\_lock);
 
-    if (len > sizeof(script) - 1) {
-        report_config_error(CONFIG_GENERAL_ERROR, "Script too long");
-        return NULL;
-    }
+ if (calls\_per\_sec > allowed\_calls) {
+ io\_schedule();
+ ret = dm\_wait\_for\_completion(md, task\_state);
+ calls\_per\_sec -= 1;
+ return ret;
+ }
 
-    script_len = snprintf(script, sizeof(script), "%.*s", len, strvec->buf);
-    if (script_len < 0) {
-        report_config_error(CONFIG_GENERAL_ERROR, "Failed to format script");
-        return NULL;
-    }
+ last\_check\_time = current\_time;
 
-    script[script_len] = '\0'; // Ensure null termination
+ int r = 0;
+ DEFINE\_WAIT(wait);
 
-    return strdup(script);
+ while (1) {
+ prepare\_to\_wait(&md->wait, &wait, task\_state);
+
+ if (!md\_in\_flight(md))
+ break;
+
+ if (signal\_pending\_state(task\_state, current)) {
+ r = -EINTR;
+ break;
+ }
+
+ io\_schedule();
+ }
+ finish\_wait(&md->wait, &wait);
+
+ return r;
 }

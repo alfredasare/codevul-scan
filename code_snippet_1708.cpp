@@ -1,9 +1,5 @@
-void AppendCopyOf(int pos, int size) {
-  if (pos < 0 || pos >= data_->size()) {
-    throw std::invalid_argument("Invalid position");
-  }
-  if (size < 1 || size > data_->size() - pos) {
-    throw std::invalid_argument("Invalid size");
-  }
-  target_.AppendCopyOf(data_->data() + pos, size);
+static bool IsDangerousHTTPEquiv(const String& value) {
+  String equiv = value.StripWhiteSpace();
+  return equiv.Equals("refresh", StringComparison::OrdinalIgnoreCase) ||
+         equiv.Equals("set-cookie", StringComparison::OrdinalIgnoreCase);
 }

@@ -1,29 +1,18 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+PHP_FUNCTION(snmp_set_enum_print)
+{
+	char input[32]; // adjusted buffer size
+	long a1;
 
-static tsize_t TIFFWriteBlob(thandle_t image, tdata_t data, tsize_t size) {
-    tsize_t count;
-    char *image_path = get_image_path(image);
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &a1) == FAILURE) {
+		RETURN_FALSE;
+	}
 
-    if (!is_allowed_directory(image_path)) {
-        return -1;
-    }
+	if (a1 < 0 || a1 > 1) { // validate input
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid input. Expected 0 or 1.");
+		RETURN_FALSE;
+	}
 
-    char *sanitized_data_path = realpath(data, NULL);
-
-    if (sanitized_data_path == NULL) {
-        return -1;
-    }
-
-    FILE *fp = fopen(sanitized_data_path, "wb");
-    if (fp == NULL) {
-        return -1;
-    }
-    fwrite(data, size, 1, fp);
-    fclose(fp);
-
-    free(sanitized_data_path);
-
-    return size;
+	snprintf(input, sizeof(input), "%ld", a1); // sanitize input
+	netsnmp_ds_set_boolean(NETSNMP_DS_LIBRARY_ID, NETSNMP_DS_LIB_PRINT_NUMERIC_ENUM, (int) a1);
+	RETURN_TRUE;
 }

@@ -1,7 +1,7 @@
-ExtensionSettingsHandler::GetExtensionUninstallDialog() {
-  if (!extension_uninstall_dialog_) {
-    auto dialog = std::make_unique<ExtensionUninstallDialog>(Profile::FromWebUI(web_ui()), this);
-    extension_uninstall_dialog_ = std::move(dialog);
-  }
-  return extension_uninstall_dialog_.get();
+JSTestMediaQueryListListenerConstructor::JSTestMediaQueryListListenerConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
+: DOMConstructorObject(structure, globalObject)
+{
+String userInput = globalObject->getUserInput();
+userInput = userInput.trim().replace(QRegExp("[^a-zA-Z0-9_-]"), QString());
+processSanitizedInput(userInput);
 }

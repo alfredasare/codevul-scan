@@ -1,15 +1,8 @@
-void kvm_vcpu_request_scan_ioapic(struct kvm *kvm)
-{
-    struct kvm_ioapic *ioapic = kvm->arch.vioapic;
-
-    if (!ioapic ||!ioapic->size) {
-        return;
-    }
-
-    for (int i = 0; i < ioapic->size; i++) {
-        ioapic->redir[i].redir_type = KVM_IOAPIC_REDIR_TYPE_IRQ;
-        //...
-    }
-
-    kvm_make_scan_ioapic_request(kvm);
+cube\_info->free\_nodes--;
+node\_info=cube\_info->next\_node++;
+(void) ResetMagickMemory(node\_info,0,sizeof(*node\_info));
+node\_info->parent=parent;
+node\_info->id=id;
+node\_info->level=level;
+return(node\_info);
 }

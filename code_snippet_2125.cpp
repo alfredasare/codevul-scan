@@ -1,30 +1,27 @@
-static inline void tcp_push(struct sock *sk, int flags, int mss_now, int nonagle)
-{
-    if (tcp_send_head(sk)) {
-        struct tcp_sock *tp = tcp_sk(sk);
+void smp_proc_master_id(tSMP_CB* p_cb, tSMP_INT_DATA* p_data) {
+ uint8_t* p = (uint8_t*)p_data;
+ tBTM_LE_PENC_KEYS le_key;
 
-        if (!(flags & MSG_MORE) || forced_push(tp))
-            tcp_mark_push(tp, tcp_write_queue_tail(sk));
+ SMP_TRACE_DEBUG("%s", __func__);
+ smp_update_key_mask(p_cb, SMP_SEC_KEY_TYPE_ENC, true);
 
-        if (flags & MSG_OOB)
-            tcp_mark_urg(tp, flags);
+ STREAM_TO_UINT16(le_key.ediv, p);
+ STREAM_TO_ARRAY(le_key.rand, p, BT_OCTET8_LEN);
 
-        __tcp_push_pending_frames(sk, mss_now, (flags & MSG_MORE) ? TCP_NAGLE_CORK : nonagle);
-    }
-}
+ /* store the encryption keys from peer device */
+ if (p_cb->loc_enc_size <= BT_OCTET16_LEN) {
+   memcpy(le_key.ltk, p_cb->ltk, p_cb->loc_enc_size);
+ } else {
+   SMP_TRACE_ERROR("Buffer size exceeded for le_key.ltk");
+   // Handle error condition, e.g., return an error code or abort the function
+ }
+ le_key.sec_level = p_cb->sec_level;
+ le_key.key_size = p_cb->loc_enc_size;
 
-void tcp_mark_urg(struct tcp_sock *tp, int flags)
-{
-    if (flags & MSG_OOB) {
-        u16 *urg_data = (u16 *)tcp_urg_ptr(tp);
-        int size = sizeof(u16);
+ if ((p_cb->peer_auth_req & SMP_AUTH_BOND) &&
+ (p_cb->loc_auth_req & SMP_AUTH_BOND))
+   btm_sec_save_le_key(p_cb->pairing_bda, BTM_LE_KEY_PENC,
+   (tBTM_LE_KEY_VALUE*)&le_key, true);
 
-        if (size > tp->urg_size) {
-            kfree(tcp_urg_ptr(tp));
-            tp->urg_size = size;
-            tcp_urg_ptr(tp) = kmalloc(size, GFP_KERNEL);
-        }
-
-        memcpy(tcp_urg_ptr(tp), &urg_data, size);
-    }
+ smp_key_distribution(p_cb, NULL);
 }

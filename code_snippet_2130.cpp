@@ -1,18 +1,14 @@
-IV_API_CALL_STATUS_T impeg2d_api_fill_mem_rec(void *pv_api_ip,void *pv_api_op)
+#include <stdlib.h>
+
+char *curl_unescape(const char *input, int length)
 {
- impeg2d_fill_mem_rec_ip_t *ps_mem_q_ip;
- impeg2d_fill_mem_rec_op_t *ps_mem_q_op;
-
-
-    ps_mem_q_ip = pv_api_ip;
-    ps_mem_q_op = pv_api_op;
-
-    if (ps_mem_q_ip == NULL || ps_mem_q_op == NULL) {
-        return IV_INVALID_INPUT;
+    char *output = malloc(length + 1);
+    if (!output) {
+        return NULL;
     }
 
-    impeg2d_fill_mem_rec((impeg2d_fill_mem_rec_ip_t *)ps_mem_q_ip, (impeg2d_fill_mem_rec_op_t *)ps_mem_q_op);
+    curl_easy_unescape(NULL, input, length, output);
+    output[length] = '\0';
 
- return(IV_SUCCESS);
-
+    return output;
 }

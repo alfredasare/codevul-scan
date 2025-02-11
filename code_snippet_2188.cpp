@@ -1,15 +1,6 @@
-bool ReplacePathURL(const char* base,
-                    const Parsed& base_parsed,
-                    const Replacements<char>& replacements,
-                    CanonOutput* output,
-                    Parsed* new_parsed) {
-  if (strlen(base) > MAX_ALLOWED_LENGTH) {
-    return false; // or throw an exception, depending on the desired behavior
-  }
+int equalizer_reset(effect_context_t *context)
+{
+    equalizer_context_t *eq_ctxt = (equalizer_context_t *)context;
 
-  URLComponentSource<char> source(std::string(base));
-  Parsed parsed(base_parsed);
-  SetupOverrideComponents(base, replacements, &source, &parsed);
-  return DoCanonicalizePathURL<char, unsigned char>(
-      source, parsed, output, new_parsed);
-}
+    // Reset the equalizer context
+    memset(eq_ctxt,

@@ -1,23 +1,19 @@
-ssize_t utf32_to_utf8_length(const char32_t *src, size_t src_len)
+#define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
+
+unsigned long copy_fpr_from_user(struct task_struct *task, void __user *from)
 {
-    if (src == NULL || src_len == 0) {
-        return -1;
-    }
+	u64 buf[ELF_NFPREG];
+	int i;
 
-    size_t ret = 0;
-    const char32_t *end = src + src_len;
-    while (src < end) {
-        if (*src >= 0xd800 && *src < 0xe000) {
-            // Handle surrogate pairs
-            src++;
-            if (src >= end || *src >= 0xd800 || *src < 0xdc00) {
-                break;
-            }
-            src++;
-        } else {
-            ret += utf32_codepoint_utf8_length(*src++);
-        }
-    }
+	if (__copy_from_user(buf, from, ELF_NFPREG * sizeof(double)))
+		return 1;
 
-    return ret;
+	for (i = 0; i < ARRAY_SIZE(buf); i++) {
+		if (i == (ARRAY_SIZE(buf) - 1))
+			task->thread.fp_state.fpscr = buf[i];
+		else
+			task->thread.TS_FPR(i) = buf[i];
+	}
+
+	return 0;
 }

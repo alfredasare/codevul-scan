@@ -1,27 +1,34 @@
-void AutoFillManager::OnFormSubmitted(const FormData& form) {
-  tab_contents_->autocomplete_history_manager()->OnFormSubmitted(form);
+u64 perf_event_read_value(struct perf_event *event, u64 *enabled, u64 *running)
+{
+	struct perf_event *child;
+	u64 total = 0;
+	u64 child_total_time_enabled;
+	u64 child_total_time_running;
 
-  if (!IsAutoFillEnabled())
-    return;
+	*enabled = 0;
+	*running = 0;
 
-  if (tab_contents_->profile()->IsOffTheRecord())
-    return;
+	mutex_lock(&event->child_mutex);
 
-  if (!form.user_submitted)
-    return;
+	(void)perf_event_read(event, false);
+	total += perf_event_count(event);
 
-  FormStructure submitted_form(form);
-  if (!IsValidFormData(form)) { // Input validation and data sanitization
-    return;
-  }
-  submitted_form.ShouldBeParsed(true); // Validate the input data before parsing
-  DeterminePossibleFieldTypesForUpload(&submitted_form);
-  LogMetricsAboutSubmittedForm(form, &submitted_form);
+	*enabled += event->total_time_enabled +
+			atomic64_read(&event->child_total_time_enabled);
+	*running += event->total_time_running +
+			atomic64_read(&event->child_total_time_running);
 
-  UploadFormData(submitted_form);
+	list_for_each_entry(child, &event->child_list, child_list) {
+		child_total_time_enabled = child->total_time_enabled;
+		child_total_time_running = child->total_time_running;
 
-  if (!submitted_form.IsAutoFillable(true))
-    return;
+		(void)perf_event_read(child, false);
 
-  ImportFormData(submitted_form);
+		total += perf_event_count(child);
+		*enabled += child_total_time_enabled;
+		*running += child_total_time_running;
+	}
+	mutex_unlock(&event->child_mutex);
+
+	return total;
 }

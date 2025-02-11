@@ -1,13 +1,16 @@
-void ihold(struct inode *inode)
-{
-    int err = 0;
-    try {
-        WARN_ON(atomic_inc_return(&inode->i_count) >= 2);
-    } catch (int e) {
-        atomic_dec_and_test(&inode->i_count);
-        err = e;
-    }
-    if (err!= 0) {
-        /* Handle the error or propagate it up the call stack */
-    }
+void PDFCreated(
+    const content::DevToolsManagerDelegate::CommandCallback& callback,
+    int command_id,
+    HeadlessPrintManager::PrintResult print_result,
+    const std::string& data) {
+  auto dictionary_value = HeadlessPrintManager::PDFContentsToDictionaryValue(data);
+  std::unique_ptr<base::DictionaryValue> response;
+  if (print_result == HeadlessPrintManager::PRINT_SUCCESS) {
+    response = CreateSuccessResponse(command_id, std::move(dictionary_value));
+  } else {
+    response = CreateErrorResponse(
+        command_id, kErrorServerError,
+        HeadlessPrintManager::PrintResultToString(print_result));
+  }
+  callback.Run(std::move(response));
 }

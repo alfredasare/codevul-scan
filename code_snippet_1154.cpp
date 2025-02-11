@@ -1,16 +1,15 @@
-#include <stdexcept>
+class DataReductionProxyConfig {
+ public:
+  DataReductionProxyConfig() : config_values_(std::make_unique<ProxyList>()) {}
 
-class TransientWindowObserver {
-public:
-    TransientWindowObserver() : destroyed_(false) {}
+  //... other member functions ...
 
-    void setDestroyed(bool value) {
-        if (!(value == false || value == true)) {
-            throw std::invalid_argument("Invalid value for destroyed_");
-        }
-        destroyed_ = value;
-    }
+  net::ProxyList GetAllConfiguredProxies() const {
+    DCHECK(thread_checker_.CalledOnValidThread());
+    if (!config_values_) return net::ProxyList();
+    return config_values_->GetAllConfiguredProxies();
+  }
 
-private:
-    bool destroyed_;
+ private:
+  std::unique_ptr<ProxyList> config_values_;
 };

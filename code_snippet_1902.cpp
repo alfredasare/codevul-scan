@@ -1,40 +1,26 @@
-int wait_on_node_pages_writeback(struct f2fs_sb_info *sbi, nid_t ino)
+static void ksm_do_scan(unsigned int scan_npages)
 {
-    pgoff_t index = 0, end = ULONG_MAX;
-    struct pagevec pvec;
-    int ret2, ret = 0;
+	struct rmap_item *rmap_item;
+	struct page *page;
+	write_lock(&page_tree_lock); // Acquire the write lock for the page tree
 
-    pagevec_init(&pvec, 0);
+	while (scan_npages-- && likely(!freezing(current))) {
+		cond_resched();
+		page = scan_get_next_page();
+		if (!page) {
+			write_unlock(&page_tree_lock); // Release the lock if no page found
+			return;
+		}
+		rmap_item = scan_get_next_rmap_item(page);
+		if (!rmap_item) {
+			write_unlock(&page_tree_lock); // Release the lock if no rmap_item found
+			put_page(page);
+			continue;
+		}
+		if (!PageKsm(page) || !in_stable_tree(rmap_item))
+			cmp_and_merge_page(page, rmap_item);
+		put_page(page);
+	}
 
-    while (index <= end) {
-        int i, nr_pages;
-        nr_pages = pagevec_lookup_tag(&pvec, NODE_MAPPING(sbi), &index,
-                PAGECACHE_TAG_WRITEBACK,
-                min(end - index, (pgoff_t)PAGEVEC_SIZE-1) + 1);
-        if (nr_pages == 0)
-            break;
-
-        for (i = 0; i < nr_pages; i++) {
-            struct page *page = pvec.pages[i];
-
-            /* until radix tree lookup accepts end_index */
-            if (unlikely(page->index > end))
-                continue;
-
-            if (ino && ino_of_node(page) == ino) {
-                char buffer[32]; // allocate a safe buffer size
-                snprintf(buffer, sizeof(buffer), "Page %lu is being written back", (unsigned long) ino);
-                printk(KERN_INFO "%s", buffer);
-                if (TestClearPageError(page))
-                    ret = -EIO;
-            }
-        }
-        pagevec_release(&pvec);
-        cond_resched();
-    }
-
-    ret2 = filemap_check_errors(NODE_MAPPING(sbi));
-    if (!ret)
-        ret = ret2;
-    return ret;
+	write_unlock(&page_tree_lock); // Release the lock after using rmap_item
 }

@@ -1,31 +1,26 @@
-static int uv__process_open_stream(uv_stdio_container_t* container,
-                                   int pipefds[2],
-                                   int writable) {
-  int flags;
+PHPAPI void var\_destroy(php\_unserialize\_data\_t \*var\_hashx)
+{
+if (!var\_hashx || !var\_hashx->first || !var\_hashx->first\_dtor) {
+return;
+}
 
-  if (pipefds[0] < 0 || pipefds[1] < 0)
-    return 0;
+while (var\_hash) {
+next = var\_hash->next;
+efree\_size(var\_hash, sizeof(var\_entries));
+var\_hash = next;
+}
 
-  if (!(container->flags & UV_CREATE_PIPE) || pipefds[0] < 0)
-    return 0;
-
-  if (uv__close(pipefds[1]))
-    if (errno!= EINTR && errno!= EINPROGRESS)
-      abort();
-
-  pipefds[1] = -1;
-  uv__nonblock(pipefds[0], 1);
-
-  if (container->data.stream->type == UV_NAMED_PIPE &&
-      ((uv_pipe_t*)container->data.stream)->ipc)
-    flags = UV_STREAM_READABLE | UV_STREAM_WRITABLE;
-  else if (writable)
-    flags = UV_STREAM_WRITABLE;
-  else
-    flags = UV_STREAM_READABLE;
-
-  if (flags < 0 || flags > UV_STREAM_READABLE | UV_STREAM_WRITABLE)
-    return 0;
-
-  return uv__stream_open(container->data.stream, pipefds[0], flags);
+while (var\_dtor\_hash) {
+for (i = 0; i < var\_dtor\_hash->used\_slots; i++) {
+if (var\_dtor\_hash->data[i] != NULL) {
+#if VAR\_ENTRIES\_DBG
+fprintf(stderr, "var\_destroy dtor(%p, %ld)\n", var\_dtor\_hash->data[i], Z\_REFCOUNT\_P(var\_dtor\_hash->data[i]));
+#endif
+zval\_ptr\_dtor(&var\_dtor\_hash->data[i]);
+}
+}
+next = var\_dtor\_hash->next;
+efree\_size(var\_dtor\_hash, sizeof(var\_dtor\_entries));
+var\_dtor\_hash = next;
+}
 }

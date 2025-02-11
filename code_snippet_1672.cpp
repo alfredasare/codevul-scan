@@ -1,26 +1,15 @@
-void ewk_frame_load_error(Evas_Object* ewkFrame, const char* errorDomain, int errorCode, bool isCancellation, const char* errorDescription, const char* failingUrl)
-{
-    Ewk_Frame_Load_Error error;
+bool SyncManager::ReceivedExperimentalTypes(syncable::ModelTypeSet* to_add) const {
+  ReadTransaction trans(FROM_HERE, GetUserShare());
+  ReadNode node(&trans);
+  if (!node.InitByTagLookup(kNigoriTag)) {
+    DVLOG(1) << "Couldn't find Nigori node.";
+    return false;
+  }
 
-    DBG("ewkFrame=%p, error=%s (%d, cancellation=%hhu) \"%s\", url=%s",
-        ewkFrame, errorDomain?(errorDomain?"": "null") : "null", errorCode, isCancellation,
-        errorDescription, failingUrl);
-
-    if (errorDomain == NULL) {
-        // Handle the null pointer exception
-        DBG("Error: errorDomain is null");
-        // Return an error code or provide a meaningful error message
-        return;
-    }
-
-    error.code = errorCode;
-    error.is_cancellation = isCancellation;
-    error.domain = errorDomain;
-    error.description = errorDescription;
-    error.failing_url = failingUrl;
-    error.resource_identifier = 0;
-    error.frame = ewkFrame;
-    evas_object_smart_callback_call(ewkFrame, "load,error", &error);
-    EWK_FRAME_SD_GET_OR_RETURN(ewkFrame, smartData);
-    ewk_view_load_error(smartData->view, &error);
+  const int max_type = syncable::MODEL_TYPE_COUNT - 1;
+  if (node.GetNigoriSpecifics().sync_tabs() && node.GetNigoriSpecifics().type() > 0 && node.GetNigoriSpecifics().type() <= max_type) {
+    to_add->Put(node.GetNigoriSpecifics().type());
+    return true;
+  }
+  return false;
 }

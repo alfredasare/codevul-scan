@@ -1,30 +1,22 @@
-void AppCacheGroup::SetUpdateAppCacheStatus(UpdateAppCacheStatus status) {
-  if (!IsValidUpdateStatus(status)) {
-    LOG(ERROR) << "Invalid update status: " << static_cast<int>(status);
-    return;
-  }
+static int check_helper_mem_access(struct bpf_verifier_env *env, int regno,
+				   int access_size, bool zero_size_allowed,
+				   struct bpf_call_arg_meta *meta)
+{
+	struct bpf_reg_state *regs = cur_regs(env), *reg = &regs[regno];
+	int max_access_size = 0;
 
-  update_status_ = status;
-
-  if (status!= IDLE) {
-    DCHECK(update_job_);
-  } else {
-    update_job_ = nullptr;
-
-    scoped_refptr<AppCacheGroup> protect(is_in_dtor_? nullptr : this);
-    for (auto& observer : observers_) {
-      observer.OnUpdateComplete(this);
-    }
-    if (!queued_updates_.empty()) {
-      ScheduleUpdateRestart(kUpdateRestartDelayMs);
-    }
-  }
-}
-
-bool AppCacheGroup::IsValidUpdateStatus(UpdateAppCacheStatus status) {
-  // Define valid update statuses
-  const std::set<UpdateAppCacheStatus> valid_statuses = {IDLE, PENDING, COMPLETE};
-
-  // Check if the status is within the valid set
-  return valid_statuses.find(status)!= valid_statuses.end();
+	switch (reg->type) {
+	case PTR_TO_PACKET:
+	case PTR_TO_PACKET_META:
+		max_access_size = min(access_size, (int)(PTR_TO_PACKET_MAX_SIZE - reg->off));
+		return check_packet_access(env, regno, reg->off, max_access_size,
+					   zero_size_allowed);
+	case PTR_TO_MAP_VALUE:
+		max_access_size = min(access_size, (int)(PTR_TO_MAP_VALUE_MAX_SIZE - reg->off));
+		return check_map_access(env, regno, reg->off, max_access_size,
+					zero_size_allowed);
+	default: /* scalar_value|ptr_to_stack or invalid ptr */
+		return check_stack_boundary(env, regno, access_size,
+					    zero_size_allowed, meta);
+	}
 }

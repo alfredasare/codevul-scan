@@ -1,7 +1,8 @@
-const char* menu_cache_item_get_icon( MenuCacheItem* item )
+static int get_user_dscr(struct task_struct *task, unsigned long *data, struct cred *cred)
 {
-    if (item == NULL || item->icon == NULL) {
-        return "error-icon";
-    }
-    return item->icon;
+    if (!capable(CAP_SYS_ADMIN))
+        return -EPERM;
+
+    *data = task->thread.dscr;
+    return 0;
 }

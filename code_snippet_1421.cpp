@@ -1,14 +1,8 @@
-struct cred *prepare_creds(void)
-{
-    struct task_struct *task = current;
-    const struct cred *old;
-    struct cred new_cred;
-
-    validate_process_creds();
-
-    new_cred = kmemdup(old = task->cred, sizeof(struct cred), GFP_KERNEL);
-    if (!new_cred)
-        return NULL;
-
-    //...
+unsigned int end = bvec->bv_offset + bvec->bv_len - 1;
+if (end >= PAGE_SIZE) {
+/* Handle error condition */
+return;
 }
+ASSERT(end < PAGE_SIZE);
+
+... (rest of the function remains unchanged)

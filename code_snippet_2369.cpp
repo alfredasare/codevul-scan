@@ -1,34 +1,24 @@
-perf_ftrace_function_call(unsigned long ip, unsigned long parent_ip,
-			  struct ftrace_ops *ops, struct pt_regs *pt_regs)
+static void mcryptd_opportunistic_flush(void)
 {
-    struct ftrace_entry *entry = NULL;
-    struct hlist_head *head;
-    struct pt_regs regs;
-    int rctx;
+	struct mcryptd_flush_list *flist;
+	struct mcryptd_alg_cstate *cstate;
 
-    head = this_cpu_ptr(event_function.perf_events);
-    if (hlist_empty(head))
-        return;
+	flist = per_cpu_ptr(mcryptd_flist, smp_processor_id());
+	while (single_task_running()) {
+		mutex_lock(&flist->lock);
+		cstate = list_first_entry_or_null(&flist->list,
+				struct mcryptd_alg_cstate, flush_list);
+		if (!cstate || !cstate->flusher_engaged) {
+			mutex_unlock(&flist->lock);
+			return;
+		}
+		list_del(&cstate->flush_list);
+		cstate->flusher_engaged = false;
 
-    #define ENTRY_SIZE (ALIGN(sizeof(struct ftrace_entry) + sizeof(u32), \
-				    sizeof(u64)) - sizeof(u32))
-
-    BUILD_BUG_ON(ENTRY_SIZE > PERF_MAX_TRACE_SIZE);
-
-    perf_fetch_caller_regs(&regs);
-
-    entry = perf_trace_buf_prepare(ENTRY_SIZE, TRACE_FN, NULL, &rctx);
-    if (!entry) {
-        return;
-    }
-
-    if (!entry) {
-        return;
-    }
-
-    entry->ip = ip;
-    entry->parent_ip = parent_ip;
-    perf_trace_buf_submit(entry, ENTRY_SIZE, rctx, 0, 1, &regs, head, NULL);
-
-    #undef ENTRY_SIZE
+		/* Re-acquire the lock before using cstate */
+		mutex_lock(&flist->lock);
+		cstate->alg_state->flusher(cstate);
+		mutex_unlock(&flist->lock);
+		mutex_unlock(&flist->lock);
+	}
 }

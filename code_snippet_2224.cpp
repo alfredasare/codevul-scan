@@ -1,19 +1,15 @@
-static int oidc_authorization_response_error(request_rec *r, oidc_cfg *c,
-oidc_proto_state_t *proto_state, const char *error,
-const char *error_description) {
-    const char *prompt = oidc_proto_state_get_prompt(proto_state);
-    if (prompt != NULL) {
-        prompt = apr_pstrdup(r->pool, apr_strescape(prompt));
-        prompt = apr_strreplace(prompt, "&", "");
-        prompt = apr_strreplace(prompt, "<", "");
-        prompt = apr_strreplace(prompt, ">", "");
-        prompt = apr_strreplace(prompt, "'", "");
-        prompt = apr_strreplace(prompt, "\"", "");
-        if ((prompt != NULL) && (apr_strnatcmp(prompt, OIDC_PROTO_PROMPT_NONE) == 0)) {
-            return oidc_session_redirect_parent_window_to_logout(r, c);
-        }
+ref_param_end_write_collection(gs_param_list * plist, gs_param_name pkey,
+                               gs_param_dict * pvalue)
+{
+    iparam_list *const iplist = (iparam_list *) plist;
+    if (pvalue->list != NULL) {
+        int code = ref_param_write(iplist, pkey, &((dict_param_list *) pvalue->list)->dict);
+
+        gs_free_object(plist->memory, pvalue->list, "ref_param_end_write_collection");
+        pvalue->list = 0;
+        return code;
+    } else {
+        // Return an error code or log an error message
+        return ERROR_CODE; // Replace ERROR_CODE with an appropriate error code
     }
-    return oidc_util_html_send_error(r, c->error_template,
-            apr_psprintf(r->pool, "OpenID Connect Provider error: %s", error),
-            error_description, DONE);
 }

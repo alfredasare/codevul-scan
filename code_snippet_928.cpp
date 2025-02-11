@@ -1,15 +1,24 @@
-call_bind(struct rpc_task *task)
-{
-    struct rpc_xprt *xprt = task->tk_xprt;
+c++
+#include <mutex>
 
-    dprint_status(task);
+class NavigationControllerImpl {
+public:
+    // ...
 
-    task->tk_action = call_connect;
-    if (!xprt_bound(xprt)) {
-        if (task->tk_action < CALL_BIND_STATUS_MIN || task->tk_action > CALL_BIND_STATUS_MAX) {
-            task->tk_action = call_bind_status;
-            task->tk_timeout = xprt->bind_timeout;
-            xprt->ops->rpcbind(task);
-        }
+private:
+    mutable std::mutex mtx_;
+    int transient_entry_index_ = -1;
+    std::unique_ptr<NavigationEntryImpl> pending_entry_;
+    std::vector<std::unique_ptr<NavigationEntryImpl>> entries_;
+
+    NavigationEntryImpl* GetActiveEntry() const {
+        std::lock_guard<std::mutex> lock(mtx_);
+        if (transient_entry_index_ != -1)
+            return entries_[transient_entry_index_].get();
+        if (pending_entry_)
+            return pending_entry_.get();
+        return GetLastCommittedEntry();
     }
-}
+
+    // ...
+};

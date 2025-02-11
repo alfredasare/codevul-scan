@@ -1,31 +1,14 @@
-static void rng_backend_prop_set_opened(Object *obj, bool value, Error **errp)
+readscreen(void)
 {
-    RngBackend *s = RNG_BACKEND(obj);
-    RngBackendClass *k = RNG_BACKEND_GET_CLASS(s);
-    Error *local_err = NULL;
-
-    if (value == s->opened) {
-        return;
-    }
-
-    if (!value && s->opened) {
-        error_setg(errp, QERR_PERMISSION_DENIED);
-        return;
-    }
-
-    // Validate the input parameter 'value'
-    if (!qbool_is_true(value)) {
-        error_setg(errp, QERR_INVALID_PARAMETER_VALUE, "opened", "true");
-        return;
-    }
-
-    if (k->opened) {
-        k->opened(s, &local_err);
-        if (local_err) {
-            error_propagate(errp, local_err);
-            return;
+    unsigned char buf[7];
+    size_t bytes_read = fread(buf, 1, sizeof(buf), infile);
+    if (bytes_read < sizeof(buf)) {
+        global = (bytes_read > 3) ? (buf[4] & 0x80) : 0;
+        if (global) {
+            globalbits = (bytes_read > 4) ? ((buf[4] & 0x07) + 1) : 0;
+            if (globalbits && bytes_read > 5) {
+                fread(globalmap, 3, ((size_t)1) << globalbits, infile);
+            }
         }
     }
-
-    s->opened = true;
 }

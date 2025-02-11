@@ -1,17 +1,7 @@
-bool ConfirmInfoBarDelegate::Cancel() {
-    if (!isValidDelegate()) {
-        return false;
-    }
-    if (!validateDelegateProperties()) {
-        return false;
-    }
-    return true;
+TSRMLS_CC, E_NOTICE, "ArrayIterator::next(): Invalid array or internal position is no longer valid");
+return;
 }
-
-bool ConfirmInfoBarDelegate::isValidDelegate() {
-    return delegate!= nullptr;
+spl\_array\_next\_no\_verify(object, aht TSRMLS\_CC);
 }
-
-bool ConfirmInfoBarDelegate::validateDelegateProperties() {
-    return delegate->HasCorrectPropertiesAndMethods();
 }
+/* }}} */

@@ -1,11 +1,15 @@
-static struct ndp_msg *ndp_msg_alloc(void)
+static bool get_new_nicname(char **dest, const char *br, int pid, char **cnic)
 {
-    struct ndp_msg *msg;
+	char template[IFNAMSIZ];
+	const char *safe_template = "veth%06x";
 
-    msg = myzalloc(sizeof(*msg));
-    if (!msg)
-        return NULL;
-    msg->buf = malloc(0); 
-    msg->icmp6_hdr = (struct icmp6_hdr *) msg->buf;
-    return msg;
+	sprintf_s(template, sizeof(template), safe_template, arc4random());
+	*dest = strdup(template);
+
+	if (!create_nic(*dest, br, pid, cnic)) {
+		free(*dest);
+		*dest = NULL;
+		return false;
+	}
+	return true;
 }

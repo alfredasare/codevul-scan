@@ -1,8 +1,20 @@
-static void inode_lru_list_add(struct inode *inode)
+static int em_fnstsw(struct x86_emulate_ctxt *ctxt)
 {
-    if (!inode ||!list_lru_add(&inode->i_sb->s_inode_lru, &inode->i_lru)) {
-        return;
-    }
-    smp_wmb(); // Ensure visibility of updated counter
-    this_cpu_inc(nr_unused);
+	u16 fsw;
+
+	if (ctxt->ops->get_cr(ctxt, 0) & (X86_CR0_TS | X86_CR0_EM))
+		return emulate_nm(ctxt);
+
+	ctxt->ops->get_fpu(ctxt);
+	asm volatile("fnstsw %0": "+m"(fsw));
+
+	if (fsw & 0x0400) {
+		ctxt->ops->put_fpu(ctxt);
+		return emulate_exception(ctxt, X86_EM_EX_INTERRUPT, 1);
+	}
+
+	ctxt->dst.val = fsw;
+	ctxt->ops->put_fpu(ctxt);
+
+	return X86EMUL_CONTINUE;
 }

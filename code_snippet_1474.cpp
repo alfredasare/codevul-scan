@@ -1,19 +1,14 @@
-static struct sk_buff **sit_ip6ip6_gro_receive(struct sk_buff **head,
-					       struct sk_buff *skb)
+int modbus_set_slave(modbus_t *ctx, int slave)
 {
-    if (!head ||!(*head)) {
-        return NULL;
+    if (ctx == NULL) {
+        errno = EINVAL;
+        return -1;
     }
 
-    if (!skb ||!skb->len) {
-        return NULL;
+    if (slave < 0 || slave >= ctx->backend->nb_slaves) {
+        errno = ERANGE;
+        return -1;
     }
 
-    if (strchr((char *)head, '<') || strchr((char *)head, '>') ||
-        strchr((char *)skb, '<') || strchr((char *)skb, '>')) {
-        return NULL;
-    }
-
-    NAPI_GRO_CB(skb)->encap_mark = 1;
-    return ipv6_gro_receive(head, skb);
+    return ctx->backend->set_slave(ctx, slave);
 }

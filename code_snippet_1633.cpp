@@ -1,25 +1,12 @@
-static bool mnt_ns_loop(struct dentry *dentry)
+xmlAttrPtr get_attribute_ex(xmlAttrPtr node, const char *name, const char *ns)
 {
-    struct mnt_namespace *mnt_ns;
-
-    if (!is_mnt_ns_file(dentry)) {
-        return false;
-    }
-
-    dentry = sanitize_dentry(dentry);
-
-    mnt_ns = get_proc_ns(dentry->d_inode)->ns;
-    return current->nsproxy->mnt_ns->seq >= mnt_ns->seq;
-}
-
-struct dentry *sanitize_dentry(struct dentry *dentry)
-{
-    if (!dentry) {
+    // Check for NULL and empty strings
+    if (!name || !*name || (!ns || !*ns)) {
         return NULL;
     }
 
-    // Validate and sanitize dentry object
-    //...
-
-    return dentry;
-}
+    while (node != NULL) {
+        if (attr_is_equal_ex(node, name, ns)) {
+            return node;
+        }
+        node = node->next;

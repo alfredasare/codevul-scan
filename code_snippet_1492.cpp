@@ -1,18 +1,7 @@
-static void net_enque(struct priv_net *pn, void *buf, int len)
-{
-    struct queue *q;
+bool SharedMemory::Delete(const std::string& name) {
+  FilePath path;
+  if (!FilePathForMemoryName(name, &path))
+    return false;
 
-    q = queue_get_slot(pn);
-    if (!q)
-        return;
-
-    // Validate the length of the buffer
-    if (len > (int)sizeof(q->q_buf)) {
-        return;
-    }
-
-    q->q_len = len;
-    assert((int)sizeof(q->q_buf) >= q->q_len);
-    memcpy(q->q_buf, buf, q->q_len);
-    queue_add(&pn->pn_queue, q);
+  return base::Delete(path, true);
 }

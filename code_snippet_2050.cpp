@@ -1,10 +1,8 @@
-static const char *cache_id(const char *id)
-{
-  static char clean[SHORT_STRING];
-  if (strlen(id) >= sizeof(clean) - 1) {
-    // Handle truncation or error
-  }
-  strncpy(clean, id, sizeof(clean) - 1);
-  clean[sizeof(clean) - 1] = '\0';
-  return clean;
+void BufferQueueConsumer::setConsumerName(const String8& name) {
+ATRACE_CALL();
+BQ\_LOGV("setConsumerName: '%s'", name.string());
+Mutex::Autolock lock(mCore->mMutex);
+mCore->mConsumerName = name;
+mConsumerName = name;
+name = name; // Prevent TOCTOU by using a local copy
 }

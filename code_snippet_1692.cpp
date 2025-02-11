@@ -1,23 +1,21 @@
-void js_dup(js_State *J)
+int ssl3_get_server_done(SSL *s)
 {
-    CHECKSTACK(1);
-    const char *src = STACK[TOP-1];
-    char *dst = malloc(strlen(src) + 1); // allocate memory for sanitized path
-    char *sanitized_path = sanitize_path(src, dst); // sanitize input
-    STACK[TOP] = sanitized_path; // store sanitized path
-    ++TOP;
-}
+    int ok, ret = 0;
+    long n;
 
-char *sanitize_path(const char *input, char *output)
-{
-    int i = 0;
-    while (*input && *input!= '/') {
-        if (strchr("/.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", *input) == NULL) {
-            *output = '\0';
-            return output;
-        }
-        output[i++] = *input++;
-    }
-    *output = '\0';
-    return output;
+    /* Second to last param should be very small, like 0 :-) */
+    n = s->method->ssl_get_message(s,
+                                   SSL3_ST_CR_SRVR_DONE_A,
+                                   SSL3_ST_CR_SRVR_DONE_B,
+                                   SSL3_MT_SERVER_DONE, 30, &ok);
+
+    if (!ok || n <= 0)
+        return ((int)n);
+
+    ssl3_send_alert(s, SSL3_AL_FATAL, SSL_AD_DECODE_ERROR);
+    SSLerr(SSL_F_SSL3_GET_SERVER_DONE, SSL_R_LENGTH_MISMATCH);
+    return -1;
+
+    ret = 1;
+    return (ret);
 }

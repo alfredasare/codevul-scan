@@ -1,14 +1,15 @@
-void Part::slotExtractionDone(KJob* job)
-{
-    //...
+void AutofillDialogViews::SectionContainer::OnMouseEntered(
+const ui::MouseEvent& event) {
+if (!ShouldForwardEvent(event))
+return;
 
-    QUrl destinationDirectory = QUrl::fromLocalFile(extractJob->destinationDirectory()).adjusted(QUrl::NormalizePathSegments);
+// Validate the event type
+if (event.type() < ui::ET_MOUSE_FIRST || event.type() > ui::ET_MOUSE_LAST) {
+LOG(WARNING) << "Invalid event type received: " << event.type();
+return;
+}
 
-    if (ArkSettings::openDestinationFolderAfterExtraction()) {
-        QProcess process;
-        process.start("xdg-open", QStringList() << destinationDirectory.toString());
-        process.waitForFinished();
-    }
-
-    //...
+SetActive(true);
+proxy\_button_->OnMouseEntered(ProxyEvent(event));
+SchedulePaint();
 }

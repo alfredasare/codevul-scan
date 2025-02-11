@@ -1,27 +1,29 @@
-bool IsX11WindowFullScreen(XID window) {
-  static Atom atom = GetAtom("_NET_WM_STATE_FULLSCREEN");
-  static const std::set<Atom> allowed_atoms = {atom};
+#include <mutex> /* For std::unique_lock */
 
-  std::vector<Atom> atom_properties;
-  if (GetAtomArrayProperty(window, "_NET_WM_STATE", &atom_properties) &&
-      std::any_of(atom_properties.begin(), atom_properties.end(),
-                  [&allowed_atoms](Atom a) { return allowed_atoms.count(a) > 0; }))
-    return true;
+/* Add a mutex object to the AMediaCodec structure */
+typedef struct AMediaCodec {
+    /* Existing members */
+    std::mutex lock; /* Mutex for synchronization */
+    /* ... */
+} AMediaCodec;
 
-#if defined(TOOLKIT_GTK)
-  GdkRectangle monitor_rect;
-  gdk_screen_get_monitor_geometry(gdk_screen_get_default(), 0, &monitor_rect);
+/* Initialize the mutex in the constructor */
+AMediaCodec::AMediaCodec() {
+    /* Existing initialization code */
+    /* No need to explicitly initialize std::mutex */
+    /* ... */
+}
 
-  gfx::Rect window_rect;
-  if (!ui::GetWindowRect(window, &window_rect))
-    return false;
+/* Destroy the mutex in the destructor */
+AMediaCodec::~AMediaCodec() {
+    /* Existing cleanup code */
+    /* No need to explicitly destroy std::mutex */
+    /* ... */
+}
 
-  return monitor_rect.x == window_rect.x() &&
-         monitor_rect.y == window_rect.y() &&
-         monitor_rect.width == window_rect.width() &&
-         monitor_rect.height == window_rect.height();
-#else
-  NOTIMPLEMENTED();
-  return false;
-#endif
+media_status_t AMediaCodec_flush(AMediaCodec *mData) {
+    std::unique_lock<std::mutex> lock(mData->lock); /* Lock the mutex before accessing the shared resource */
+    media_status_t result = translate_error(mData->mCodec->flush());
+    /* Mutex is unlocked automatically when the lock goes out of scope */
+    return result;
 }

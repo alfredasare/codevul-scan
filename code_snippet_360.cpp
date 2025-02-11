@@ -1,12 +1,13 @@
-MagickExport void *GetVirtualMemoryBlob(const MemoryInfo *memory_info)
+xps_true_callback_encode_char(gs_font *pfont, gs_char chr, gs_glyph_space_t spc)
 {
-  assert(memory_info!= (const MemoryInfo *) NULL);
-  assert(memory_info->signature == MagickCoreSignature);
+    xps_font_t *font = pfont->client_data;
+    int value;
+    int max_int = INT_MAX;
 
-  size_t blob_size = memory_info->blob_size;
-  if (memory_info->blob!= NULL && blob_size > 0 && memory_info->blob + blob_size >= memory_info->blob) {
-    return memory_info->blob;
-  } else {
-    return NULL;
-  }
+    value = xps_encode_font_char(font, chr);
+    if (value > max_int) {
+        /* Handle error condition */
+        return GS_ERROR;
+    }
+    return value;
 }

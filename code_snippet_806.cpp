@@ -1,12 +1,18 @@
-void Browser::FocusToolbar() {
-    UserMetrics::RecordAction(UserMetricsAction("FocusToolbar"));
-    if (window_->GetFocusToolbarSize() > 0) {
-        char buffer[window_->GetFocusToolbarSize()];
-        window_->GetFocusToolbar(buffer, window_->GetFocusToolbarSize());
-    } else {
-        // Handle the case when the buffer size is invalid
-        // For example, you can log an error message or throw an exception
-        std::cerr << "Error: Invalid buffer size" << std::endl;
-        //...
-    }
+static void unlink1_callback(struct urb *urb)
+{
+	/* Check if urb is NULL before using it */
+	if (!urb) {
+		pr_err("urb is NULL\n");
+		return;
+	}
+
+	int status = urb->status;
+
+	if (status == 0)
+		status = usb_submit_urb(urb, GFP_ATOMIC);
+
+	if (status) {
+		urb->status = status;
+		complete(urb->context);
+	}
 }

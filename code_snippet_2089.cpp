@@ -1,6 +1,8 @@
-static __init int init_posix_timers(void)
+size_t local_wcsnlen(const wchar_t *s, size_t maxlen)
 {
-    size_t size = sizeof(struct k_itimer); // Define a constant size
-    posix_timers_cache = kmem_cache_create("posix_timers_cache", size, 0, SLAB_PANIC, NULL);
-    return 0;
+  const wchar_t *ptr = s;
+  while (*ptr != L'\0' && maxlen-- > 0) {
+    ptr++;
+  }
+  return ptr - s;
 }

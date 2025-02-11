@@ -1,23 +1,15 @@
-int snd_seq_queue_check_access(int queueid, int client)
-{
-    struct snd_seq_queue *q = queueptr(queueid);
-    int access_ok;
-    unsigned long flags;
+void* r_bin_dyldcache_free(struct r_bin_dyldcache_obj_t* bin) {
+	if (!bin) {
+		return NULL;
+	}
+	free_buffer(bin->b); // assuming free_buffer is a function that checks if the buffer is initialized before freeing
+	free (bin);
+	return NULL;
+}
 
-    if (! q)
-        return 0;
-
-    spin_lock_irqsave(&q->owner_lock, flags);
-
-    // Input validation: validate the client parameter
-    if (client < 0 || client > 255) {
-        spin_unlock_irqrestore(&q->owner_lock, flags);
-        return -EINVAL;
-    }
-
-    access_ok = check_access(q, client);
-    spin_unlock_irqrestore(&q->owner_lock, flags);
-
-    queuefree(q);
-    return access_ok;
+void free_buffer(struct r_buf *b) {
+	if (b && b->data) {
+		free(b->data);
+		b->data = NULL;
+	}
 }

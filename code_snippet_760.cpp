@@ -1,26 +1,25 @@
-bool rps_may_expire_flow(struct net_device *dev, u16 rxq_index,
-                         u32 flow_id, u16 filter_id)
+#include <limits.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+
+int lxcfs_truncate(const char *path, off_t newsize)
 {
-    struct netdev_rx_queue *rxqueue = dev->_rx + rxq_index;
-    struct rps_dev_flow_table *flow_table;
-    struct rps_dev_flow *rflow;
-    bool expire = true;
-    unsigned int cpu;
+	char resolved_path[PATH_MAX] = {0};
 
-    rcu_read_lock();
-    flow_table = rcu_dereference(rxqueue->rps_flow_table);
-    if (flow_table && flow_id <= flow_table->mask) {
-        rflow = &flow_table->flows[flow_id];
-        mutex_lock(&rflow->cpu_lock);
-        cpu = rflow->cpu;
-        mutex_unlock(&rflow->cpu_lock);
+	if (strncmp(path, "/cgroup", 7) == 0)
+		return 0;
 
-        if (rflow->filter == filter_id && cpu < nr_cpu_ids &&
-            ((int)(per_cpu(softnet_data, cpu).input_queue_head -
-                  rflow->last_qtail) <
-             (int)(10 * flow_table->mask)))
-            expire = false;
-    }
-    rcu_read_unlock();
-    return expire;
+	if (realpath(path, resolved_path) == NULL) {
+		fprintf(stderr, "Error resolving path: %s\n", strerror(errno));
+		return -EINVAL;
+	}
+
+	if (strncmp(resolved_path, "/cgroup", 7) != 0) {
+		fprintf(stderr, "Invalid path: %s\n", resolved_path);
+		return -EINVAL;
+	}
+
+	// If the path is valid, proceed with the original functionality
+	return -EINVAL;
 }

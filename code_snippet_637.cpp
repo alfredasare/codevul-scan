@@ -1,16 +1,35 @@
-static int php_stream_http_stream_stat(php_stream_wrapper *wrapper, php_stream *stream, php_stream_statbuf *ssb TSRMLS_DC)
+bool Smb4KGlobal::addMountedShare(Smb4KShare *share)
 {
-    size_t max_input_size = 1024;
-    char input_data[max_input_size + 1]; // Add 1 for null-terminator
+Q\_ASSERT(share);
 
-    if (ssb->path && strlen(ssb->path) + 1 > max_input_size) {
-        return -1;
-    }
-    strlcpy(input_data, ssb->path, max_input_size);
-    input_data[max_input_size] = '\0'; // Ensure null-termination
+bool added = false;
 
-    // Process the input data within the allocated memory
-    //...
+if (share && share->path().length() > 0)
+{
+mutex.lock();
 
-    return 0;
+if (!findShareByPath(share->path()))
+{
+if(share->isForeign())
+{
+p->mountedSharesList.append(share);
+added = true;
+
+p->onlyForeignShares = true;
+
+for (Smb4KShare *s : p->mountedSharesList)
+{
+if (!s->isForeign())
+{
+p->onlyForeignShares = false;
+break;
+}
+}
+}
+}
+
+mutex.unlock();
+}
+
+return added;
 }

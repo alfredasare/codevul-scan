@@ -1,8 +1,19 @@
-cmsFloat64Number CMSEXPORT cmsIT8GetPropertyDbl(cmsHANDLE hIT8, const char* cProp)
-{
-    const char *v = (const char*)cmsIT8GetProperty(hIT8, cProp); // Cast to const char*
+bool ExtensionService::IsCallerAuthorizedToClearData() const {
+// Implement the necessary checks to validate the caller's authorization
+// Return true if the caller is authorized, false otherwise
+}
 
-    if (v == NULL) return 0.0;
+void ExtensionService::UnloadAllExtensions() {
+if (!IsCallerAuthorizedToClearData()) {
+return;
+}
 
-    return/cmsFloat64Number_from_string(v); // Use a safe conversion function
+profile_->GetExtensionSpecialStoragePolicy()->
+RevokeRightsForAllExtensions();
+
+extensions_.clear();
+disabled\_extensions_.clear();
+terminated\_extension\_ids_.clear();
+terminated\_extensions_.clear();
+extension\_runtime\_data_.clear();
 }

@@ -1,25 +1,29 @@
-hook_hsignal (struct t_weechat_plugin *plugin, const char *signal,
-              t_hook_callback_hsignal *callback, void *callback_data)
+ModuleExport size_t RegisterDCMImage(void)
 {
-    struct t_hook *new_hook;
-    struct t_hook_hsignal *new_hook_hsignal;
-    int priority;
-    const char *ptr_signal;
+  MagickInfo
+    *entry;
 
-    if (!signal || strlen(signal) == 0 || !callback)
-        return NULL;
+  static const char
+    *DCMNote=
+    {
+      "DICOM is used by the medical community for images like X-rays.  The\n"
+      "specification, \"Digital Imaging and Communications in Medicine\n"
+      "(DICOM)\", is available at http://medical.nema.org/.  In particular,\n"
+      "see part 5 which describes the image encoding (RLE, JPEG, JPEG-LS),\n"
+      "and supplement 61 which adds JPEG-2000 encoding."
+    };
 
-    static const char *allowed_signals[] = {"signal1", "signal2",...};
-    int i;
-    for (i = 0; i < sizeof(allowed_signals) / sizeof(*allowed_signals); i++) {
-        if (strcmp(signal, allowed_signals[i]) == 0) {
-            break;
-        }
-    }
-    if (i == sizeof(allowed_signals) / sizeof(*allowed_signals)) {
-        error("Invalid signal: %s", signal);
-        return NULL;
-    }
+  if (!ValidateMagickInfo(entry)) {
+    return(MagickImageCoderSignature);
+  }
 
-    //...
+  entry=AcquireMagickInfo("DCM","DCM",
+    "Digital Imaging and Communications in Medicine image");
+  entry->decoder=(DecodeImageHandler *) ReadDCMImage;
+  entry->magick=(IsImageFormatHandler *) IsDCM;
+  entry->flags^=CoderAdjoinFlag;
+  entry->flags|=CoderSeekableStreamFlag;
+  entry->note=ConstantString(DCMNote);
+  (void) RegisterMagickInfo(entry);
+  return(MagickImageCoderSignature);
 }

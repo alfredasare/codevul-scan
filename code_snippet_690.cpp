@@ -1,27 +1,24 @@
-static void efx_dequeue_buffers(struct efx_tx_queue *tx_queue,
-			       unsigned int index)
+int jpc_pchglist_insert(jpc_pchglist_t *pcl, int idx, jpc_pocpchg_t *pchg)
 {
-    struct efx_nic *efx = tx_queue->efx;
-    unsigned long stop_index, read_ptr;
-
-    stop_index = (unsigned long)index + 1 + (unsigned long)tx_queue->ptr_mask;
-    read_ptr = tx_queue->read_count & tx_queue->ptr_mask;
-
-    while (read_ptr!= stop_index) {
-        struct efx_tx_buffer *buffer = &tx_queue->buffer[read_ptr];
-        if (unlikely(buffer->len == 0)) {
-            netif_err(efx, tx_err, efx->net_dev,
-                      "TX queue %d spurious TX completion id %x\n",
-                      tx_queue->queue, read_ptr);
-            efx_schedule_reset(efx, RESET_TYPE_TX_SKIP);
-            return;
-        }
-
-        efx_dequeue_buffer(tx_queue, buffer);
-        buffer->continuation = true;
-        buffer->len = 0;
-
-        __atomic_add_unless(&tx_queue->read_count, tx_queue->ptr_mask, stop_index);
-        read_ptr = tx_queue->read_count & tx_queue->ptr_mask;
+    // Ensure the index is not out of bounds
+    if (idx < 0 || idx > pcl->size) {
+        return JPC_ERR_bad_index;
     }
+
+    // Expand the list if necessary
+    if (pcl->size == pcl->allocated) {
+        pcl->allocated *= 2;
+        pcl->buf = realloc(pcl->buf, pcl->allocated * sizeof(jpc_pocpchg_t));
+    }
+
+    // Shift elements to insert the new object
+    if (idx < pcl->size) {
+        memmove(&pcl->buf[idx + 1], &pcl->buf[idx], (pcl->size - idx) * sizeof(jpc_pocpchg_t));
+    }
+
+    // Insert the new object
+    pcl->buf[idx] = *pchg;
+    pcl->size++;
+
+    return 0;
 }

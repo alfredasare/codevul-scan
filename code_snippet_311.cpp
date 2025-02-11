@@ -1,26 +1,36 @@
-static void SkipDXTMipmaps(Image *image, DDSInfo *dds_info, int texel_size)
+static struct tty_ldisc *tty_ldisc_get(struct tty_struct *tty, int disc)
 {
-  register ssize_t
-    i;
+	struct tty_ldisc *ld;
+	struct tty_ldisc_ops *ldops;
 
-  MagickOffsetType
-    offset;
+	if (disc < N_TTY || disc >= NR_LDISCS)
+		return ERR_PTR(-EINVAL);
 
-  size_t
-    h,
-    w;
+	/*
+	 * Get the ldisc ops - we may need to request them to be loaded
+	 * dynamically and try again.
+	 */
+	ldops = get_ldops(disc);
+	if (IS_ERR(ldops)) {
+		request_module("tty-ldisc-%d", disc);
+		ldops = get_ldops(disc);
+		if (IS_ERR(ldops))
+			return ERR_CAST(ldops);
+	}
 
-  //... (rest of the code remains the same)
+	ld = kmalloc(sizeof(struct tty_ldisc), GFP_KERNEL);
+	if (ld == NULL) {
+		put_ldops(ldops);
+		return ERR_PTR(-ENOMEM);
+	}
 
-  for (i = 1; (i < (ssize_t) dds_info->mipmapcount) && w && h; i++)
-  {
-    offset = (MagickOffsetType) ((w + 3) / 4) * ((h + 3) / 4) * texel_size;
-    if (offset >= image->size) {
-      break;
-    }
-    (void) SeekBlob(image, offset, SEEK_CUR);
+	ld->ops = ldops;
+	ld->tty = tty;
 
-    w = DIV2(w);
-    h = DIV2(h);
-  }
+	if (IS_ERR(ldops)) {
+		kfree(ld);
+		return ERR_CAST(ldops);
+	}
+
+	return ld;
 }

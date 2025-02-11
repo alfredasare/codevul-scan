@@ -1,23 +1,22 @@
-PassRefPtr<RTCSessionDescriptionDescriptor> RTCPeerConnectionHandlerChromium::localDescription()
+c++
+void CSoundFile::UpdateTimeSignature()
 {
-    if (!m_webHandler)
-        return 0;
-
-    RTCSessionDescriptionDescriptor* desc = m_webHandler->localDescription();
-    if (!desc)
-        return 0;
-
-    if (!sanitizeAndEscapeUserControllableData(desc))
-        return 0;
-
-    return PassRefPtr<RTCSessionDescriptionDescriptor>(desc);
-}
-
-bool sanitizeAndEscapeUserControllableData(RTCSessionDescriptionDescriptor* desc)
-{
-    // Implement sanitization and escaping logic here
-    // For example:
-    std::string sanitizedDesc = escapeSpecialChars(desc->description);
-    desc->description = sanitizedDesc;
-    return true;
+    if (m_PlayState.m_nPattern >= 0 && m_PlayState.m_nPattern < Patterns.Size())
+    {
+        if (Patterns[m_PlayState.m_nPattern].GetOverrideSignature())
+        {
+            m_PlayState.m_nCurrentRowsPerBeat = Patterns[m_PlayState.m_nPattern].GetRowsPerBeat();
+            m_PlayState.m_nCurrentRowsPerMeasure = Patterns[m_PlayState.m_nPattern].GetRowsPerMeasure();
+        }
+        else
+        {
+            m_PlayState.m_nCurrentRowsPerBeat = m_nDefaultRowsPerBeat;
+            m_PlayState.m_nCurrentRowsPerMeasure = m_nDefaultRowsPerMeasure;
+        }
+    }
+    else
+    {
+        m_PlayState.m_nCurrentRowsPerBeat = m_nDefaultRowsPerBeat;
+        m_PlayState.m_nCurrentRowsPerMeasure = m_nDefaultRowsPerMeasure;
+    }
 }

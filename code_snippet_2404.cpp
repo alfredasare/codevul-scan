@@ -1,40 +1,18 @@
-zip_xz_init(struct archive_read *a, struct zip *zip)
+PHP_FUNCTION(snmp_set_enum_print)
 {
-    lzma_ret r;
+	char input[32]; // adjusted buffer size
+	long a1;
 
-    if (zip->zipx_lzma_valid) {
-        lzma_end(&zip->zipx_lzma_stream);
-        zip->zipx_lzma_valid = 0;
-    }
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &a1) == FAILURE) {
+		RETURN_FALSE;
+	}
 
-    memset(&zip->zipx_lzma_stream, 0, sizeof(zip->zipx_lzma_stream));
+	if (a1 < 0 || a1 > 1) { // validate input
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "Invalid input. Expected 0 or 1.");
+		RETURN_FALSE;
+	}
 
-    try {
-        r = lzma_stream_decoder(&zip->zipx_lzma_stream, UINT64_MAX, 0);
-        if (r != LZMA_OK) {
-            archive_set_error(&(a->archive), ARCHIVE_ERRNO_MISC,
-                "xz initialization failed: %s",
-                lzma_strerror(r));
-            return ARCHIVE_FAILED;
-        }
-    } catch (const std::exception& e) {
-        archive_set_error(&(a->archive), ARCHIVE_ERRNO_MISC,
-            "xz initialization failed: %s", e.what());
-        return ARCHIVE_FAILED;
-    }
-
-    zip->zipx_lzma_valid = 1;
-
-    free(zip->uncompressed_buffer);
-
-    zip->uncompressed_buffer_size = 256 * 1024;
-    zip->uncompressed_buffer = (uint8_t*) malloc(zip->uncompressed_buffer_size);
-    if (zip->uncompressed_buffer == NULL) {
-        archive_set_error(&a->archive, ENOMEM,
-            "No memory for xz decompression");
-        return ARCHIVE_FATAL;
-    }
-
-    zip->decompress_init = 1;
-    return ARCHIVE_OK;
+	snprintf(input, sizeof(input), "%ld", a1); // sanitize input
+	netsnmp_ds_set_boolean(NETSNMP_DS_LIBRARY_ID, NETSNMP_DS_LIB_PRINT_NUMERIC_ENUM, (int) a1);
+	RETURN_TRUE;
 }

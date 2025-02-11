@@ -1,7 +1,9 @@
-String RenderMenuList::itemIcon(unsigned id) const
+static ssize_t write_iter_null(struct kiocb *iocb, struct iov_iter *from)
 {
-    if (id < 0 || id >= getMaxItemCount()) {
-        throw std::out_of_range("Invalid item ID");
-    }
-    return std::to_string(id); 
+	size_t count = iov_iter_count(from);
+	if (count > 0) {
+		iov_iter_advance(from, count);
+		return count;
+	}
+	return 0;
 }

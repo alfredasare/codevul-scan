@@ -1,13 +1,9 @@
-static unsigned short get_ushort(const unsigned char *data, size_t size)
+#define MAX_NAME_LENGTH 64 // Define an appropriate maximum name length
+
+static int color_table_compare(const void *lhs, const void *rhs)
 {
-    if (size < sizeof(unsigned short)) {
-        return 0; // or some other error handling mechanism
-    }
+    const ColorEntry *entry1 = lhs;
+    const ColorEntry *entry2 = rhs;
 
-    unsigned short val = *(const unsigned short *)data;
-
-#ifdef OPJ_BIG_ENDIAN
-    val = ((val & 0xffU) << 8) | (val >> 8);
-#endif
-    return val;
+    return strncasecmp(entry1->name, entry2->name, MIN(MAX_NAME_LENGTH, strlen(entry1->name), strlen(entry2->name)));
 }

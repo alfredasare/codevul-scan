@@ -1,28 +1,14 @@
-static char *get_next_cgroup_dir(const char *taskcg, const char *querycg)
-{
-    char *start, *end;
-    size_t querycg_len = strlen(querycg);
+using ContentSettingPtr = ContentSetting*;
 
-    if (querycg_len >= strlen(taskcg)) {
-        fprintf(stderr, "%s: I was fed bad input\n", __func__);
-        return NULL;
-    }
+bool MediaStreamDevicesController::IsDefaultMediaAccessBlocked() const {
+  DCHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
+  ContentSettingPtr content_setting_ptr =
+      profile_->GetHostContentSettingsMap()->GetDefaultContentSetting(
+          CONTENT_SETTINGS_TYPE_MEDIASTREAM, content_setting_ptr);
 
-    // Validate querycg string
-    if (strchr(querycg, '/') || strchr(querycg, '\\')) {
-        fprintf(stderr, "%s: Invalid querycg string\n", __func__);
-        return NULL;
-    }
+  if (!content_setting_ptr) {
+    return false;
+  }
 
-    if (strcmp(querycg, "/") == 0)
-        start = strdup(taskcg + 1);
-    else
-        start = strdup(taskcg + strlen(querycg) + 1);
-    if (!start)
-        return NULL;
-
-    end = strchr(start, '/');
-    if (end)
-        *end = '\0';
-    return start;
+  return (*content_setting_ptr == CONTENT_SETTING_BLOCK);
 }

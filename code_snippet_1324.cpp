@@ -1,11 +1,8 @@
-void __init hugetlb_bad_size(void)
+static int pvc_create(struct net *net, struct socket *sock, int protocol, int kern)
 {
-    if (parsed_valid_hugepagesz!= NULL) {
-        size_t size = strlen(parsed_valid_hugepagesz);
-        if (size <= sizeof(parsed_valid_hugepagesz)) {
-            strncpy_s(parsed_valid_hugepagesz, sizeof(parsed_valid_hugepagesz), parsed_valid_hugepagesz, size + 1);
-        } else {
-            // Handle error or truncate the input if necessary
-        }
-    }
+	if (net != &init_net || protocol < 0 || protocol > 255)
+		return -EAFNOSUPPORT;
+
+	sock->ops = &pvc_proto_ops;
+	return vcc_create(net, sock, protocol, PF_ATMPVC);
 }

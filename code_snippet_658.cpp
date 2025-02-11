@@ -1,13 +1,13 @@
-static int omninet_open(struct tty_struct *tty, struct usb_serial_port *port)
-{
-    struct usb_serial *serial = port->serial;
-    struct usb_serial_port *wport;
+pthread_mutex_t vrrp_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-    if (!tty ||!port ||!serial) {
-        return -EINVAL; 
+vrrp_vmac_xmit_base_handler(__attribute__((unused)) vector_t *strvec)
+{
+    pthread_mutex_lock(&vrrp_mutex);
+
+    vrrp_t *vrrp = LIST_TAIL_DATA(vrrp_data->vrrp);
+    if (vrrp) {
+        __set_bit(VRRP_VMAC_XMITBASE_BIT, &vrrp->vmac_flags);
     }
 
-    wport = serial->port[1];
-    tty_port_tty_set(&wport->port, tty);
-    return usb_serial_generic_open(tty, port);
+    pthread_mutex_unlock(&vrrp_mutex);
 }

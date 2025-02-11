@@ -1,9 +1,10 @@
-base::ThreadLocalStorage::Slot& SafePatternTLS() {
-  static base::NoDestructor<base::ThreadLocalStorage::Slot> safe_pattern_tls(nullptr);
+void OxideQQuickWebView::keyReleaseEvent(QKeyEvent* event) {
+Q\_D(OxideQQuickWebView);
 
-  if (!OnThreadTermination ||!OnThreadTermination->isValid()) {
-    safe_pattern_tls = &OnThreadTermination;
-  }
+if (event->type() == QEvent::KeyRelease && event->isAccepted()) {
+return;
+}
 
-  return *safe_pattern_tls;
+QQuickItem::keyReleaseEvent(event);
+d->contents\_view_->handleKeyReleaseEvent(event);
 }

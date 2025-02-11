@@ -1,10 +1,13 @@
+bool UserHasPermissionToShowWindow() {
+  // Implement permission check here.
+  // For example, you might want to check if the user is logged in as an administrator or has specific role-based access control.
+  // If the user has permission, return true; otherwise, return false.
+}
+
 void DesktopWindowTreeHostX11::ShowImpl() {
-  gfx::Rect rect = Show(ui::SHOW_STATE_NORMAL);
-  // Validate the rect before accessing its elements
-  if (rect.IsValid()) {
-    // Access the rect's elements safely
-    int width = rect.width();
-    int height = rect.height();
-    //...
+  if (!UserHasPermissionToShowWindow()) {
+    return;
   }
+  
+  Show(ui::SHOW_STATE_NORMAL, gfx::Rect());
 }

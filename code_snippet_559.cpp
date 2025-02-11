@@ -1,27 +1,28 @@
-void ExtensionInstallPrompt::ConfirmReEnable(Delegate* delegate, const Extension* extension) {
-  DCHECK(ui_loop_ == base::MessageLoop::current());
-  if (!profile_.empty() &&!base::StringPrintf("%s", profile_.c_str()).empty()) {
-    extension_ = extension;
-    delegate_ = delegate;
-    bool is_remote_install = false; // Initialize is_remote_install to false
-    if (profile_ && extensions::ExtensionPrefs::Get(profile_)->HasDisableReason(extension->id(), extensions::Extension::DISABLE_REMOTE_INSTALL)) {
-      is_remote_install = true;
-    }
-    PromptType type = UNSET_PROMPT_TYPE;
-    if (is_remote_install) {
-      type = REMOTE_INSTALL_PROMPT;
-    } else {
-      type = RE_ENABLE_PROMPT;
-    }
-    prompt_ = new Prompt(type);
+static void stop_command_port(struct usb_serial *serial)
+{
+	struct usb_serial_port *command_port;
+	struct whiteheat_command_private *command_info;
 
-    if (image_data_.size() > 0 && IsAllowedImageFormat(image_data_)) {
-      // Load the image
-    } else {
-      // Handle the error
-    }
-  } else {
-    // Invalid profile, handle the error
-    return;
-  }
+	if (!serial || !serial->port || COMMAND_PORT >= serial->num_ports) {
+		pr_debug("stop_command_port: Invalid serial or port\n");
+		return;
+	}
+
+	command_port = serial->port[COMMAND_PORT];
+	if (!command_port) {
+		pr_debug("stop_command_port: Invalid command_port\n");
+		return;
+	}
+
+	command_info = usb_get_serial_port_data(command_port);
+	if (!command_info) {
+		pr_debug("stop_command_port: Invalid command_info\n");
+		return;
+	}
+
+	mutex_lock(&command_info->mutex);
+	command_info->port_running--;
+	if (!command_info->port_running)
+		usb_kill_urb(command_port->read_urb);
+	mutex_unlock(&command_info->mutex);
 }

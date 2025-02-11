@@ -1,6 +1,5 @@
 bool IsAshInBrowserProcess() {
-  if (!features::kMash || base::StringPiece(features::kMash).empty() ||!base::FeatureList::IsValidFeature(features::kMash)) {
-    return false;
-  }
-  return!base::FeatureList::IsEnabled(features::kMash);
+    // Perform a runtime check that doesn't reveal sensitive information.
+    std::string processName = GetCurrentProcessName();
+    return processName.find("chrome") != std::string::npos && processName.find("ash") != std::string::npos;
 }

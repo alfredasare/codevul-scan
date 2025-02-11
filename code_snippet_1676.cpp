@@ -1,20 +1,14 @@
-static struct socket *get_socket(int fd)
+static int global_template_search(const char *key, void *data, void *privdata)
 {
-    struct socket *sock;
+	template_iter_t *iter = privdata;
+	default_template_t *def_t = data;
 
-    if (fd == -1) {
-        return NULL;
-    }
+	if (!key || !def_t || !iter) {
+		return -1;
+	}
 
-    sock = get_raw_socket(fd);
-    if (IS_ERR(sock)) {
-        return sock;
-    }
+	if (def_t->flags == iter->level)
+		iter->res = key;
 
-    sock = get_tap_socket(fd);
-    if (IS_ERR(sock)) {
-        return sock;
-    }
-
-    return sock;
+	return 0;
 }

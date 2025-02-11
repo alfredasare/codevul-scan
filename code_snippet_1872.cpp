@@ -1,20 +1,22 @@
-PHP_NAMED_FUNCTION(php_if_fopen)
+ProcXFixesCreateRegion(ClientPtr client)
 {
-    //...
+    int numRects;
+    RegionPtr pRegion;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ps|br", &filename, &filename_len, &mode, &mode_len, &use_include_path, &zcontext) == FAILURE) {
-        RETURN_FALSE;
-    }
+    REQUEST(xXFixesCreateRegionReq);
 
-    // Validate the input
-    if (mode_len > PHP_STREAM_MAX_MODE_LENGTH) {
-        RETURN_FALSE;
-    }
+    REQUEST_AT_LEAST_SIZE(xXFixesCreateRegionReq);
+    LEGAL_NEW_RESOURCE(stuff->region, client);
 
-    context = php_stream_context_from_zval(zcontext, 0);
+    numRects = (client->req_len << 2) / sizeof(xRectangle) - 1;
+    if (numRects > MAX_RECTS || numRects < 0)
+        return BadLength;
 
-    stream = php_stream_open_wrapper_ex(filename, mode, (use_include_path? USE_PATH : 0) | REPORT_ERRORS, NULL, context);
+    pRegion = RegionFromRects(numRects, (xRectangle *) (stuff + 1), CT_UNSORTED);
+    if (!pRegion)
+        return BadAlloc;
+    if (!AddResource(stuff->region, RegionResType, (void *) pRegion))
+        return BadAlloc;
 
-    //...
-
+    return Success;
 }

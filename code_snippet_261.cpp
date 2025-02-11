@@ -1,13 +1,26 @@
-static ssize_t hash_sendpage(struct socket *sock, struct page *page,
-			     int offset, size_t size, int flags)
-{
-    //...
-
-    err = af_alg_wait_for_completion(err, &ctx->completion);
-    if (err) {
-        printk(KERN_ERR "hash_sendpage: Error %d occurred\n", err);
-        goto unlock;
-    }
-
-    //...
+size_t GLES2Util::GLTargetToFaceIndex(uint32_t target) {
+if (target < GL_TEXTURE_2D || target > GL_TEXTURE_CUBE_MAP_NEGATIVE_Z) return 0;
+switch (target) {
+case GL_TEXTURE_2D:
+case GL_TEXTURE_EXTERNAL_OES:
+case GL_TEXTURE_RECTANGLE_ARB:
+case GL_TEXTURE_3D:
+case GL_TEXTURE_2D_ARRAY:
+return 0;
+case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+return 1;
+case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+return 2;
+case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+return 3;
+case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+return 4;
+case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+return 5;
+case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+return 6;
+default:
+NOTREACHED();
+return 0;
+}
 }

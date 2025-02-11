@@ -1,28 +1,31 @@
-bool BitReaderCore::ReadBitsInternal(int num_bits, uint64_t* out) {
-  DCHECK_GE(num_bits, 0);
+static void rxrpc\_rxk5\_free(struct rxk5\_key *rxk5)
+{
+	int loop;
 
-  if (num_bits == 0) {
-    *out = 0;
-    return true;
-  }
+	rxrpc\_free\_krb5\_principal(&rxk5->client);
+	rxrpc\_free\_krb5\_principal(&rxk5->server);
+	rxrpc\_free\_krb5\_tagged(&rxk5->session);
 
-  if (num_bits > nbits_ &&!Refill(num_bits)) {
-     nbits_ = 0;
-     reg_ = 0;
-     return false; // Return a generic error message
-  }
+	if (rxk5->addresses) {
+		for (loop = rxk5->n\_addresses - 1; loop >= 0; ) {
+			if (loop >= INT_MAX - 1)
+				break;
+			rxrpc\_free\_krb5\_tagged(&rxk5->addresses[loop]);
+			loop--;
+		}
+		kfree(rxk5->addresses);
+	}
+	if (rxk5->authdata) {
+		for (loop = rxk5->n\_authdata - 1; loop >= 0; ) {
+			if (loop >= INT_MAX - 1)
+				break;
+			rxrpc\_free\_krb5\_tagged(&rxk5->authdata[loop]);
+			loop--;
+		}
+		kfree(rxk5->authdata);
+	}
 
-  bits_read_ += num_bits;
-
-  if (num_bits == kRegWidthInBits) {
-    *out = reg_;
-    reg_ = 0;
-    nbits_ = 0;
-    return true;
-  }
-
-  *out = reg_ >> (kRegWidthInBits - num_bits);
-  reg_ <<= num_bits;
-  nbits_ -= num_bits;
-  return true;
+	kfree(rxk5->ticket);
+	kfree(rxk5->ticket2);
+	kfree(rxk5);
 }

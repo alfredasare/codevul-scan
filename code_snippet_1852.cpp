@@ -1,33 +1,23 @@
-enum ovl_path_type ovl_path_type(struct dentry *dentry)
-{
-    struct ovl_entry *oe = dentry->d_fsdata;
-    size_t upper_len, lower_len;
+c++
+void RestoreForeignSession(
+    std::vector<const SessionWindow*>::const_iterator begin,
+    std::vector<const SessionWindow*>::const_iterator end) {
+  StartTabCreation();
+  for (std::vector<const SessionWindow*>::const_iterator i = begin;
+       i != end; ++i) {
+    Browser* browser = CreateRestoredBrowser(
+        static_cast<Browser::Type>((*i)->type),
+        (*i)->bounds,
+        (*i)->show_state);
 
-    if (oe->__upperdentry) {
-        upper_len = strlen(oe->__upperdentry->d_name);
-        if (oe->lowerdentry) {
-            lower_len = strlen(oe->lowerdentry->d_name);
-            if (S_ISDIR(dentry->d_inode->i_mode)) {
-                if (upper_len + lower_len + 1 <= PATH_MAX) {
-                    return OVL_PATH_MERGE;
-                } else {
-                    return OVL_PATH_ERROR;
-                }
-            } else {
-                if (upper_len <= PATH_MAX) {
-                    return OVL_PATH_UPPER;
-                } else {
-                    return OVL_PATH_ERROR;
-                }
-            }
-        } else {
-            if (upper_len <= PATH_MAX) {
-                return OVL_PATH_UPPER;
-            } else {
-                return OVL_PATH_ERROR;
-            }
-        }
-    } else {
-        return OVL_PATH_LOWER;
-    }
+    const int initial_tab_count = browser->tab_count();
+    int selected_tab_index = std::min((*i)->selected_tab_index, initial_tab_count - 1);
+    RestoreTabsToBrowser(*(*i), browser, selected_tab_index);
+    ShowBrowser(browser, initial_tab_count, selected_tab_index);
+    tab_loader_->TabIsLoading(
+        &browser->GetSelectedWebContents()->GetController());
+    NotifySessionServiceOfRestoredTabs(browser, initial_tab_count);
+  }
+
+  FinishedTabCreation(true, true);
 }

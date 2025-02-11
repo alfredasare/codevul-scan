@@ -1,17 +1,12 @@
-void smp_proc_master_id(tSMP_CB* p_cb, tSMP_INT_DATA* p_data) {
-   ...
-    STREAM_TO_UINT16_safe(&le_key.ediv, p); // Use safe integer arithmetic function
-   ...
-}
+static UPNP_INLINE void glob_alias_init(void)
+{
+	struct xml_alias_t *alias = &gAliasDoc;
 
-// Define the safe integer arithmetic function
-uint16_t STREAM_TO_UINT16_safe(uint16_t* dst, uint8_t* src) {
-    uint16_t result = 0;
-    int16_t shift = 0;
-    while (*src!= 0 && shift < 16) {
-        result |= (*src & 0x1) << shift;
-        src++;
-        shift++;
-    }
-    return result;
+	membuffer_init(&alias->doc);
+	membuffer_init(&alias->name);
+	alias->ct = NULL;
+	alias->last_modified = 0;
+
+	// Fix for CWE-284 and CVE-2016-6255
+	memset(alias, 0, sizeof(struct xml_alias_t));
 }

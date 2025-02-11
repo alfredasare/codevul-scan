@@ -1,9 +1,17 @@
-BGD_DECLARE(void) gdImageFilledEllipse (gdImagePtr im, int mx, int my, int w, int h, int c)
+InitClient(ClientPtr client, int i, void *ospriv)
 {
-    if (mx < 0 || mx >= im->sx || my < 0 || my >= im->sy ||
-        w < 0 || w > im->sx || h < 0 || h > im->sy) {
+    if (i < 0 || i >= MAX_CLIENTS) { // Add input validation to limit the range of 'i'
         return;
     }
-    // Rest of the code remains the same
-    //...
+    client->index = i;
+    xorg_list_init(&client->ready);
+    xorg_list_init(&client->output_pending);
+    client->clientAsMask = ((Mask) i) << CLIENTOFFSET;
+    client->closeDownMode = i ? DestroyAll : RetainPermanent;
+    client->requestVector = InitialVector;
+    client->osPrivate = ospriv;
+    QueryMinMaxKeyCodes(&client->minKC, &client->maxKC);
+    client->smart_start_tick = SmartScheduleTime;
+    client->smart_stop_tick = SmartScheduleTime;
+    client->clientIds = NULL;
 }

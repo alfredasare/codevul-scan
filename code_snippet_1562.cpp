@@ -1,13 +1,9 @@
-static int rb_head_page_replace(struct buffer_page *old, struct buffer_page *new)
+parse\_error\_msg(apr\_array\_header\_t \*tokens, apr\_size\_t index)
 {
-    unsigned long *ptr = (unsigned long *)&old->list.prev->next;
-    unsigned long val;
-    unsigned long ret;
+if (index >= tokens->nelts) {
+return "end of string";
+}
 
-    val = (*ptr >> 32) & RB_FLAG_MASK;
-    val |= RB_PAGE_HEAD;
-
-    ret = cmpxchg(ptr, val, (unsigned long)&new->list);
-
-    return ret == val;
+const Token *token = &APR\_ARRAY\_IDX(tokens, index, Token);
+return apr\_psprintf(tokens->pool, "\"%s\" at position %lu", token->str, token->offset);
 }

@@ -1,13 +1,21 @@
+#include <stdint.h>
+#if HAVE_ARC4RANDOM_UNIFORM
+#include <stdlib.h>
+
 get_random()
 {
-  long int l;
-  prng_bytes ((unsigned char *)&l, sizeof(l));
-  if (l < 0) {
-    l = hash_function(l);
-  }
-  return l;
+  return arc4random_uniform(LLONG_MAX);
 }
 
-int hash_function(long int x) {
-  return (x ^ (x >> 16)) & 0xFFFFFFFF;
+#else
+// Fallback implementation using OpenSSL
+#include <openssl/rand.h>
+
+get_random()
+{
+  uint64_t r;
+  RAND_bytes((unsigned char *)&r, sizeof(r));
+  if (r > 0) return r;
+  else return -r;
 }
+#endif

@@ -1,9 +1,14 @@
-static int emulate_nm(struct x86_emulate_ctxt *ctxt)
+gst_asf_demux_check_header (GstASFDemux * demux)
 {
-  int nm_vector = NM_VECTOR;
-  
-  int sanitized_nm_vector = 0;
-  sanitized_nm_vector = nm_vector;
-  
-  return emulate_exception(ctxt, sanitized_nm_vector, 0, false);
+  AsfObject obj;
+  guint8 *cdata = (guint8 *) gst_adapter_map (demux->adapter,
+      MIN (ASF_OBJECT_HEADER_SIZE, demux->adapter->size));
+  if (cdata == NULL)                   /* need more data */
+    return GST_ASF_DEMUX_CHECK_HEADER_NEED_DATA;
+
+  if (asf_demux_peek_object (demux, cdata, MIN (ASF_OBJECT_HEADER_SIZE, demux->adapter->size), &obj, FALSE
+          && obj.id == ASF_OBJ_HEADER))
+    return GST_ASF_DEMUX_CHECK_HEADER_YES;
+
+  return GST_ASF_DEMUX_CHECK_HEADER_NO;
 }

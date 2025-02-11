@@ -1,14 +1,31 @@
-u16 channel_to_chanspec(struct brcmu_d11inf *d11inf, struct ieee80211_channel *ch) {
-    struct brcmu_chan ch_inf;
+bool jsvMathsOpTypeEqual(JsVar \*a, JsVar \*b) {
+bool eql = (a==0) == (b==0);
+if (a && b) {
+int64_t intA, intB;
+if (jsvIsInt(a)) {
+intA = jsvIntValue(a);
+} else if (jsvIsFloat(a)) {
+intA = (int64_t)jsvFloatValue(a);
+} else {
+intA = 0;
+}
 
-    // Validate and sanitize the center_freq value
-    if (ch->center_freq < 2402000000 || ch->center_freq > 2484000000) {
-        return 0;
-    }
+if (jsvIsInt(b)) {
+intB = jsvIntValue(b);
+} else if (jsvIsFloat(b)) {
+intB = (int64_t)jsvFloatValue(b);
+} else {
+intB = 0;
+}
 
-    ch_inf.chnum = ieee80211_frequency_to_channel(ch->center_freq);
-    ch_inf.bw = BRCMU_CHAN_BW_20;
-    d11inf->encchspec(&ch_inf);
-
-    return ch_inf.chspec;
+eql = (intA == intB);
+}
+if (eql) {
+JsVar \*contents = jsvMathsOp(a,b, LEX\_EQUAL);
+if (!jsvGetBool(contents)) eql = false;
+jsvUnLock(contents);
+} else {
+assert(!(jsvIsString(a) && jsvIsString(b) && jsvIsBasicVarEqual(a,b)));
+}
+return eql;
 }

@@ -1,16 +1,21 @@
-void BrowserCommandController::UpdateOpenFileState(CommandUpdater* command_updater) {
-  bool enabled = true;
-  PrefService* local_state = g_browser_process->local_state();
-  if (local_state) {
-    bool validPref = local_state->GetBoolean(prefs::kAllowFileSelectionDialogs);
-    if (!validPref ||!IsAllowedValue(validPref)) {
-      enabled = false; // Default to disabled if preference is invalid
-    }
-  }
-  command_updater->UpdateCommandEnabled(IDC_OPEN_FILE, enabled);
-}
+getu16(int swap, uint16_t value)
+{
+	if (value < UINT16_MAX) {
+		union {
+			uint16_t ui;
+			char c[2];
+		} retval, tmpval;
 
-bool IsAllowedValue(bool prefValue) {
-  static const std::set<bool> allowedValues = {true, false};
-  return allowedValues.count(prefValue);
+		if (swap) {
+			tmpval.ui = value;
+
+			retval.c[0] = tmpval.c[1];
+			retval.c[1] = tmpval.c[0];
+
+			return retval.ui;
+		} else
+			return value;
+	}
+	// Handle error case
+	return 0; // or any other appropriate error value
 }

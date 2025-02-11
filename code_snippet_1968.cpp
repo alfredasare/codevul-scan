@@ -1,21 +1,7 @@
-xmlNodePtr get_node_with_attribute_ex(xmlNodePtr node, char *name, char *name_ns, char *attribute, char *value, char *attr_ns)
+static unsigned int snd_timer_user_poll(struct file *file, poll_table * wait)
 {
-    xmlAttrPtr attr;
+        unsigned int mask;
+        struct snd_timer_user *tu;
 
-    while (node!= NULL) {
-        if (name!= NULL) {
-            node = get_node_ex(node, name, name_ns);
-            if (node == NULL) {
-                // Handle error without exposing sensitive information
-                return NULL;
-            }
-        }
-
-        attr = get_attribute_ex(node->properties, attribute, attr_ns);
-        if (attr!= NULL && strcmp((char*)attr->children->content, value) == 0) {
-            return node;
-        }
-        node = node->next;
-    }
-    return NULL;
-}
+        if (!file || !(tu = file->private_data) || !tu->qused)
+                return

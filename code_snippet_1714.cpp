@@ -1,9 +1,14 @@
-void CGaiaCredentialBase::DisplayErrorInUI(LONG status,
-                                          LONG substatus,
-                                          BSTR status_text) {
-  if (status!= STATUS_SUCCESS) {
-    if (substatus >= 0 && substatus < events_->GetFieldCount(this, FID_DESCRIPTION)) {
-      events_->SetFieldString(this, FID_DESCRIPTION, status_text);
-    }
-  }
+u64 ring_buffer_time_stamp(struct ring_buffer *buffer, int cpu)
+{
+	u64 time;
+	int error;
+
+	preempt_disable_notrace();
+	error = rb_time_stamp(buffer);
+	if (!error) {
+		preempt_enable_no_resched_notrace();
+		return time;
+	}
+	preempt_enable_notrace();
+	return 0; /* or an appropriate error value */
 }

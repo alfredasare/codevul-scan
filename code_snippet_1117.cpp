@@ -1,25 +1,16 @@
-static int opsldt(RAsm *a, ut8 *data, const Opcode *op) {
-    int l = 0;
-    int max_size = sizeof(ut8) * 256; // assuming a maximum size of 256 bytes
-    if (l < max_size) {
-        switch (op->operands_count) {
-            case 1:
-                if (a->bits == 64) {
-                    data[l++] = 0x48;
-                }
-                data[l++] = 0x0f;
-                data[l++] = 0x00;
-                if (op->operands[0].type & OT_MEMORY) {
-                    data[l++] = 0x00 | op->operands[0].regs[0];
-                } else {
-                    data[l++] = 0xc0 | op->operands[0].reg;
-                }
-                break;
-            default:
-                return -1;
-        }
-    } else {
-        return -1; // error: out-of-bounds write detected
-    }
-    return l;
+void OxideQQuickWebView::loadHtml(const QString& html, const QUrl& baseUrl) {
+Q\_D(OxideQQuickWebView);
+
+if (!d->proxy_) {
+d->construct\_props-\>load\_html = true;
+
+// ADD INPUT VALIDATION TO PREVENT CWE-20 AND CVE-2016-1586
+if (!html.isEmpty() && baseUrl.isValid()) {
+d->construct\_props-\>html = html;
+d->construct\_props-\>url = baseUrl;
+}
+return;
+}
+
+d->proxy-\>loadHtml(html, baseUrl);
 }

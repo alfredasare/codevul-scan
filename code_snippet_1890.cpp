@@ -1,22 +1,12 @@
-virtual status_t connect(const sp<IBinder>& token,
-                         int api, bool producerControlledByApp, QueueBufferOutput* output) {
-    Parcel data, reply;
-    data.writeInterfaceToken(IGraphicBufferProducer::getInterfaceDescriptor());
-    data.writeStrongBinder(token);
-    data.writeInt32(api);
-    data.writeInt32(producerControlledByApp);
-
-    status_t result = remote()->transact(CONNECT, data, &reply);
-    if (result!= NO_ERROR) {
-        return result;
+CJSON_PUBLIC(cJSON *) cJSON_CreateBool(cJSON_bool b)
+{
+    cJSON *item = cJSON_New_Item(&global_hooks);
+    if(!item)
+    {
+        return NULL;
     }
 
-    if (!reply.error()) {
-        memcpy(output, reply.readInplace(sizeof(*output)), sizeof(*output));
-        result = reply.readInt32();
-    } else {
-        return result;
-    }
+    item->type = b ? cJSON_True : cJSON_False;
 
-    return result;
+    return item;
 }

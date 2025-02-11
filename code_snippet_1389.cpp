@@ -1,15 +1,19 @@
-void brcmf_do_escan(struct brcmf_if *ifp, struct cfg80211_scan_request *request)
+static int lua_translate_name_harness_first(request_rec *r)
 {
-    //... (rest of the function remains the same)
+    int fd;
+    char filename[MAX_FILENAME_LENGTH];
 
-    char *path = ifp->drvr->config->escan_info.escan_buf;
-    size_t path_len = strlen(path);
+    ap_make_filename(r->pool, filename, r->filename, NULL);
 
-    // Validate the path and restrict it to a allowed directory
-    if (path_len > 0 && path[path_len - 1] == '/') {
-        // Prevent path traversal attack by removing trailing slash
-        path[path_len - 1] = '\0';
+    fd = open(filename, O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+
+    if (fd == -1 && errno != EEXIST) {
+        return HTTP_INTERNAL_SERVER_ERROR;
+    } else {
+        if (fd != -1) {
+            close(fd);
+        }
+
+        return lua_request_rec_hook_harness(r, "translate_name", AP_LUA_HOOK_FIRST);
     }
-
-    //... (rest of the function remains the same)
 }

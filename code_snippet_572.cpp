@@ -1,77 +1,44 @@
-dissect_PRINTER_INFO_1(tvbuff_t *tvb, int offset,
-					  packet_info *pinfo, proto_tree *tree,
-					  dcerpc_info *di, guint8 *drep)
+int kvm_iommu_map_guest(struct kvm *kvm)
 {
-	guint32 length;
-	gboolean err = FALSE;
+	int r;
+	struct iommu_domain *domain;
 
-	offset = dissect_ndr_uint32(tvb, offset, pinfo, tree, di, drep,
-								  hf_printer_flags, &length);
-	if (offset == -1) {
-		err = TRUE;
+	if (!iommu_present(&pci_bus_type)) {
+		printk(KERN_ERR "%s: iommu not found\n", __func__);
+		return -ENODEV;
 	}
 
-	if (!err) {
-		offset += length;
+	mutex_lock(&kvm->slots_lock);
+
+	domain = iommu_domain_alloc(&pci_bus_type);
+	if (!domain) {
+		r = -ENOMEM;
+		goto out_unlock;
 	}
 
-	err = FALSE;
+	kvm->arch.iommu_domain = domain;
 
-	offset = tvb_ensure_remaining_length(tvb, offset);
-	if (!offset) {
-		err = TRUE;
+	if (!allow_unsafe_assigned_interrupts &&
+	    !iommu_capable(&pci_bus_type, IOMMU_CAP_INTR_REMAP)) {
+		printk(KERN_WARNING "%s: No interrupt remapping support,"
+		       " disallowing device assignment."
+		       " Re-enble with \"allow_unsafe_assigned_interrupts=1\""
+		       " module option.\n", __func__);
+		iommu_domain_free(kvm->arch.iommu_domain);
+		kvm->arch.iommu_domain = NULL;
+		r = -EPERM;
+		goto out_unlock;
 	}
 
-	if (!err) {
-		offset = dissect_spoolss_relstr(tvb, offset, pinfo, tree, di, drep,
-									   hf_printerdesc, 0, NULL);
-		if (offset == -1) {
-			err = TRUE;
-		}
-	}
+	r = kvm_iommu_map_memslots(kvm);
+	if (r)
+		kvm_iommu_unmap_memslots(kvm);
+	else
+		domain = kvm->arch.iommu_domain;
 
-	if (!err) {
-		offset += tvb_get_length(tvb, offset);
-	}
-
-	err = FALSE;
-
-	offset = tvb_ensure_remaining_length(tvb, offset);
-	if (!offset) {
-		err = TRUE;
-	}
-
-	if (!err) {
-		offset = dissect_spoolss_relstr(tvb, offset, pinfo, tree, di, drep,
-									   hf_printername, 0, NULL);
-		if (offset == -1) {
-			err = TRUE;
-		}
-	}
-
-	if (!err) {
-		offset += tvb_get_length(tvb, offset);
-	}
-
-	err = FALSE;
-
-	offset = tvb_ensure_remaining_length(tvb, offset);
-	if (!offset) {
-		err = TRUE;
-	}
-
-	if (!err) {
-		offset = dissect_spoolss_relstr(tvb, offset, pinfo, tree, di, drep,
-									   hf_printercomment, 0, NULL);
-		if (offset == -1) {
-			err = TRUE;
-		}
-	}
-
-	if (err) {
-		warning("Error parsing PRINTER_INFO_1");
-		return -1;
-	}
-
-	return offset;
+out_unlock:
+	mutex_unlock(&kvm->slots_lock);
+	if (!r && domain)
+		iommu_domain_unref(domain);
+	return r;
 }

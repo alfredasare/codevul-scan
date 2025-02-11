@@ -1,8 +1,6 @@
-static uint8_t* avrc_get_data_ptr(BT_HDR* p_pkt) {
-    size_t packet_size = sizeof(*p_pkt); 
-    if (p_pkt->offset > packet_size) {
-        printf("Invalid offset: %u\n");
-        return NULL;
-    }
-    return (uint8_t*)(p_pkt + 1) + p_pkt->offset;
+void SVGStyleElement::setDisabled(bool set_disabled) {
+if (CSSStyleSheet* style\_sheet = sheet()) {
+style\_sheet->setDisabled(set\_disabled);
+style\_sheet = nullptr;
+}
 }

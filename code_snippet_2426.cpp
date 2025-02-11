@@ -1,17 +1,10 @@
-SampleTable::SampleTable(const sp<DataSource> &source) {
-    if (!source) {
-        throw std::invalid_argument("Invalid DataSource");
-    }
-
-    if (mChunkOffsetOffset < 0 || mChunkOffsetType < 0 || mNumChunkOffsets < 0 ||
-        mSampleToChunkOffset < 0 || mNumSampleToChunkOffsets < 0 ||
-        mSampleSizeOffset < 0 || mSampleSizeFieldSize < 0 ||
-        mDefaultSampleSize < 0 || mNumSampleSizes < 0 ||
-        mTimeToSampleCount < 0 || !mTimeToSample || !mSampleTimeEntries || !mCompositionTimeDeltaEntries ||
-        mNumCompositionTimeDeltaEntries < 0 ||
-        mSyncSampleOffset < 0 || mNumSyncSamples < 0 || mLastSyncSampleIndex < 0) {
-        throw std::invalid_argument("Invalid input parameters");
-    }
-
-    mSampleIterator = new SampleIterator(this);
+void BasePrefsChange::Observe(int type,
+const content::NotificationSource& source,
+const content::NotificationDetails& details) {
+if (type == chrome::NOTIFICATION_PREF_CHANGED) {
+const std::string* pref\_name = content::Details<std::string>(details).ptr();
+if (pref\_name && pref\_observer-\>IsObserved(\*pref\_name)) {
+ProtectorServiceFactory::GetForProfile(profile())->DismissChange(this);
+}
+}
 }

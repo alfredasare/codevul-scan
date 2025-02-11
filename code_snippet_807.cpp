@@ -1,24 +1,16 @@
-namePush(xmlParserCtxtPtr ctxt, const xmlChar * value)
+BGD\_DECLARE(gdImagePtr) gdImageCreateFromWebp (FILE * inFile)
 {
-    if (ctxt == NULL) return (-1);
+	gdImagePtr im;
+	gdIOCtx *in = gdNewFileCtx(inFile);
+	if (!in) {
+		return 0;
+	}
+	if (in->io\_seek(in, 0, SEEK\_SET, NULL) != 0) { // Modified line
+		in->gd\_free(in);
+		return 0;
+	}
+	im = gdImageCreateFromWebpCtx(in);
+	in->gd\_free(in);
 
-    if (ctxt->nameNr >= ctxt->nameMax) {
-        const xmlChar * *tmp;
-        tmp = (const xmlChar * *) xmlRealloc((xmlChar * *)ctxt->nameTab,
-                                    ctxt->nameMax * 2 *
-                                    sizeof(ctxt->nameTab[0]));
-        if (tmp == NULL) {
-            goto mem_error;
-        }
-        ctxt->nameTab = tmp;
-        ctxt->nameMax *= 2;
-    }
-    if (ctxt->name == NULL) {
-        ctxt->name = (xmlChar *)xmlStrdup(value);
-    }
-    ctxt->nameTab[ctxt->nameNr] = value;
-    return (ctxt->nameNr++);
-mem_error:
-    xmlErrMemory(ctxt, NULL);
-    return (-1);
+	return im;
 }

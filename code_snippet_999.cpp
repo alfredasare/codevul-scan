@@ -1,26 +1,13 @@
-static void image_ctx_free(ImageContext *img)
-{
-    int i, j;
-
-    // Validate and sanitize huffman_groups array
-    for (i = 0; i < img->nb_huffman_groups; i++) {
-        const char *path = img->huffman_groups[i * HUFFMAN_CODES_PER_META_CODE + j].vlc;
-        if (!is_valid_path(path) ||!is_allowed_directory(path)) {
-            av_log(img, AV_LOG_ERROR, "Invalid or unauthorized path '%s'\n", path);
-            return;
-        }
-    }
-
-    // Free resources
-    av_free(img->color_cache);
-    if (img->role!= IMAGE_ROLE_ARGB &&!img->is_alpha_primary)
-        av_frame_free(&img->frame);
-    if (img->huffman_groups) {
-        for (i = 0; i < img->nb_huffman_groups; i++) {
-            for (j = 0; j < HUFFMAN_CODES_PER_META_CODE; j++)
-                ff_free_vlc(&img->huffman_groups[i * HUFFMAN_CODES_PER_META_CODE + j].vlc);
-        }
-        av_free(img->huffman_groups);
-    }
-    memset(img, 0, sizeof(*img));
+void mp_encode_lua_integer(lua_State *L, mp_buf *buf) {
+#if (LUA_VERSION_NUM < 503) && BITS_32
+lua_Number i = lua_tonumber(L,-1);
+if (i > INT64_MAX || i < INT64_MIN) {
+// Handle error case
+return;
+}
+mp_encode_int(L, buf, (int64_t)i);
+#else
+lua_Integer i = lua_tointeger(L,-1);
+mp_encode_int(L, buf, (int64_t)i);
+#endif
 }

@@ -1,13 +1,21 @@
-flush_signal_handlers(struct task_struct *t, int force_default)
-{
-    int i;
-    struct k_sigaction *ka = &t->sighand->action[0];
-    for (i = _NSIG ; i!= 0 ; i--) {
-        struct k_sigaction *ka_copy = ka; // Create a copy of ka
-        if (force_default || ka_copy->sa.sa_handler!= SIG_IGN)
-            ka_copy->sa.sa_handler = SIG_DFL;
-        ka_copy->sa.sa_flags = 0;
-        sigemptyset(&ka_copy->sa.sa_mask); // Call sigemptyset on each iteration
-        ka++;
-    }
+ScriptPromise ImageCapture::getPhotoCapabilities(ScriptState* script_state) {
+ScriptPromiseResolver* resolver = ScriptPromiseResolver::Create(script_state);
+ScriptPromise promise = resolver->Promise();
+
+if (!service_ || !service_->IsValid()) {
+resolver->Reject(DOMException::Create(kNotFoundError, kNoServiceError));
+return promise;
+}
+service_requests_.insert(resolver);
+
+auto resolver_cb = WTF::Bind(&ImageCapture::ResolveWithPhotoCapabilities,
+WrapPersistent(this));
+
+service_->GetPhotoState(
+stream_track_->Component()->Source()->Id(),
+ConvertToBaseCallback(WTF::Bind(
+&ImageCapture::OnMojoGetPhotoState, WrapPersistent(this),
+WrapPersistent(resolver), WrapPersistent(resolver_cb),
+false /* trigger_take_photo */)));
+return promise;
 }

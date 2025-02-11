@@ -1,19 +1,22 @@
-void ssl2_clear(SSL *s)
+static struct Curl_easy* gethandleathead(struct curl_llist *pipeline)
 {
-    SSL2_STATE *s2;
-    unsigned char *rbuf, *wbuf;
+  if (!pipeline) {
+    return NULL;
+  }
 
-    s2 = s->s2;
+#ifdef DEBUGBUILD
+  {
+    struct curl_llist_element *p = pipeline->head;
+    while(p) {
+      struct Curl_easy *e = p->ptr;
+      DEBUGASSERT(GOOD_EASY_HANDLE(e));
+      p = p->next;
+    }
+  }
+#endif
+  if(pipeline->head) {
+    return (struct Curl_easy *) pipeline->head->ptr;
+  }
 
-    rbuf = s2->rbuf;
-    wbuf = s2->wbuf;
-
-    OPENSSL_zeroize(s2, sizeof *s2);
-
-    s2->rbuf = rbuf;
-    s2->wbuf = wbuf;
-    s2->clear_text = 1;
-    s->packet = s2->rbuf;
-    s->version = SSL2_VERSION;
-    s->packet_length = 0;
+  return NULL;
 }

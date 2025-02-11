@@ -1,15 +1,20 @@
-void DevToolsWindow::OpenInNewTab(const std::string& url) {
-  // Encrypt the URL using a secure storage mechanism
-  crypto::AESCrypt::Encrypt(base::SecureValue(url), url);
+static int uas_slave_configure(struct scsi_device *sdev)
+{
+	struct uas_dev_info *devinfo = sdev->hostdata;
+	int new_qdepth = devinfo->qdepth - 2;
 
-  // Store the encrypted URL in memory
-  content::OpenURLParams params(
-      GURL(""), content::Referrer(), NEW_FOREGROUND_TAB,
-      content::PAGE_TRANSITION_LINK, false);
-  content::WebContents* inspected_web_contents = GetInspectedWebContents();
-  if (inspected_web_contents) {
-    inspected_web_contents->OpenURL(params);
-  } else {
-    //...
-  }
+	if (new_qdepth < 0)
+		new_qdepth = 0;
+	else if (new_qdepth > sdev->queue_depth_max)
+		new_qdepth = sdev->queue_depth_max;
+
+	if (devinfo->flags & US_FL_NO_REPORT_OPCODES)
+		sdev->no_report_opcodes = 1;
+
+	/* A few buggy USB-ATA bridges don't understand FUA */
+	if (devinfo->flags & US_FL_BROKEN_FUA)
+		sdev->broken_fua = 1;
+
+	scsi_change_queue_depth(sdev, new_qdepth);
+	return 0;
 }

@@ -1,17 +1,12 @@
-void RenderFrameImpl::OnCut() {
-  base::AutoReset<bool> handling_select_range(&handling_select_range_, true);
-  std::string command = WebString::fromUTF8("Cut");
-  command = SanitizeCommandString(command);
-  frame_->executeCommand(command, GetFocusedElement());
-}
-
-std::string SanitizeCommandString(const std::string& input) {
-  static const std::set<std::string> allowed_commands = {"Cut", "Copy", "Paste"};
-  std::string sanitized_command;
-  for (char c : input) {
-    if (allowed_commands.find(std::string(1, c))!= allowed_commands.end()) {
-      sanitized_command += c;
-    }
-  }
-  return sanitized_command;
+int compat_get_timespec64(struct timespec64 __user *ts, const void __user *uts)
+{
+	if (COMPAT_USE_64BIT_TIME) {
+		struct timespec64 kts;
+		if (copy_from_user(&kts, uts, sizeof(kts)))
+			return -EFAULT;
+		*ts = kts;
+		return 0;
+	} else {
+		return __compat_get_timespec64(ts, uts);
+	}
 }

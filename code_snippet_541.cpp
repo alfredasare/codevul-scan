@@ -1,25 +1,18 @@
-static const wbxml_decoding *get_wbxml_decoding_from_public_id (guint32 public_id)
-{
-    const wbxml_decoding *map = NULL;
-
-    DebugLog(("get_wbxml_decoding_from_public_id: public_id = %u\n", public_id));
-    if (public_id >= 2) {
-        const wbxml_integer_list *item = well_known_public_id_list;
-
-        while (item && item->public_id && item->map) {
-            if (item->public_id == public_id) {
-                map = item->map;
-                break;
-            }
-            item++;
-        }
+void SetLeftUnavailable() {
+    if (mbptr_ == nullptr) {
+        // Handle the null case appropriately, e.g., logging an error or throwing an exception.
+        return;
     }
 
-    if (map!= NULL) {
-        return map;
-    } else {
-        // Handle the error case here, e.g., return a default value or throw an exception
-        //...
-        return NULL;
+    mbptr_->left_available = 0;
+
+    if (num_planes_ > 0 && block_size_ > 0 && stride_ >= 0) {
+        for (int p = 0; p < num_planes_; p++) {
+            for (int i = -1; i < block_size_; ++i) {
+                if (i * stride_ >= 0 && i * stride_ < static_cast<int>(sizeof(data_ptr_[0]))) {
+                    data_ptr_[p][i * stride_ - 1] = 129;
+                }
+            }
+        }
     }
 }

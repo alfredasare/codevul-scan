@@ -1,21 +1,13 @@
-static void RemapIndices(const ssize_t *map, const unsigned char *source,
-  unsigned char *target)
+void CLASS hat_transform(float *temp, float *base, int st, int size, int sc)
 {
-  register ssize_t
-    i;
-
-  for (i = 0; i < MIN(16, sizeof(map) / sizeof(map[0])); i++)
-  {
-    if (map[i] >= 0 && map[i] < sizeof(source) / sizeof(source[0]))
-    {
-      if (map[i] == -1)
-        target[i] = 3;
-      else
-        target[i] = source[map[i]];
-    }
-    else
-    {
-      target[i] = 0;
-    }
-  }
+if (sc < 0 || sc >= size || st < 0 || st >= size) {
+return;
+}
+int i;
+for (i=0; i < sc; i++)
+temp[i] = 2*base[st*i] + base[st*(sc-i)] + base[st*(i+sc)];
+for (; i+sc < size; i++)
+temp[i] = 2*base[st*i] + base[st*(i-sc)] + base[st*(i+sc)];
+for (; i < size; i++)
+temp[i] = 2*base[st*i] + base[st*(i-sc)] + base[st*(2*size-2-(i+sc))];
 }

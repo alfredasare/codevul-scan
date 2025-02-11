@@ -1,7 +1,7 @@
-chunk_repack(chunk_t *chunk)
+#include <linux/udp.h> /* For UDP_PROTOCOL_NUMBER */
+
+int udp_offload_init(void)
 {
-  if (chunk->datalen && chunk->data && chunk->data != &chunk->mem[0]) {
-    memmove(chunk->mem, chunk->data, chunk->datalen);
-  }
-  chunk->data = (chunk->data) ? &chunk->mem[0] : NULL;
+    const int expected_protocol = UDP_PROTOCOL_NUMBER;
+    return inet6_add_offload(&udpv6_offload, expected_protocol);
 }

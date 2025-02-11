@@ -1,19 +1,7 @@
-get_kinfo_proc (pid_t pid, struct kinfo_proc *p)
-{
-  int mib[4];
-  size_t len;
-
-  len = 4;
-  sysctlnametomib ("kern.proc.pid", mib, &len);
-
-  len = sizeof (struct kinfo_proc);
-  mib[3] = pid;
-
-  if (sysctl (mib, 4, p, &len, NULL, 0)!= 0)
-  {
-    perror ("sysctl");
-    return -1;
+DelayScrollOffsetClampScope() {
+  DCHECK(count_ > 0 || NeedsClampList().IsEmpty());
+  if (std::numeric_limits<decltype(count_)>::max() - count_ <= 1) {
+    // Handle error case
   }
-
-  return 1;
+  count_++;
 }

@@ -1,14 +1,15 @@
-static unsigned int bt_unused_tags(struct blk_mq_bitmap_tags *bt)
+struct crypto_alg *crypto_alg_lookup(const char *name, u32 type, u32 mask)
 {
-    unsigned int i, used;
+	struct crypto_alg *alg;
 
-    for (i = 0, used = 0; i < bt->map_nr; i++) {
-        struct blk_align_bitmap *bm = &bt->map[i];
+	down_read(&crypto_alg_sem);
+	alg = __crypto_alg_lookup(name, type, mask);
+	up_read(&crypto_alg_sem);
 
-        char format_string[32];
-        snprintf(format_string, sizeof(format_string), "%%x", 0);
-        used += bitmap_weight((unsigned long *)format_string, bm->depth);
-    }
+	if (alg == NULL) {
+		pr_debug("crypto_alg_lookup: failed to find algorithm\n");
+		return NULL;
+	}
 
-    return bt->depth - used;
+	return alg;
 }

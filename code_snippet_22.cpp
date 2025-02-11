@@ -1,15 +1,18 @@
 static int pmcraid_netlink_init(void)
 {
-    int result;
+	int result;
+	struct genl_family *family = &pmcraid_event_family;
 
-    result = genl_register_family(&pmcraid_event_family);
+	result = genl_register_family(family);
 
-    if (result)
-        return result;
+	if (result)
+		goto exit_unregister_family;
 
-    if (current_uid() == 0 || cap_get_cap_net_raw_ioctl()) {
-        pmcraid_info("registered NETLINK GENERIC group: %d\n", pmcraid_event_family.id);
-    }
+	pmcraid_info("registered NETLINK GENERIC group: %d\n", family->id);
 
-    return result;
+exit_unregister_family:
+	if (result && family->id)
+		genl_unregister_family(family);
+
+	return result;
 }

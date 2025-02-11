@@ -1,19 +1,30 @@
-void RunTest(const GURL& url) {
-    // Validate the URL using a regular expression
-    if (!url_is_valid(url)) {
-        LOG(ERROR) << "Invalid URL: " << url;
-        return;
+static void print_maps(struct pid_info_t* info)
+{
+    FILE *maps;
+    size_t offset;
+    char device[10];
+    long int inode;
+    char file[PATH_MAX];
+    char safe_format[100];
+
+    snprintf(info->path, sizeof(info->path), "%s%s", info->path, "maps");
+
+    maps = fopen(info->path, "r");
+
+    if (!maps)
+        goto out;
+
+    while (fscanf(maps, "%*x-%*x %*s %zx %s %ld %s\n", &offset, device, &inode,
+            file) == 4) {
+        if (inode == 0 || !strcmp(device, "00:00"))
+            continue;
+
+        snprintf(safe_format, sizeof(safe_format), "%%-9s %%5d %%10s %%4s %%9s %%18s %%9zd %%10ld %s\n", file);
+        printf(safe_format, info->cmdline, info->pid, info->user, "mem", "???", device, offset, inode);
     }
 
-    ui_test_utils::NavigateToURL(browser(), url);
-    content::WebContents* web_contents = browser()->tab_strip_model()->GetActiveWebContents();
-    ASSERT_TRUE(web_contents);
-    EXPECT_TRUE(ExecuteWebUIResourceTest(web_contents, include_libraries_));
-}
+    fclose(maps);
 
-bool url_is_valid(const GURL& url) {
-    static const std::regex valid_url_regex(
-        R"((https?|ftp)://[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}
-         \b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)?)");
-    return std::regex_match(url.spec(), valid_url_regex);
+out:
+    info->path[info->parent_length] = '\0';
 }

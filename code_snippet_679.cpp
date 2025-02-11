@@ -1,10 +1,26 @@
-void mark_page_dirty_in_slot(struct kvm *kvm, struct kvm_memory_slot *memslot,
-			     gfn_t gfn)
-{
-	if (memslot && memslot->dirty_bitmap) {
-		unsigned long rel_gfn = gfn - memslot->base_gfn;
-		spin_lock(&memslot->dirty_bitmap_lock);
-		__set_bit_le(rel_gfn, memslot->dirty_bitmap);
-		spin_unlock(&memslot->dirty_bitmap_lock);
-	}
+class XDisplay; // Forward declaration
+
+class ScopedDisplay {
+public:
+    ScopedDisplay(XDisplay* display = nullptr) : m_display(display) {}
+    ~ScopedDisplay() { if (m_display) XCloseDisplay(m_display); }
+
+    XDisplay* get() const { return m_display; }
+    XDisplay* release() { XDisplay* temp = m_display; m_display = nullptr; return temp; }
+    void reset(XDisplay* display = nullptr) { if (m_display) XCloseDisplay(m_display); m_display = display; }
+    XDisplay& operator*() const { return *m_display; }
+    XDisplay* operator->() const { return m_display; }
+
+private:
+    XDisplay* m_display;
+};
+
+XDisplay* GetXDisplay() {
+    // Implementation details of getting X Display
+    // ...
+}
+
+bool XDisplayExists() {
+    ScopedDisplay display(GetXDisplay());
+    return (display.get() != nullptr);
 }

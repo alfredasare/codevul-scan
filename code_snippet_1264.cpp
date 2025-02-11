@@ -1,40 +1,35 @@
-SYSCALL_DEFINE3(inotify_add_watch, int, fd, const char __user *, pathname, _u32, mask)
-{
-    struct fsnotify_group *group;
-    struct inode *inode;
-    struct path path;
-    struct file *filp;
-    int ret, fput_needed;
-    unsigned flags = 0;
+void smp_proc_compare(tSMP_CB* p_cb, tSMP_INT_DATA* p_data) {
+ SMP_TRACE_DEBUG("%s", __func__);
+ // Check if the lengths match to prevent buffer over-read
+ if (p_cb->rconfirm_len != p_data->key.p_data_len) {
+ // Handle the mismatch appropriately, e.g., return an error
+ tSMP_INT_DATA smp_int_data;
+ smp_int_data.status = SMP_LENGTH_ERR;
+ p_cb->failure = SMP_LENGTH_ERR;
+ smp_sm_event(p_cb, SMP_AUTH_CMPL_EVT, &smp_int_data);
+ return;
+ }
 
-    filp = fget_light(fd, &fput_needed);
-    if (filp == NULL) {
-        ret = -EBADF;
-        goto fput_and_out;
-    }
+ if (!memcmp(p_cb->rconfirm, p_data->key.p_data, p_cb->rconfirm_len)) {
+ /* compare the max encryption key size, and save the smaller one for the
+ * link */
+ if (p_cb->peer_enc_size < p_cb->loc_enc_size)
+ p_cb->loc_enc_size = p_cb->peer_enc_size;
 
-    /* verify that this is indeed an inotify instance */
-    if (unlikely(filp->f_op!= &inotify_fops)) {
-        ret = -EINVAL;
-        goto fput_and_out;
-    }
+ if (p_cb->role == HCI_ROLE_SLAVE)
+ smp_sm_event(p_cb, SMP_RAND_EVT, NULL);
+ else {
+ /* master device always use received i/r key as keys to distribute */
+ p_cb->local_i_key = p_cb->peer_i_key;
+ p_cb->local_r_key = p_cb->peer_r_key;
 
-    if (!(mask & IN_DONT_FOLLOW))
-        flags |= LOOKUP_FOLLOW;
-    if (mask & IN_ONLYDIR)
-        flags |= LOOKUP_DIRECTORY;
+ smp_sm_event(p_cb, SMP_ENC_REQ_EVT, NULL);
+ }
 
-    ret = inotify_find_inode(pathname, &path, flags);
-    if (ret)
-        goto fput_and_out;
-
-    inode = path.dentry->d_inode;
-    group = filp->private_data;
-
-    /* create/update an inode mark */
-    ret = inotify_update_watch(group, inode, mask);
-    path_put(&path);
-fput_and_out:
-    fput_light(filp, fput_needed);
-    return ret;
+ } else {
+ tSMP_INT_DATA smp_int_data;
+ smp_int_data.status = SMP_CONFIRM_VALUE_ERR;
+ p_cb->failure = SMP_CONFIRM_VALUE_ERR;
+ smp_sm_event(p_cb, SMP_AUTH_CMPL_EVT, &smp_int_data);
+ }
 }

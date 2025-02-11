@@ -1,32 +1,46 @@
-int_eximarith_t n = 0; 
+CWE_189_FIXED_EVAL_NUMBER(uschar **sptr, BOOL decimal, uschar **error)
+{
 register int c;
 int_eximarith_t n;
 uschar *s = *sptr;
+
 while (isspace(*s)) s++;
 c = *s;
+
 if (isdigit(c))
   {
   int count;
   (void)sscanf(CS s, (decimal? SC_EXIM_DEC "%n" : SC_EXIM_ARITH "%n"), &n, &count);
   s += count;
-  switch (tolower(*s))
+
+  // Parse optional suffix
+  long suffix_multiplier = 1;
+  if (s[0] == 'k')
     {
-    default: break;
-    case 'k': n *= 1024; s++; break;
-    case'm': n *= 1024*1024; s++; break;
-    case 'g': n *= 1024*1024*1024; s++; break;
+    suffix_multiplier = 1024;
+    s++;
     }
+  else if (s[0] == 'm')
+    {
+    suffix_multiplier = 1024*1024;
+    s++;
+    }
+  else if (s[0] == 'g')
+    {
+    suffix_multiplier = 1024*1024*1024;
+    s++;
+    }
+
+  n *= suffix_multiplier;
+
   while (isspace (*s)) s++;
-  }
-else if (c == '(')
-  {
-  s++;
-  n = eval_expr(&s, decimal, error, 1);
   }
 else
   {
   *error = US"expecting number or opening parenthesis";
   n = 0;
   }
+
 *sptr = s;
 return n;
+}

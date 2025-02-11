@@ -1,32 +1,19 @@
-u8 sta_info_tx_streams(struct sta_info *sta)
+#define MAX_MATCH_LENGTH 256 // Adjust this value based on your buffer size
+
+static const char *register_map_handler(cmd_parms *cmd, void *_cfg,
+                                       const char* match, const char *file, const char *function)
 {
-    struct ieee80211_sta_ht_cap *ht_cap = &sta->sta.ht_cap;
-    u8 rx_streams;
-
-    if (!sta->sta.ht_cap.ht_supported)
-        return 1;
-
-    if (sta->sta.vht_cap.vht_supported) {
-        int i;
-        u16 tx_mcs_map = le16_to_cpu(sta->sta.vht_cap.vht_mcs.tx_mcs_map);
-
-        for (i = 7; i >= 0; i--) {
-            if ((tx_mcs_map & (0x3 << (i * 2)))!= IEEE80211_VHT_MCS_NOT_SUPPORTED)
-                return i + 1;
-        }
+    // Check if the length of match is within the allowed limit
+    if (strlen(match) >= MAX_MATCH_LENGTH) {
+        return "Error: Input string is too long";
     }
 
-    if (ht_cap->mcs.rx_mask[3])
-        rx_streams = 4;
-    else if (ht_cap->mcs.rx_mask[2])
-        rx_streams = 3;
-    else if (ht_cap->mcs.rx_mask[1])
-        rx_streams = 2;
-    else
-        rx_streams = 1;
+    const char *err = ap_check_cmd_context(cmd, NOT_IN_DIRECTORY|NOT_IN_FILES|NOT_IN_HTACCESS);
+    if (err) {
+        return err;
+    }
+    if (!function) function = "handle";
 
-    if (!(ht_cap->mcs.tx_params & IEEE80211_HT_MCS_TX_RX_DIFF))
-        return rx_streams;
-
-    return ((ht_cap->mcs.tx_params & IEEE80211_HT_MCS_TX_MAX_STREAMS_MASK) >> IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT) + 1;
+    // Use strncpy instead of strcpy to prevent buffer overflows
+    return register_mapped_file_function_hook(strncpy(malloc(MAX_MATCH_LENGTH), match, MAX_MATCH_LENGTH - 1), cmd, _cfg, file, function);
 }

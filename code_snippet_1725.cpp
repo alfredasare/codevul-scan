@@ -1,26 +1,49 @@
-ProcXFixesCreateRegion(ClientPtr client)
+ModuleExport size_t RegisterDCMImage(void)
 {
-    int things;
-    RegionPtr pRegion;
+  MagickInfo
+    *entry;
 
-    REQUEST(xXFixesCreateRegionReq);
+  static const char
+    *DCMNote=
+    {
+      "DICOM is used by the medical community for images like X-rays.  The\n"
+      "specification, \"Digital Imaging and Communications in Medicine\n"
+      "(DICOM)\", is available at http://medical.nema.org/.  In particular,\n"
+      "see part 5 which describes the image encoding (RLE, JPEG, JPEG-LS),\n"
+      "and supplement 61 which adds JPEG-2000 encoding."
+    };
 
-    REQUEST_AT_LEAST_SIZE(xXFixesCreateRegionReq);
-    LEGAL_NEW_RESOURCE(stuff->region, client);
+  if (IsValidDCMName("DCM")) {
+    entry=AcquireMagickInfo("DCM","DCM",
+      "Digital Imaging and Communications in Medicine image");
+    entry->decoder=(DecodeImageHandler *) ReadDCMImage;
+    entry->magick=(IsImageFormatHandler *) IsDCM;
+    entry->flags^=CoderAdjoinFlag;
+    entry->flags|=CoderDecoderSeekableStreamFlag;
+    entry->note=ConstantString(DCMNote);
+    (void) RegisterMagickInfo(entry);
+  }
 
-    if (client->req_len < 0 || client->req_len > MAX_REGION_SIZE) {
-        return BadLength;
+  return(MagickImageCoderSignature);
+}
+
+static int IsValidDCMName(const char *name) {
+  const char *allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.";
+  int i;
+  for (i = 0; name[i] != '\0'; i++) {
+    int found = 0;
+    int c = (int)name[i];
+    int len = strlen(allowed_chars);
+    int j;
+    for (j = 0; j < len; j++) {
+      if (c == (int)allowed_chars[j]) {
+        found = 1;
+        break;
+      }
     }
-
-    size_t region_size = sizeof(xXFixesCreateRegionReq) + client->req_len * sizeof(xRectangle);
-
-    pRegion = RegionFromRects(client->req_len, (xRectangle *) (stuff + 1), CT_UNSORTED);
-    if (!pRegion) {
-        return BadAlloc;
+    if (!found) {
+      return 0;
     }
-    if (!AddResource(stuff->region, RegionResType, (void *) pRegion)) {
-        return BadAlloc;
-    }
-
-    return Success;
+  }
+  return 1;
 }

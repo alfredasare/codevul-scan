@@ -1,11 +1,13 @@
-void us_to_timeval(struct timeval *val, int64_t us)
+static bool should_load_proto(struct iptables_command_state *cs)
 {
-    if (us < 0 || us > INT64_MAX) {
-        return;
-    }
+    if (!cs || !cs->protocol)
+        return false;
 
-    struct timeval tv;
-    tv.tv_sec = us / 1000000;
-    tv.tv_usec = us % 1000000;
-    *val = tv;
+    if (cs->protocol[0] == '\0')
+        return false;
+
+    if (find_proto(cs->protocol, XTF_DONT_LOAD,
+            cs->options & OPT_NUMERIC, NULL) == NULL)
+        return true;
+    return !cs->proto_used;
 }

@@ -1,12 +1,16 @@
-base::string16 ReplaceEmptyUsername(const base::string16& username) {
-  const std::set<char> allowedChars = {"a-zA-Z0-9._"};
-  if (username.empty()) {
-    return l10n_util::GetStringUTF16(IDS_PASSWORD_MANAGER_EMPTY_LOGIN);
-  }
-  for (char c : username) {
-    if (!allowedChars.count(c)) {
-      return l10n_util::GetStringUTF16(IDS_INVALID_USERNAME);
+status_t MediaPlayerService::AudioOutput::attachAuxEffect(int effectId)
+{
+    ALOGV("attachAuxEffect(%d)", effectId);
+    const int minEffectId = 0;
+    const int maxEffectId = 100; // or any other appropriate upper limit
+    Mutex::Autolock lock(mLock);
+    if (effectId < minEffectId || effectId > maxEffectId) {
+        ALOGE("Invalid effectId: %d. Must be between %d and %d.", effectId, minEffectId, maxEffectId);
+        return INVALID_OPERATION;
     }
-  }
-  return l10n_util::EscapeStringForHTML(username);
+    mAuxEffectId = effectId;
+    if (mTrack != 0) {
+        return mTrack->attachAuxEffect(effectId);
+    }
+    return NO_ERROR;
 }

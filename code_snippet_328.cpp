@@ -1,24 +1,11 @@
-GF_Err mdia_Write(GF_Box *s, GF_BitStream *bs)
+mrb_mod_instance_methods(mrb_state *mrb, mrb_value mod)
 {
-    GF_Err e;
-    GF_MediaBox *ptr = (GF_MediaBox *)s;
-    e = gf_isom_box_write_header(s, bs);
-    if (e) return e;
-
-    if (ptr && ptr->mediaHeader) {
-        e = gf_isom_box_write((GF_Box *) ptr->mediaHeader, bs);
-        if (e) return e;
-    }
-
-    if (ptr && ptr->handler) {
-        e = gf_isom_box_write((GF_Box *) ptr->handler, bs);
-        if (e) return e;
-    }
-
-    if (ptr && ptr->information) {
-        e = gf_isom_box_write((GF_Box *) ptr->information, bs);
-        if (e) return e;
-    }
-
-    return GF_OK;
+  struct RClass *c = mrb_class_ptr(mod);
+  if (!c) {
+    mrb_raise(mrb, E_TYPE_ERROR, "expected a class");
+    return mrb_nil_value();
+  }
+  mrb_bool recur = TRUE;
+  mrb_get_args(mrb, "|b", &recur);
+  return mrb_class_instance_method_list(mrb, recur, c, 0);
 }

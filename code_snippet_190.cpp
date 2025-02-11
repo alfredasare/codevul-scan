@@ -1,13 +1,13 @@
-void ArthurOutputDev::updateLineDash(GfxState *state)
+v8::Handle<v8::Value> ToV8(TestObject* impl, v8::Handle<v8::Object> creationContext, v8::Isolate* isolate)
 {
-    int dashLength = state->getDashLength();
-    int dashSpace = state->getDashSpace();
-
-    if (dashLength > INT_MAX - dashSpace || dashLength < INT_MIN + dashSpace) {
-        // Handle the overflow/underflow case
-        //...
+    if (!impl || !impl->IsKindOf(v8::Local<v8::FunctionTemplate>::New(isolate, TestObject::constructor))) {
+        return v8::Null(isolate);
     }
+    return ToV8Internal(impl, creationContext, isolate);
+}
 
-    uint32_t totalLength = static_cast<uint32_t>(dashLength) + dashSpace;
-    //...
+v8::Handle<v8::Value> ToV8Internal(TestObject* impl, v8::Handle<v8::Object> creationContext, v8::Isolate* isolate)
+{
+    // Previously named 'toV8NoInline'
+    // ... (the rest of the original function body)
 }

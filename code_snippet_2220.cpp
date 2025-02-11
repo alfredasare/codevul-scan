@@ -1,5 +1,13 @@
-gs_makepattern(gs_client_color * pcc, const gs_pattern_template_t * pcp,
-               const gs_matrix * pmat, gs_gstate * pgs, gs_memory_t * mem)
+static struct nd_opt_hdr *ndisc_next_option(struct nd_opt_hdr *cur, struct nd_opt_hdr *end)
 {
-    return gs_pattern1_make_pattern(pcc, pcp, pmat, pgs, mem);
+        int type;
+        if (!cur || !end || cur >= end)
+                return NULL;
+        type = cur->nd_opt_type;
+        do {
+                if ((unsigned long)cur + (cur->nd_opt_len << 3) > (unsigned long)end)
+                        return NULL;
+                cur = ((void *)cur) + (cur->nd_opt_len << 3);
+        } while (cur < end && cur->nd_opt_type != type);
+        return cur <= end && cur->nd_opt_type == type ? cur : NULL;
 }

@@ -1,22 +1,17 @@
-int fb_get_color_depth(struct fb_var_screeninfo *var,
-		       struct fb_fix_screeninfo *fix)
-{
-    uint32_t depth = 0;
+c++
+#include <vector>
 
-    if (fix->visual == FB_VISUAL_MONO01 ||
-        fix->visual == FB_VISUAL_MONO10)
-        depth = 1;
-    else {
-        if (var->green.length == var->blue.length &&
-            var->green.length == var->red.length &&
-            var->green.offset == var->blue.offset &&
-            var->green.offset == var->red.offset)
-            depth = var->green.length;
-        else {
-            // Safe arithmetic operation to avoid overflow
-            depth = (uint32_t)(var->green.length + var->red.length + var->blue.length);
-        }
-    }
+class StyleSheetCSSRuleList {
+public:
+    // ...
+    std::vector<CSSRule*> rules;
+    // ...
+};
 
-    return depth;
+StyleSheetCSSRuleList Create(CSSStyleSheet* sheet) {
+    StyleSheetCSSRuleList list(sheet);
+    list.rules.emplace_back(new CSSRule(/*...*/));
+    list.rules.emplace_back(new CSSRule(/*...*/));
+    // ... add more rules ...
+    return list;
 }

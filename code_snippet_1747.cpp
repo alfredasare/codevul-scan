@@ -1,18 +1,22 @@
-static unsigned long get_unmapped_area_zero(struct file *file,
-					unsigned long addr, unsigned long len,
-					unsigned long pgoff, unsigned long flags)
+sparse_skip_file (struct tar_stat_info *st)
 {
-#ifdef CONFIG_MMU
-	if (flags & MAP_SHARED) {
-		struct file *file = shmem_zero_setup(NULL);
-		if (IS_ERR(file)) {
-			return PTR_ERR(file);
-		}
-		return shmem_get_unmapped_area(file, addr, len, pgoff, flags);
-	} else {
-		return current->mm->get_unmapped_area(file, addr, len, pgoff, flags);
-	}
-#else
-	return -ENOSYS;
-#endif
+  bool rc = true;
+  struct tar_sparse_file file;
+
+  if (!tar_sparse_init (&file))
+    return dump_status_not_implemented;
+
+  file.stat_info = st;
+  file.fd = -1;
+
+  rc = tar_sparse_decode_header (&file);
+  if (!rc) {
+    tar_sparse_done (&file);
+    return dump_status_error;
+  }
+
+  skip_file (file.stat_info->archive_file_size - file.dumped_size);
+  tar_sparse_done (&file);
+
+  return rc ? dump_status_ok : dump_status_short;
 }

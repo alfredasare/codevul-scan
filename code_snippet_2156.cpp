@@ -1,19 +1,17 @@
-static bool VerifyNumber(const uint8* buffer,
-                         int buffer_size,
-                         int* offset,
-                         int max_digits) {
-  RCHECK(*offset < buffer_size);
+yystpcpy_secure(char * restrict yydest, const char * restrict yysrc, size_t dest_size)
+{
+  char *yyd = yydest;
+  const char *yys = yysrc;
+  size_t remaining_space = dest_size;
 
-  while (isspace(buffer[*offset])) {
-    ++(*offset);
-    RCHECK(*offset < buffer_size);
+  while (*yys != '\0' && remaining_space > 1) {
+    *yyd++ = *yys++;
+    --remaining_space;
   }
 
-  int numSeen = 0;
-  while (--max_digits >= 0 && *offset < buffer_size && isdigit(buffer[*offset])) {
-    ++numSeen;
-    ++(*offset);
+  if (remaining_space == 1) {
+    *yyd = '\0';
   }
 
-  return (numSeen > 0);
+  return yydest;
 }

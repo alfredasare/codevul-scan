@@ -1,17 +1,26 @@
-static int mptsas_post_load(void *opaque, int version_id)
+void snd_msndmidi_input_read(void *mpuv)
 {
-    MPTSASState *s = opaque;
+	unsigned long flags;
+	struct snd_msndmidi *mpu = mpuv;
+	void *pwMIDQData = mpu->dev->mappedbase + MIDQ_DATA_BUFF;
 
-    if (s->doorbell_idx >= 0 && s->doorbell_idx < s->doorbell_cnt &&
-        s->doorbell_cnt <= ARRAY_SIZE(s->doorbell_msg) &&
-        s->doorbell_reply_idx >= 0 && s->doorbell_reply_idx < s->doorbell_reply_size &&
-        s->doorbell_reply_size <= ARRAY_SIZE(s->doorbell_reply) &&
-        MPTSAS_FIFO_INVALID(s, request_post) ||
-        MPTSAS_FIFO_INVALID(s, reply_post) ||
-        MPTSAS_FIFO_INVALID(s, reply_free) ||
-        s->diagnostic_idx >= 0 && s->diagnostic_idx <= 4) {
-        return -EINVAL;
-    }
-
-    return 0;
+	spin_lock_irqsave(&mpu->input_lock, flags);
+	while (readw(mpu->dev->MIDQ + JQS_wTail) !=
+	       readw(mpu->dev->MIDQ + JQS_wHead)) {
+		u16 wTmp, val;
+			if (readw(mpu->dev->MIDQ + JQS_wHead) + 1 >
+			    readw(mpu->dev->MIDQ + JQS_wSize)) {
+				writew(0, mpu->dev->MIDQ + JQS_wHead);
+				wTmp = 0;
+			} else {
+				wTmp = readw(mpu->dev->MIDQ + JQS_wHead) + 1;
+			}
+			val = readw(pwMIDQData + 2 * wTmp);
+			if (test_bit(MSNDMIDI_MODE_BIT_INPUT_TRIGGER,
+				     &mpu->mode))
+				snd_rawmidi_receive(mpu->substream_input,
+						    (unsigned char *)&val, 1);
+		writew(wTmp, mpu->dev->MIDQ + JQS_wHead);
+	}
+	spin_unlock_irqrestore(&mpu->input_lock, flags);
 }

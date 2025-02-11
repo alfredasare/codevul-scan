@@ -1,27 +1,16 @@
-WebKit::WebPrintScalingOption PrintWebViewHelper::GetPrintScalingOption(
-    bool source_is_html, const DictionaryValue& job_settings,
-    const PrintMsg_Print_Params& params) {
-  DCHECK(!print_for_preview_);
-  DCHECK(source_is_html);
-  DCHECK(params.print_to_pdf ||!params.is_first_request);
+static ssize_t proxy_readlink(FsContext *fs_ctx, V9fsPath *fs_path,
+                              char *buf, size_t bufsz)
+{
+    int retval;
+    size_t bytes_read = min(bufsz, pathconf(fs_path->path, _PC_PATH_MAX));
 
-  if (params.print_to_pdf)
-    return WebKit::WebPrintScalingOptionSourceSize;
-
-  if (!source_is_html) {
-    if (!FitToPageEnabled(job_settings)) {
-      LOG(WARNING) << "Invalid job settings: cannot determine print scaling option";
-      return WebKit::WebPrintScalingOptionNone;
+    retval = v9fs_request(fs_ctx->private, T_READLINK, buf, fs_path, bytes_read);
+    if (retval < 0) {
+        errno = -retval;
+        return -1;
     }
 
-    bool no_plugin_scaling =
-        print_preview_context_.frame()->isPrintScalingDisabledForPlugin(
-            print_preview_context_.node());
+    buf[bytes_read] = '\0';
 
-    if (params.is_first_request && no_plugin_scaling) {
-      LOG(WARNING) << "Plugin scaling disabled; cannot determine print scaling option";
-      return WebKit::WebPrintScalingOptionNone;
-    }
-  }
-  return WebKit::WebPrintScalingOptionFitToPrintableArea;
+    return bytes_read;
 }

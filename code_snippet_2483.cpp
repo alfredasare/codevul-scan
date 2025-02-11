@@ -1,42 +1,32 @@
-static void glfs_async_cbk(glfs_fd_t *fd, ssize_t ret, void *data)
+#include <string.h>
+
+create_spnego_ctx(void)
 {
-    glfs_cbk_cookie *cookie = data;
-    struct tcmu_device *dev = cookie->dev;
-    struct tcmulib_cmd *cmd = cookie->cmd;
-    size_t length = cookie->length;
+	spnego_gss_ctx_id_t spnego_ctx = NULL;
 
-    if (length > SIZE_MAX || length < 0) {
-        ret = SAM_STAT_FAILED;
-        cmd->done(dev, cmd, ret);
-        free(cookie);
-        return;
-    }
+	spnego_ctx = calloc(1, sizeof(spnego_gss_ctx_id_rec));
 
-    if (ret < 0 || ret > SIZE_MAX) {
-        ret = SAM_STAT_FAILED;
-        cmd->done(dev, cmd, ret);
-        free(cookie);
-        return;
-    }
+	if (spnego_ctx == NULL) {
+		return (NULL);
+	}
 
-    // Rest of the code remains the same
-    if (ret < 0 || ret != (ssize_t)length) {
-        // Read/write/flush failed
-        switch (cookie->op) {
-        case TCMU_GLFS_READ:
-            ret =  tcmu_set_sense_data(cmd->sense_buf, MEDIUM_ERROR,
-                                       ASC_READ_ERROR, NULL);
-            break;
-        case TCMU_GLFS_WRITE:
-        case TCMU_GLFS_FLUSH:
-            ret =  tcmu_set_sense_data(cmd->sense_buf, MEDIUM_ERROR,
-                                       ASC_WRITE_ERROR, NULL);
-            break;
-        }
-    } else {
-        ret = SAM_STAT_GOOD;
-    }
+	spnego_ctx->magic_num = SPNEGO_MAGIC_ID;
+	spnego_ctx->ctx_handle = GSS_C_NO_CONTEXT;
+	spnego_ctx->mech_set = NULL;
+	spnego_ctx->internal_mech = NULL;
+	spnego_ctx->optionStr = NULL;
+	spnego_ctx->DER_mechTypes.length = 0;
+	spnego_ctx->DER_mechTypes.value = NULL;
+	spnego_ctx->default_cred = GSS_C_NO_CREDENTIAL;
+	spnego_ctx->mic_reqd = 0;
+	spnego_ctx->mic_sent = 0;
+	spnego_ctx->mic_rcvd = 0;
+	spnego_ctx->mech_complete = 0;
+	spnego_ctx->nego_done = 0;
+	spnego_ctx->internal_name = GSS_C_NO_NAME;
+	spnego_ctx->actual_mech = GSS_C_NO_OID;
 
-    cmd->done(dev, cmd, ret);
-    free(cookie);
+	check_spnego_options(spnego_ctx);
+
+	return (spnego_ctx);
 }

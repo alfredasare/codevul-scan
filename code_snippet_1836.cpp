@@ -1,18 +1,22 @@
-static struct dentry *__lookup_hash(const struct qstr *name,
-				     struct dentry *base, unsigned int flags)
-{
-	struct dentry *dentry = lookup_dcache(name, base, flags);
+void BaseAudioContext::ContextDestroyed(ExecutionContext* context) {
+  if (context == nullptr) {
+    // Handle null input scenario appropriately, e.g., logging an error or throwing an exception.
+    return;
+  }
 
-	if (dentry)
-		return dentry;
+  // Additional checks can be added here to validate the context object if required.
 
-	if (!base ||!dentry_valid(base)) {
-		return ERR_PTR(-EINVAL);
-	}
+  Uninitialize();
+}
 
-	dentry = d_alloc(base, name);
-	if (unlikely(!dentry))
-		return ERR_PTR(-ENOMEM);
+// In the class definition
+std::unique_ptr<ExecutionContext> context_;
 
-	return lookup_real(base->d_inode, dentry, flags);
+// In the constructor
+context_ = std::make_unique<ExecutionContext>();
+
+// In the destructor
+void BaseAudioContext::ContextDestroyed() {
+  context_.reset();
+  Uninitialize();
 }

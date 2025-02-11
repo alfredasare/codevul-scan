@@ -1,15 +1,9 @@
-dissect_fp_aal2(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data)
-{
-    guint tvb_length = tvb_length(tvb);
-    guint max_length = MAX_TVB_LENGTH;
+X86_EFLAGS_ZF | X86_EFLAGS_SF;
+flags &= reg\_value;
 
-    if (tvb_length > max_length) {
-        return; // Handle invalid input
-    }
-
-    if (data && tvb_length + strlen((char*)data) > max_length) {
-        return; // Handle invalid input
-    }
-
-    return dissect_fp_common(tvb, pinfo, tree, data);
+ctxt->eflags &= ~0xffUL;
+ctxt->eflags |= flags | X86\_EFLAGS\_FIXED;
+return X86EMUL\_CONTINUE;
 }
+
+Note: The validation part should be adjusted based on the actual requirements and expected input values.

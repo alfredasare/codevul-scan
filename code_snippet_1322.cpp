@@ -1,24 +1,10 @@
-MagickExport IndexPacket *GetAuthenticIndexQueue(const Image *image)
-{
-  CacheInfo
-    *magick_restrict cache_info;
-
-  const int
-    id = GetOpenMPThreadId();
-
-  assert(image!= (const Image *) NULL);
-  assert(image->signature == MagickSignature);
-  assert(image->cache!= (Cache) NULL);
-  cache_info=(CacheInfo *) image->cache;
-  assert(cache_info->signature == MagickSignature);
-  if (cache_info->methods.get_authentic_indexes_from_handler!=
-       (GetAuthenticIndexesFromHandler) NULL)
-    return(cache_info->methods.get_authentic_indexes_from_handler(image));
-  assert(id < (int) cache_info->number_threads);
-  if (strcmp(image->directory, "/path/to/expected/directory1") == 0 ||
-      strcmp(image->directory, "/path/to/expected/directory2") == 0) {
-    return(cache_info->nexus_info[id]->indexes);
-  } else {
-    return NULL; // or throw an error
-  }
+void WaitForThrottleWillProcess() {
+>       std::unique_lock<std::mutex> lock(will\_process\_mutex_);
+if (will\_process\_called\_)
+return;
+will\_process\_loop\_runner\_ = new MessageLoopRunner();
+will\_process\_loop\_runner-\>Run();
+will\_process\_loop\_runner\_ = nullptr;
 }
+
+Please add a mutex named `will_process_mutex_` and lock it before checking the state of `will_process_called_` to prevent a race condition.

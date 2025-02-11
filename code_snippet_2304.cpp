@@ -1,32 +1,25 @@
-M_bool M_fs_path_isabs(const char *p, M_fs_system_t sys_type)
+bool xmp_get_property_bool(XmpPtr xmp, const char *schema, const char *name,
+                           bool *property, uint32_t *propsBits)
 {
-    size_t len;
+    CHECK_PTR(xmp, false);
+    RESET_ERROR;
 
-    if (p == NULL) {
-        return M_FALSE;
+    if (!schema || !name) {
+        set_error(XMP_ERROR_INVALID_ARGUMENT);
+        return false;
     }
 
-    len = M_str_len(p);
-    if (len == 0) {
-        return M_FALSE;
-    }
-
-    sys_type = M_fs_path_get_system_type(sys_type);
-
-    if (sys_type == M_FS_SYSTEM_WINDOWS) {
-        // Check for UNC paths and absolute drives
-        if (M_fs_path_isunc(p) || (len >= 2 && (p[1] == PATH_SEPARATOR_WIN || (p[0] == PATH_SEPARATOR_WIN && p[1] == PATH_SEPARATOR_WIN)))) {
-            return M_TRUE;
-        }
-    } else if (sys_type == M_FS_SYSTEM_UNIX) {
-        // Check for root directories
-        if (*p == PATH_SEPARATOR_UNIX) {
-            return M_TRUE;
+    bool ret = false;
+    try {
+        auto txmp = reinterpret_cast<const SXMPMeta *>(xmp);
+        XMP_OptionBits optionBits;
+        ret = txmp->GetProperty_Bool(schema, name, property, &optionBits);
+        if (propsBits) {
+            *propsBits = optionBits;
         }
     }
-
-    return M_FALSE;
+    catch (const XMP_Error &e) {
+        set_error(e);
+    }
+    return ret;
 }
-
-#define PATH_SEPARATOR_WIN '\\'
-#define PATH_SEPARATOR_UNIX '/'

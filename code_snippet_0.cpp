@@ -1,12 +1,10 @@
-static void trace_iterator_increment(struct trace_iterator *iter)
+static void trace\_iterator\_increment(struct trace\_iterator \*iter)
 {
-    struct ring_buffer_iter *buf_iter = trace_buffer_iter(iter, iter->cpu);
+	struct ring\_buffer\_iter \*buf\_iter = trace\_buffer\_iter(iter, iter->cpu);
 
-    if (iter->idx < iter->max_idx) {
-        iter->idx++;
-        if (buf_iter)
-            ring_buffer_read(buf_iter, NULL);
-    } else {
-        /* Handle error or boundary condition */
-    }
+	if (iter->idx < iter->end) {
+		iter->idx++;
+		if (buf\_iter)
+			ring\_buffer\_read(buf\_iter, NULL);
+	}
 }

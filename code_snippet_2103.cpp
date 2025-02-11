@@ -1,22 +1,17 @@
-#include <string>
-#include <vector>
-#include <algorithm>
-
-class WebPageSerializerTest {
+class RgnIterPair {
 public:
-    WebPageSerializerTest() : m_supportedSchemes(getAllowedSchemes()) {
-        for (int i = 0; i < m_supportedSchemes.size(); i++) {
-            if (!std::any_of(getAllowedSchemes().begin(), getAllowedSchemes().end(), [&](const std::string& scheme) { return scheme == m_supportedSchemes[i]; })) {
-                throw std::runtime_error("Invalid scheme");
-            }
+    RgnIterPair(const SkRegion& rgn, int max_iterators = 10)
+        : fRgn(rgn), fMaxIterators(max_iterators), fIteratorCount(0) {}
+
+    void resetIterator() {
+        if (fIteratorCount < fMaxIterators) {
+            fIter.reset(fRgn);
+            fIteratorCount++;
+        } else {
+            // Throw an exception or log an error here
         }
     }
 
 private:
-    static const std::vector<std::string> getAllowedSchemes() {
-        std::vector<std::string> allowedSchemes = {"http", "https", "file"};
-        return allowedSchemes;
-    }
-
-    std::vector<std::string> m_supportedSchemes;
-};
+    const SkRegion& fRgn;
+    SkRegion::Iter fIter;

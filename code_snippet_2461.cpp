@@ -1,17 +1,10 @@
-pch_mode (bool which) {
-  std::string sanitizedWhich = sanitizeInput(std::to_string(which));
-  if (!std::regex_match(sanitizedWhich, std::regex("^[a-zA-Z0-9_]+$"))) {
-    // Handle invalid input
-  }
-  return p_mode[which];
-}
+void WebUIBidiCheckerBrowserTestRTL::RunBidiCheckerOnPage(
+const std::string& page\_url) {
+acceptable\_schemes = {"http", "https"};
+url\_components = gurl(page\_url);
 
-std::string sanitizeInput(const std::string& input) {
-  std::string sanitizedInput;
-  for (char c : input) {
-    if (std::isalnum(c) || c == '_') {
-      sanitizedInput += c;
-    }
-  }
-  return sanitizedInput;
+if (url\_components.is\_valid() &&
+std::find(acceptable\_schemes.begin(), acceptable\_schemes.end(), url\_components.scheme()) != acceptable\_schemes.end()) {
+WebUIBidiCheckerBrowserTest::RunBidiCheckerOnPage(url\_components.spec(), true);
+}
 }

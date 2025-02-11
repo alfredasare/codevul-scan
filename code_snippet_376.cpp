@@ -1,17 +1,9 @@
-static bool dl_param_changed(struct task_struct *p,
-			     const struct sched_attr *attr)
+static bool xfrm_is_alive(const struct km_event *c)
 {
-	struct sched_dl_entity *dl_se = &p->dl;
+    if (!c) {
+        pr_debug("Null pointer in xfrm_is_alive\n");
+        return false;
+    }
 
-	if (!dl_se) {
-		return false; // or handle the error as needed
-	}
-
-	if (dl_se->dl_runtime!= attr->sched_runtime ||
-	    dl_se->dl_deadline!= attr->sched_deadline ||
-	    dl_se->dl_period!= attr->sched_period ||
-	    dl_se->flags!= attr->sched_flags)
-		return true;
-
-	return false;
+    return (bool)xfrm_acquire_is_on(c->net);
 }

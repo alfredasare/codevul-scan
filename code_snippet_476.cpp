@@ -1,10 +1,11 @@
-static int has_item(char **ary, const char *item)
+static void echo_char_raw(unsigned char c, struct n_tty_data *ldata)
 {
-    size_t i;
-    for (i = 0; ary[i]!= NULL; i++) {
-        if (strcmp(item, ary[i]) == 0) {
-            return 1;
-        }
-    }
-    return 0;
+	if (c == ECHO_OP_START) {
+		add_echo_byte(ECHO_OP_START, ldata);
+	} else {
+		// Check if adding the character will cause buffer overflow
+		if (ldata->echo_buf_ptr < ldata->echo_buf_end) {
+			*ldata->echo_buf_ptr++ = c;
+		}
+	}
 }

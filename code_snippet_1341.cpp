@@ -1,10 +1,9 @@
-void _gnutls_set_server_random(gnutls_session_t session, uint8_t * rnd)
+INLINE void impeg2d\_bit\_stream\_flush(void\* pv\_ctxt, UWORD32 u4\_no\_of\_bits)
 {
-    if (strlen((char*)rnd)!= TLS_RANDOM_SIZE) {
-        // Handle invalid input
-        return;
-    }
-
-    // Use a safe memory copy function
-    strcpy_s(session->security_parameters.server_random, TLS_RANDOM_SIZE, (char*)rnd);
+stream\_t \*ps\_stream = (stream\_t \*)pv\_ctxt;
+if (ps\_stream->u4\_offset + u4\_no\_of\_bits <= ps\_stream->u4\_max\_offset)
+{
+FLUSH\_BITS(ps\_stream->u4\_offset, ps\_stream->u4\_buf, ps\_stream->u4\_buf\_nxt, u4\_no\_of\_bits, ps\_stream->pu4\_buf\_aligned)
+}
+return;
 }

@@ -1,16 +1,20 @@
-MemoryRegion *vga_init_io(VGACommonState *s, Object *obj,
-                           const MemoryRegionPortio **vga_ports,
-                           const MemoryRegionPortio **vbe_ports)
+_gcry\_mpi\_point\_init (mpi\_point\_t p)
 {
-    MemoryRegion *vga_mem;
-    size_t mem_size = sizeof(*vga_mem);
+p->x = mpi\_new (0);
+if (p->x == NULL) {
+return -1;
+}
 
-    *vga_ports = vga_portio_list;
-    *vbe_ports = vbe_portio_list;
+p->y = mpi\_new (0);
+if (p->y == NULL) {
+mpi\_free (p->x);
+return -1;
+}
 
-    vga_mem = g_malloc(mem_size);
-    memory_region_init_io(vga_mem, obj, &vga_mem_ops, s, "vga-lowmem", mem_size);
-    memory_region_set_flush_coalesced(vga_mem);
-
-    return vga_mem;
+p->z = mpi\_new (0);
+if (p->z == NULL) {
+mpi\_free (p->y);
+mpi\_free (p->x);
+return -1;
+}
 }

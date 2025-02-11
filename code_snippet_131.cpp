@@ -1,13 +1,6 @@
-static void perf_mmap_open(struct vm_area_struct *vma)
+BGD_DECLARE(void) gdImageFilledEllipse (gdImagePtr im, int mx, int my, int w, int h, int c)
 {
-    struct perf_event *event = vma->vm_file->private_data;
-
-    if (vma && vma->vm_file && vma->vm_file->fops && vma->vm_file->fops->permission) {
-        if (!vma->vm_file->fops->permission(vma->vm_file, FMODE_READ)) {
-            printk(KERN_ERR "Permission denied\n");
-            return;
-        }
-    }
-
-    atomic_inc(&event->mmap_count);
+if (im == NULL || mx < 0 || my < 0 || w <= 0 || h <= 0 || c < 0 || mx > im->sx || my > im->sy || mx + w > im->sx || my + h > im->sy)
+return;
+//... rest of the function
 }

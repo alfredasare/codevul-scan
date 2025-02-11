@@ -1,17 +1,25 @@
-static size_t encoding_filter_script_to_intermediate(unsigned char **to, size_t *to_length, const unsigned char *from, size_t from_length TSRMLS_DC)
-{
-    // Validate input data length
-    if (from_length > *to_length) {
-        return 0; // or handle error accordingly
-    }
+#include <string>
+#include <cctype>
 
-    // Use safer conversion library
-    int conv_len = iconv((iconv_t)0, "", "", to, from_length);
-    if (conv_len == (size_t)-1) {
-        return 0; // or handle error accordingly
+std::string SanitizeInput(const std::string& input) {
+  std::string result;
+  for (char c : input) {
+    if (std::isalnum(c) || c == '_' || c == '-') {
+      result += c;
     }
+  }
+  return result;
+}
 
-    // Update to_length and return
-    *to_length = conv_len;
-    return conv_len;
+bool FormHasNonEmptyPasswordField(const FormData& form) {
+  constexpr size_t max_length = 64;
+  for (const auto& field : form.fields) {
+    if (field.IsPasswordInputElement()) {
+      std::string normalized_value = SanitizeInput(field.value);
+      if (!normalized_value.empty() && normalized_value.length() <= max_length) {
+        return true;
+      }
+    }
+  }
+  return false;
 }

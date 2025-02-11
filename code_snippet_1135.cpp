@@ -1,15 +1,29 @@
-static int ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
-				     struct ps_data *ps, struct sk_buff *skb)
+static int br\_mdb\_copy(struct net\_bridge\_mdb\_htable \*new,
+ struct net\_bridge\_mdb\_htable \*old,
+ int elasticity)
 {
-    struct ieee80211_local *local = sdata->local;
+ struct net\_bridge\_mdb\_entry \*mp;
+ struct hlist\_node \*p;
+ int maxlen = 0;
+ int len;
+ int i;
 
-    if (local->tim_in_locked_section) {
-        __ieee80211_beacon_add_tim(sdata, ps, skb);
-    } else {
-        spin_lock_bh(&local->tim_lock);
-        __ieee80211_beacon_add_tim(sdata, ps, skb);
-        spin_unlock_bh(&local->tim_lock);
-    }
+ for (i = 0; i < old->max; i++)
+ hlist\_for\_each\_entry(mp, p, &old->mhash[i], hlist[old->ver])
+ hlist\_add\_head(&mp->hlist[new->ver],
+ &new->mhash[br\_ip\_hash(new, &mp->addr)]);
 
-    return 0;
+ if (!elasticity)
+ return 0;
+
+ for (i = 0; i < new->max; i++) {
+ len = 0;
+ hlist\_for\_each\_entry(mp, p, &new->mhash[i], hlist[new->ver])
+ len++;
+
+ if (len > maxlen)
+ maxlen = len;
+ }
+
+ return maxlen > elasticity ? -EINVAL : 0;
 }

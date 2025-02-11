@@ -1,28 +1,13 @@
-static BOOL update_begin_paint(rdpContext* context)
+size_t ZSTD_compressBegin_usingDict(ZSTD_CCtx* cctx, const void* dict, size_t dictSize, int compressionLevel)
 {
-    wStream* s;
-    rdpUpdate* update = context->update;
-    const char* path = "/path/to/absolute/folder"; // Ensure path is absolute
+    if (compressionLevel < 1 || compressionLevel > 22) {
+        return ZSTD_error(ZSTD_error_level_ codingFailure);
+    }
 
-    if (update->us)
-        update->EndPaint(context);
-
-    s = fastpath_update_pdu_init_new(path); // Use absolute path
-
-    if (!s)
-        return FALSE;
-
-    Stream_SealLength(s);
-    Stream_Seek(s, 2); /* numberOrders (2 bytes) */
-
-    // Sanitize input data
-    size_t len = strlen(update->combineUpdates);
-    char sanitized[len + 1];
-    strncpy(sanitized, update->combineUpdates, len);
-    sanitized[len] = '\0';
-
-    update->combineUpdates = sanitized;
-    update->numberOrders = 0;
-    update->us = s;
-    return TRUE;
+    ZSTD_parameters const params = ZSTD_getParams(compressionLevel, ZSTD_CONTENTSIZE_UNKNOWN, dictSize);
+    ZSTD_CCtx_params const cctxParams =
+            ZSTD_assignParamsToCCtxParams(cctx->requestedParams, params);
+    DEBUGLOG(4, "ZSTD_compressBegin_usingDict (dictSize=%u)", (U32)dictSize);
+    return ZSTD_compressBegin_internal(cctx, dict, dictSize, ZSTD_dct_auto, ZSTD_dtlm_fast, NULL,
+                                       cctxParams, ZSTD_CONTENTSIZE_UNKNOWN, ZSTDb_not_buffered);
 }

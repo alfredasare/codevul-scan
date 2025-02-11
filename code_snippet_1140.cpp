@@ -1,14 +1,4 @@
-static void *igmp_mc_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+setnonblocking(int fd)
 {
-    struct ip_mc_list *im = NULL;
-    if (v == SEQ_START_TOKEN)
-        im = igmp_mc_get_first(seq);
-    else
-        im = igmp_mc_get_next(seq, v);
-    ++*pos;
-    if (im!= NULL) {
-        igmp_mc_free(im);
-        im = NULL;
-    }
-    return im;
+    return fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
 }

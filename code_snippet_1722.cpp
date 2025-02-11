@@ -1,6 +1,18 @@
-std::string toString() const {
-    if (!m_string.empty() &&!std::all_of(m_string.begin(), m_string.end(), [](char c) { return std::isalnum(c) || c == '_' || c == '.'; })) {
-        throw std::runtime_error("Invalid input data");
-    }
-    return m_string;
+static struct oz_hcd *oz_hcd_claim(void)
+{
+	struct oz_hcd *ozhcd;
+
+	spin_lock_bh(&g_hcdlock);
+	ozhcd = g_ozhcd;
+	if (ozhcd == NULL) {
+		spin_unlock_bh(&g_hcdlock);
+		return NULL;
+	}
+	if (ozhcd->hcd == NULL) {
+		spin_unlock_bh(&g_hcdlock);
+		return NULL;
+	}
+	usb_get_hcd(ozhcd->hcd);
+	spin_unlock_bh(&g_hcdlock);
+	return ozhcd;
 }

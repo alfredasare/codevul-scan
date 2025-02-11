@@ -1,11 +1,8 @@
-int libshare_init(void)
+static void hash_split(ps_mm *data)
 {
-    int result;
+	php_uint32 nmax;
+	ps_sd **nhash;
+	ps_sd **ohash, **ehash;
+	ps_sd *ps, *next;
 
-    result = libshare_nfs_init();
-    if (result!= 0) {
-        return result;
-    }
-
-    return libshare_smb_init();
-}
+	nmax = ((data->hash_max + 1) << 1) -

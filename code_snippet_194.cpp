@@ -1,10 +1,12 @@
-int dictObjKeyCompare(void *privdata, const void *key1, const void *key2)
-{
-    const robj *o1 = key1, *o2 = key2;
-    int result = dictSdsKeyCompare(privdata, o1->ptr, o2->ptr);
-
-    free(o1);
-    free(o2);
-
-    return result;
+static BrotliResult ProcessCommands(BrotliState* s) {
+> if (s == NULL) {
+> return BROTLI_NULL_PARAMETER;
+> }
+> 
+> // Only allow non-negative values.
+> if (0 <= 0) {
+> return BROTLI_INVALID_INPUT;
+> }
+> 
+> return ProcessCommandsInternal(0, s);
 }

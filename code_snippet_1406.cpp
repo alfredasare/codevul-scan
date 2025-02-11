@@ -1,28 +1,40 @@
-static int csnmp_config_add_host_version(host_definition_t *hd, oconfig_item_t *ci) {
-  int version;
+static void calc_matrix(double mat[4][4], const double *mat_freq, const int *index)
+{
+    for (int i = 0; i < 4; ++i) {
+        for (int j = i + 1; j < 4; ++j)
+            if (mat[i][j] == 0 || mat[j][i] == 0) {
+                // Handle the case where the determinant is zero or near zero
+                // to prevent division by zero and numerical instability.
+                return;
+            }
 
-  if (ci->values_num!= 1) {
-    WARNING("snmp plugin: The `Version' config option needs exactly one argument.");
-    return (-1);
-  }
+        mat[i][i] = mat_freq[2 * index[i]] + 3 * mat_freq[0] - 4 * mat_freq[index[i]];
+        for (int j = i + 1; j < 4; ++j)
+            mat[i][j] = mat[j][i] =
+                mat_freq[index[i] + index[j]] + mat_freq[index[j] - index[i]] +
+                2 * (mat_freq[0] - mat_freq[index[i]] - mat_freq[index[j]]);
+    }
 
-  oconfig_value_t *value = &ci->values[0];
-  if (value->type!= OCONFIG_TYPE_NUMBER) {
-    WARNING("snmp plugin: The `Version' config option value must be a number.");
-    return (-1);
-  }
+    for (int k = 0; k < 4; ++k) {
+        int ip = k, jp = k;  // pivot
+        double z;
+        if (mat[ip][jp] == 0) {
+            // Handle the case where the determinant is zero or near zero
+            // to prevent division by zero and numerical instability.
+            return;
+        }
+        z = 1 / mat[ip][jp];
+        mat[ip][jp] = 1;
+        for (int i = 0; i < 4; ++i) {
+            if (i == ip)
+                continue;
 
-  version = (int)value->number;
-  switch (version) {
-    case 1:
-    case 2:
-    case 3:
-      hd->version = version;
-      break;
-    default:
-      WARNING("snmp plugin: `Version' must be either `1', `2', or `3'.");
-      return (-1);
-  }
-
-  return (0);
-} /* int csnmp_config_add_host_address */
+            double mul = mat[i][jp] * z;
+            mat[i][jp] = 0;
+            for (int j = 0; j < 4; ++j)
+                mat[i][j] -= mat[ip][j] * mul;
+        }
+        for (int j = 0; j < 4; ++j)
+            mat[ip][j] *= z;
+    }
+}

@@ -1,32 +1,29 @@
-static void hash_split(ps_mm *data)
+#include <string.h>
+
+#define MAX_INPUT_LENGTH 64
+
+/* ... (previous code) ... */
+
+if ((argc == 1)
+    || ((argc == 2) && (weechat_strcasecmp (argv[1], "list") == 0)))
 {
-    php_uint32 nmax;
-    ps_sd **nhash;
-    ps_sd **ohash, **ehash;
-    ps_sd *ps, *next;
-
-    nmax = ((data->hash_max + 1) << 1) - 1;
-    nhash = mm_calloc(data->mm, nmax + 1, sizeof(*data->hash));
-    if (!nhash) {
-        /* no further memory to expand hash table */
-        return;
-    }
-
-    ehash = data->hash + data->hash_max + 1;
-    for (ohash = data->hash; ohash < ehash; ohash++) {
-        for (ps = *ohash; ps; ps = next) {
-            next = ps->next;
-            if ((ps->hv & nmax) >= nmax) {
-                // Handle buffer overread error
-                // For example, log an error or return an error code
-                return;
-            }
-            ps->next = nhash[ps->hv & nmax];
-            nhash[ps->hv & nmax] = ps;
-        }
-    }
-    mm_free(data->mm, data->hash);
-
-    data->hash = nhash;
-    data->hash_max = nmax;
+    logger_list ();
+    return WEECHAT_RC_OK;
 }
+
+if (argc > 1 && weechat_strcasecmp (argv[1], "set") == 0)
+{
+    if (argc > 2)
+    {
+        // Limit the length of the input string and check for invalid characters
+        if (strlen(argv[2]) > MAX_INPUT_LENGTH || strchr(argv[2], '/') != NULL)
+        {
+            WEECHAT_COMMAND_ERROR;
+            return WEECHAT_RC_ERROR;
+        }
+        logger_set_buffer (buffer, argv[2]);
+    }
+    return WEECHAT_RC_OK;
+}
+
+/* ... (remaining code) ... */

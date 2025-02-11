@@ -1,36 +1,32 @@
-void fslib_duplicate(const char *full_path) {
-    assert(full_path);
+VideoCaptureController* VideoCaptureManager::GetOrCreateController(
+    media::VideoCaptureSessionId capture_session_id,
+    const media::VideoCaptureParams& params) {
+  DCHECK_CURRENTLY_ON(BrowserThread::IO);
 
-    struct stat s;
-    if (stat(full_path, &s)!= 0 || s.st_uid!= 0 || access(full_path, R_OK))
-        return;
+  auto session_it = sessions_.find(capture_session_id);
+  if (session_it == sessions_.end())
+    return nullptr;
+  const MediaStreamDevice& device_info = session_it->second;
 
-    char *dest_dir = build_dest_dir(full_path);
-    char path_buffer[PATH_MAX];
-    strcpy(path_buffer, full_path);
+  VideoCaptureController* existing_device =
+      LookupControllerByMediaTypeAndDeviceId(device_info.type, device_info.id);
 
-    char *ptr = strrchr(path_buffer, '/');
-    if (!ptr || ptr > path_buffer + PATH_MAX - 1)
-        return;
-    ptr++;
+  if (existing_device) {
+    DCHECK_EQ(device_info.type, existing_device->stream_type());
+    return existing_device;
+  }
 
-    if (*ptr == '\0')
-        return;
-
-    size_t name_len = strlen(dest_dir) + strlen(ptr) + 2;
-    char *name = malloc(name_len);
-    sprintf(name, "%s/%s", dest_dir, ptr);
-
-    if (stat(name, &s) == 0) {
-        free(name);
-        return;
+  // Check if a controller already exists for the device before creating a new one.
+  for (const auto& controller : controllers_) {
+    if (controller->stream_type() == device_info.type &&
+        controller->device_id() == device_info.id) {
+      return controller;
     }
-    free(name);
+  }
 
-    if (arg_debug || arg_debug_private_lib)
-        printf("    copying %s to private %s\n", full_path, dest_dir);
-
-    sbox_run(SBOX_ROOT| SBOX_SECCOMP, 4, PATH_FCOPY, "--follow-link", full_path, dest_dir);
-    report_duplication(full_path);
-    lib_cnt++;
+  VideoCaptureController* new_controller = new VideoCaptureController(
+      device_info.id, device_info.type, params,
+      video_capture_provider_->CreateDeviceLauncher(), emit_log_message_cb_);
+  controllers_.emplace_back(new_controller);
+  return new_controller;
 }

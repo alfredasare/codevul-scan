@@ -1,18 +1,14 @@
-sg_get_rq_mark(Sg_fd * sfp, int pack_id)
-{
-    Sg_request *resp;
-    unsigned long iflags;
-    bool authorized = is_authorized(sfp->owner);
-
-    write_lock_irqsave(&sfp->rq_list_lock, iflags);
-    for (resp = sfp->headrp; resp; resp = resp->nextrp) {
-        if ((1 == resp->done) && (!resp->sg_io_owned) &&
-            ((-1 == pack_id) || (resp->header.pack_id == pack_id)) &&
-            authorized) {
-            resp->done = 2;
-            break;
-        }
+c++
+UsbTransferFunction::~UsbTransferFunction() {
+    // Close and release the USB transfer endpoint
+    if (m_transferEndpoint) {
+        usb_close(m_transferEndpoint);
+        m_transferEndpoint = nullptr;
     }
-    write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
-    return resp;
+
+    // Free the USB transfer buffer
+    if (m_transferBuffer) {
+        free(m_transferBuffer);
+        m_transferBuffer = nullptr;
+    }
 }

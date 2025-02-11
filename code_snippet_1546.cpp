@@ -1,18 +1,19 @@
-SoftMPEG4Encoder::~SoftMPEG4Encoder() {
-    ALOGV("Destruct SoftMPEG4Encoder");
-    releaseEncoder();
+static unsigned char *AcquireCompactPixels(const Image *image, ExceptionInfo *exception)
+{
+  size_t packet_size, row_stride;
+  unsigned char *compact_pixels;
 
-    List<BufferInfo *> &outQueue = getPortQueue(1);
-    List<BufferInfo *> &inQueue = getPortQueue(0);
+  packet_size = (image->depth > 8UL) ? 2UL : 1UL;
+  row_stride = image->columns * packet_size;
 
-    if (!outQueue.empty()) {
-        ALOGE("Out queue is not empty!");
-        // Handle the error condition
-    } else if (!inQueue.empty()) {
-        ALOGE("In queue is not empty!");
-        // Handle the error condition
-    } else {
-        CHECK(outQueue.empty());
-        CHECK(inQueue.empty());
-    }
+  compact_pixels = calloc(1, row_stride * image->rows * sizeof(*compact_pixels));
+
+  if (compact_pixels == NULL)
+  {
+    (void) ThrowMagickException(exception, GetMagickModule(),
+      ResourceLimitError, "MemoryAllocationFailed", "`%s'",
+      image->filename);
+  }
+
+  return(compact_pixels);
 }

@@ -1,8 +1,12 @@
-static int check_addr_less_start(RBinJavaField *method, ut64 addr) {
-    ut64 start = r_bin_java_get_method_code_offset(method);
-    if (addr < 0 || addr >= start + method->code_size) {
-        return -1; // or some other error value
-    }
-    int result = (int)(addr - start);
-    return result < 0;
+void php_gd_error_method(int type, const char *format, va_list args)
+{
+	TSRMLS_FETCH();
+
+	int written = php_verror(NULL, "", type, format, args TSRMLS_CC);
+	if (written < 0) {
+		// Error occurred; handle error and return
+		// For example, report the error and terminate the process
+		report_error_and_terminate();
+		return;
+	}
 }

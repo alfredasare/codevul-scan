@@ -1,15 +1,13 @@
-static bool fixed_msr_to_range(u32 msr, u64 *start, u64 *end)
+static int tiff_closeproc(thandle_t clientdata)
 {
-    int seg, unit;
-    size_t len = sizeof(u64); // Define the buffer length
+	(void)clientdata;
+	tiff_handle *th = (tiff_handle *)clientdata;
+	gdIOCtx *ctx = th->ctx;
 
-    if (!fixed_msr_to_seg_unit(msr, &seg, &unit))
-        return false;
+        if (ctx && ctx-> ged_magic == GD_IO_MAGIC) {
+                (ctx->gd_free)(ctx);
+                th->ctx = NULL;
+        }
 
-    // Validate and sanitize input parameters
-    if (seg < 0 || seg > MAX_SEGMENTS || unit < 0 || unit > MAX_UNITS)
-        return false;
-
-    fixed_mtrr_seg_unit_range(seg, unit, start, end);
-    return true;
+	return 0;
 }

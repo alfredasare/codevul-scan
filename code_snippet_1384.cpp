@@ -1,18 +1,16 @@
-void flush_tlb_current_task(void)
-{
-    struct mm_struct *mm = current->mm;
-    rwlock_t flush_lock = RWLOCK_UNLOCKED;
-
-    preempt_disable();
-
-    rwlock_write_lock(&flush_lock);
-    count_vm_tlb_event(NR_TLB_LOCAL_FLUSH_ALL);
-    local_flush_tlb();
-    trace_tlb_flush(TLB_LOCAL_SHOOTDOWN, TLB_FLUSH_ALL);
-
-    if (cpumask_any_but(mm_cpumask(mm), smp_processor_id()) < nr_cpu_ids)
-        flush_tlb_others(mm_cpumask(mm), mm, 0UL, TLB_FLUSH_ALL);
-
-    rwlock_write_unlock(&flush_lock);
-    preempt_enable();
+static void handle_binary_protocol_error(conn *c) {
+if (c->binary_header.request.opcode > INT16_MAX) {
+> write\_bin\_error(c, PROTOCOL\_BINARY\_RESPONSE\_EINVAL, NULL, 0);
+> if (settings.verbose) {
+> fprintf(stderr, "Invalid opcode (out of bounds), close connection %d\n", c->sfd);
+> }
+c->write\_and\_go = conn\_closing;
+return;
+}
+write\_bin\_error(c, PROTOCOL\_BINARY\_RESPONSE\_EINVAL, NULL, 0);
+if (settings.verbose) {
+fprintf(stderr, "Protocol error (opcode %02x), close connection %d\n",
+c->binary\_header.request.opcode, c->sfd);
+}
+c->write\_and\_go = conn\_closing;
 }

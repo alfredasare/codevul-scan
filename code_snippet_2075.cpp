@@ -1,27 +1,20 @@
-xps_parse_glyph_offsets(char *s, float *uofs, float *vofs)
+int crypto_register_skcipher(struct skcipher_alg *alg)
 {
-    bool offsets_overridden; /* not used */
+	struct crypto_alg base = { };
+	int err;
 
-    while (*s!= '\0') {
-        if (*s == ',') {
-            s++;
-            if (*s == ',') {
-                s++;
-            } else {
-                char *end = strchr(s, ',');
-                if (end != NULL) {
-                    *end = '\0';
-                }
-                if (uofs != NULL) {
-                    *uofs = strtof(s, NULL);
-                } else if (vofs != NULL) {
-                    *vofs = strtof(s, NULL);
-                }
-                s = end != NULL ? end + 1 : s;
-            }
-        } else {
-            s++;
-        }
-    }
-    return s;
+	if (!alg || !alg->base.cra_name || !alg->base.cra_driver_name ||
+	    !alg->base.cra_blocksize || !alg->base.cra_ctxsize ||
+	    !alg->base.cra_alignmask || !alg->encrypt || !alg->decrypt ||
+	    !alg->base.cra_u.skcipher.min_keysize ||
+	    alg->base.cra_u.skcipher.max_keysize < alg->base.cra_u.skcipher.min_keysize)
+		return -EINVAL;
+
+	memcpy(&base, alg, sizeof(base));
+
+	err = skcipher_prepare_alg(alg);
+	if (err)
+		return err;
+
+	return crypto_register_alg(&base);
 }

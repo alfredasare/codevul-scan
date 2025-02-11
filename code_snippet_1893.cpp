@@ -1,31 +1,12 @@
-int ptsname_malloc(int fd, char **ret) {
-    size_t l = 256; 
+void xen_netbk_remove_xenvif(struct xenvif *vif)
+{
+        struct xen_netbk *netbk = vif->netbk;
 
-    assert(fd >= 0);
-    assert(ret);
-
-    for (;;) {
-        char *c;
-
-        c = new(char, l);
-        if (!c)
-            return -ENOMEM;
-
-        if (ptsname_r(fd, c, l) == 0) {
-            *ret = c;
-            return 0;
-        }
-        if (errno!= ERANGE) {
-            free(c);
-            return -errno;
+        if (!netbk) {
+                /* Handle the case when vif->netbk is NULL appropriately, e.g., log an error or return early. */
+                return;
         }
 
-        size_t max_size = SIZE_MAX / 2; 
-        l = (l < max_size)? l : max_size; 
-
-        free(c);
-
-        if (l > SIZE_MAX / 2) 
-            return -ENOMEM;
-    }
+        vif->netbk = NULL;
+        atomic_dec(&netbk->netfront_count);
 }

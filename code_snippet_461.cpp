@@ -1,7 +1,22 @@
-static void vhost_scsi_put_inflight(struct vhost_scsi_inflight *inflight)
-{
-    if (kref_read(&inflight->kref) == 0) {
-        return;
-    }
-    kref_put(&inflight->kref, vhost_scsi_done_inflight);
+bool Document::IsSecureContextImpl() const {
+  if (!GetSecurityOrigin()->IsPotentiallyTrustworthy())
+    return false;
+
+  if (SchemeRegistry::SchemeShouldBypassSecureContextCheck(
+          GetSecurityOrigin()->Protocol()))
+    return true;
+
+  if (!frame_)
+    return true;
+  Frame* parent = frame_->Tree().Parent();
+  while (parent) {
+    if (!parent->GetSecurityContext()
+             ->GetSecurityOrigin()
+             ->IsPotentiallyTrustworthy())
+      return false;
+    if (!parent->GetSecurityContext()->IsSecureContext())
+      return false;
+    parent = parent->Tree().Parent();
+  }
+  return true;
 }

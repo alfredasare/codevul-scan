@@ -1,13 +1,24 @@
-static int cp2112_i2c_write_req(void *buf, u8 slave_address, u8 *data, u8 data_length)
+static int snd_card_do_free(struct snd_card *card)
 {
-    struct cp2112_write_req_report *report = buf;
-
-    if (data_length > sizeof(report->data) - 1)
-        return -EINVAL;
-
-    report->report = CP2112_DATA_WRITE_REQUEST;
-    report->slave_address = slave_address << 1;
-    report->length = data_length;
-    memcpy(report->data, data, data_length);
-    return data_length + 3;
+#if IS_ENABLED(CONFIG_SND_MIXER_OSS)
+	if (snd_mixer_oss_notify_callback)
+		snd_mixer_oss_notify_callback(card, SND_MIXER_OSS_NOTIFY_FREE);
+#endif
+	snd_device_free_all(card);
+	if (card->private_free)
+		card->private_free(card);
+	if (snd_info_free_entry(card->proc_id) < 0) {
+		dev_warn(card->dev, "unable to free proc entry\n");
+		snd_info_card_free(card); /* Free the card's info structure if proc entry fails */
+	}
+	if (snd_info_card_free(card) < 0) {
+		dev_warn(card->dev, "unable to free card info\n");
+		/* Handle error accordingly */
+	} else {
+		snd_info_flush_cache(card); /* Ensure cache is flushed after successful free */
+	}
+	if (card->release_completion)
+		complete(card->release_completion);
+	kfree(card);
+	return 0;
 }

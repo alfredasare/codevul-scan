@@ -1,26 +1,15 @@
-php_http_url_t *php_http_url_parse_authority(const char *str, size_t len, unsigned flags TSRMLS_DC)
-{
-    size_t maxlen = strnlen(str, len) + 1;
-    struct parse_state *state = ecalloc(1, sizeof(*state) + maxlen);
+static const auto kMaxLinkClicksPerMinute = 5;  // Set maximum link clicks per minute as needed
+static base::Time last_click_time = base::Time::Now();
+base::TimeDelta interval = base::Time::Now() - last_click_time;
 
-    state->end = str + len;
-    state->ptr = str;
-    state->flags = flags;
-    state->maxlen = maxlen;
-    TSRMLS_SET_CTX(state->ts);
-
-    if (!(state->ptr = parse_authority(state))) {
-        efree(state);
-        return NULL;
+if (interval.InMinutes() < 1) {
+    int allowed_clicks = (interval.InMinutes() * kMaxLinkClicksPerMinute).floor();
+    if (allowed_clicks <= 0) {
+        return;
     }
-
-    if (state->ptr!= state->end) {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING,
-                "Failed to parse URL authority, unexpected character at pos %u in '%s'",
-                (unsigned) (state->ptr - str), str);
-        efree(state);
-        return NULL;
-    }
-
-    return (php_http_url_t *) state;
 }
+last_click_time = base::Time::Now();
+
+BEREKTAIN_EQ(link_, source);
+if (GetDelegate()->LinkClicked(ui::DispositionFromEventFlags(event_flags)))
+    RemoveSelf();

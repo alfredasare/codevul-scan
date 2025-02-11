@@ -1,23 +1,22 @@
-static void acpi_pcihp_update_hotplug_bus(AcpiPciHpState *s, int bsel)
+static int __init xen_blkif_init(void)
 {
-    BusChild *kid, *next;
-    PCIBus *bus = acpi_pcihp_find_hotplug_bus(s, bsel);
+	int rc = 0;
 
-    /*... */
+	if (!xen_domain())
+		return -ENODEV;
 
-    if (!bus) {
-        return;
-    }
-    kid = QTAILQ_FIRST(&bus->qbus.children);
-    while (kid != NULL) {
-        DeviceState *qdev = kid->child;
-        PCIDevice *pdev = PCI_DEVICE(qdev);
-        int slot = PCI_SLOT(pdev->devfn);
+	rc = xen_blkif_interface_init();
+	if (rc)
+		goto cleanup_interface;
 
-        if (acpi_pcihp_pc_no_hotplug(s, pdev)) {
-            s->acpi_pcihp_pci_status[bsel].hotplug_enable &= ~(1U << slot);
-        }
+	rc = xen_blkif_xenbus_init();
+	if (rc)
+		goto cleanup_interface;
 
-        kid = QTAILQ_NEXT(kid, sibling);
-    }
+	/* No errors, return successfully */
+	return 0;
+
+cleanup_interface:
+	xen_blkif_interface_cleanup(); /* Release resources allocated by xen_blkif_interface_init */
+	return rc;
 }

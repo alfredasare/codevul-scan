@@ -1,22 +1,6 @@
-_gcry_mpi_point_init (mpi_point_t p)
+PDO_API void php_pdo_stmt_delref(pdo_stmt_t *stmt TSRMLS_DC)
 {
-    int err;
-
-    p->x = mpi_new (0);
-    if (p->x == NULL) {
-        err = gcry_error (GCRYV_ERROR_ALLOC);
-        return err;
-    }
-
-    p->y = mpi_new (0);
-    if (p->y == NULL) {
-        err = gcry_error (GCRYV_ERROR_ALLOC);
-        return err;
-    }
-
-    p->z = mpi_new (0);
-    if (p->z == NULL) {
-        err = gcry_error (GCRYV_ERROR_ALLOC);
-        return err;
-    }
+	if (stmt && stmt->refcount > 0 && --stmt->refcount == 0) {
+		free_statement(stmt TSRMLS_CC);
+	}
 }

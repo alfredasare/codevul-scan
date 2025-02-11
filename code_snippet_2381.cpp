@@ -1,30 +1,11 @@
-status_t OMXNodeInstance::createPersistentInputSurface(
-    sp<IGraphicBufferProducer> *bufferProducer,
-    sp<IGraphicBufferConsumer> *bufferConsumer) {
-    String8 name("GraphicBufferSource");
-    // Validate the input name
-    if (name.indexOf('/') != -1 || !isAllowedName(name.string())) {
-        ALOGE("Invalid name: %s", name.string());
-        return BAD_VALUE;
-    }
+static int pid_numa_maps_open(struct inode *inode, struct file *file)
+{
+	int error;
 
-    sp<IGraphicBufferProducer> producer;
-    sp<IGraphicBufferConsumer> consumer;
-    BufferQueue::createBufferQueue(&producer, &consumer);
-    consumer->setConsumerName(name);
-    consumer->setConsumerUsageBits(GRALLOC_USAGE_HW_VIDEO_ENCODER);
+	error = numa_maps_open(inode, file, &proc_pid_numa_maps_op);
+	if (error)
+		return error;
 
-    //... (rest of the function remains unchanged)
-
-    return OK;
-}
-
-bool isAllowedName(const char* name) {
-    static const char* allowedNames[] = {"GraphicBufferSource", "AllowedName1", "AllowedName2"};
-    for (const char* allowedName : allowedNames) {
-        if (strcmp(name, allowedName) == 0) {
-            return true;
-        }
-    }
-    return false;
+	get_pid(file->f_path.dentry->d_inode);
+	return 0;
 }

@@ -1,6 +1,8 @@
-OMX::buffer_id OMXNodeInstance::makeBufferID(OMX_BUFFERHEADERTYPE *bufferHeader) {
-    if (bufferHeader == NULL || bufferHeader->nSize < sizeof(OMX_BUFFERHEADERTYPE)) {
-        throw std::invalid_argument("Invalid buffer header");
+static inline void notify_cmos_timer(int timer_value) {
+    if (timer_value < 0 || timer_value > INT_MAX) {
+        fprintf(stderr, "Invalid timer value received: %d\n", timer_value);
+        return;
     }
-    return (OMX::buffer_id)bufferHeader;
+
+    // Add the actual functionality here
 }

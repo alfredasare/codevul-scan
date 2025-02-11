@@ -1,16 +1,18 @@
-int cap_inode_need_killpriv(struct dentry *dentry)
+static void check\_guest\_throttling(void)
 {
-    struct inode *inode = dentry->d_inode;
-    int error;
+if (!mig\_throttle\_on) {
+return;
+}
 
-    if (!dentry ||!dentry->d_inode ||!dentry->d_inode->i_op->getxattr) {
-        return 0;
-    }
+int64\_t t1 = qemu\_clock\_get\_ns(QEMU\_CLOCK\_REALTIME);
 
-    error = inode->i_op->getxattr(dentry, XATTR_NAME_CAPS, NULL, 0);
-    if (error <= 0) {
-        return 0;
-    }
+if (!atomic\_load(&t0)) {
+atomic\_init(&t0, t1);
+return;
+}
 
-    return 1;
+if (40 < (t1-atomic\_load(&t0))/1000000) {
+mig\_throttle\_guest\_down();
+atomic\_compare\_exchange\_weak(&t0, &t0, &t1);
+}
 }

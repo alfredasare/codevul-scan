@@ -1,8 +1,6 @@
-int xmlrpc_getlast_error(void)
-{
-    char *error_message = xmlrpc_error_message(xmlrpc_error_code);
-    if (strchr(error_message, '/')!= NULL) {
-        return -1; // or some other error code
-    }
-    return xmlrpc_error_code;
+EINVAL;
 }
+
+/* It's a good practice to avoid #including inside functions,
+so move the #include <stddef.h> to the beginning of the file,
+before defining the function. */

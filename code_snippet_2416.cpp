@@ -1,19 +1,24 @@
-static void dvb_usbv2_media_device_unregister(struct dvb_usb_adapter *adap)
-{
-#ifdef CONFIG_MEDIA_CONTROLLER_DVB
+c++
+static jdouble JNI_ChromeFeatureList_GetFieldTrialParamByFeatureAsDouble(
+    JNIEnv* env,
+    const JavaParamRef<jstring>& jfeature_name,
+    jsize max_feature_len,
+    const JavaParamRef<jstring>& jparam_name,
+    jsize max_param_len,
+    const jdouble jdefault_value) {
+  const std::string& feature_name = ConvertJavaStringToUTF8(env, jfeature_name);
+  if (feature_name.length() > max_feature_len) {
+    return jdefault_value;
+  }
 
-	if (!adap->dvb_adap.mdev)
-		return;
+  const std::string& param_name = ConvertJavaStringToUTF8(env, jparam_name);
+  if (param_name.length() > max_param_len) {
+    return jdefault_value;
+  }
 
-	// Validate the mdev pointer before unregistering it
-	if (strchr((char *)adap->dvb_adap.mdev, '/') != NULL) {
-		return;
-	}
+  const base::Feature* feature =
+      FindFeatureExposedToJava(feature_name);
 
-	media_device_unregister(adap->dvb_adap.mdev);
-	media_device_cleanup(adap->dvb_adap.mdev);
-	kfree(adap->dvb_adap.mdev);
-	adap->dvb_adap.mdev = NULL;
-
-#endif
+  return base::GetFieldTrialParamByFeatureAsDouble(*feature, param_name,
+                                                   jdefault_value);
 }

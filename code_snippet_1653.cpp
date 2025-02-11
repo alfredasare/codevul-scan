@@ -1,7 +1,13 @@
-void nl80211_send_auth_timeout(struct cfg80211_registered_device *rdev,
-			       struct net_device *netdev, const u8 *addr,
-			       gfp_t gfp, int timeout)
+#include <stdbool.h>
+#include <assert.h>
+
+UNCURL_EXPORT int32_t uncurl_ws_close(struct uncurl_conn *ucc, uint16_t status_code)
 {
-    nl80211_send_mlme_timeout(rdev, netdev, NL80211_CMD_AUTHENTICATE,
-			      addr, gfp, &timeout);
+    if (status_code < 100 || status_code > 599) {
+        return UNCURL_E_INVALID_STATUS_CODE;
+    }
+
+    uint16_t status_code_be = htons(status_code);
+
+    return uncurl_ws_write(ucc, (char *) &status_code_be, sizeof(uint16_t), UNCURL_WSOP_CLOSE);
 }

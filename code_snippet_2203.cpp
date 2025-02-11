@@ -1,12 +1,7 @@
-void SVGStyleElement::ParseAttribute(const AttributeModificationParams& params) {
-  if (params.name == SVGNames::titleAttr) {
-    if (sheet_ && IsInDocumentTree() && !params.new_value.empty()) {
-      sheet_->SetTitle(params.new_value);
-    } else {
-      throw std::invalid_argument("Invalid or missing title attribute value");
-    }
-    return;
-  }
+#include <linux/udp.h> /* For UDP_PROTOCOL_NUMBER */
 
-  SVGElement::ParseAttribute(params);
+int udp_offload_init(void)
+{
+    const int expected_protocol = UDP_PROTOCOL_NUMBER;
+    return inet6_add_offload(&udpv6_offload, expected_protocol);
 }

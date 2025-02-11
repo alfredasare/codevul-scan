@@ -1,11 +1,5 @@
-R_API void r_config_hold_free(RConfigHold *h) {
-    if (h) {
-        if (h->list_num) {
-            r_list_free(h->list_num);
-        }
-        if (h->list_char) {
-            r_list_free(h->list_char);
-        }
-        R_FREE(h);
-    }
+if (item_len < sizeof(cert)) {
+    ND_PRINT((ndo, " [|%s]", NPSTR(ISAKMP_NPTYPE_CERT)));
+    return NULL;
 }
+memcpy(&cert, ext, sizeof(cert));

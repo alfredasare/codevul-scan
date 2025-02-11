@@ -1,12 +1,13 @@
-static struct page *get_a_page(struct receive_queue *rq, gfp_t gfp_mask)
-{
-    struct page *p = rq->pages;
+#include <mutex>
+#include <unordered_set>
 
-    if (p) {
-        rq->pages = (struct page *)validate_and_sanitize(p->private, rq->allowed_pages_chars);
-        p->private = 0;
-    } else
-        p = alloc_page(gfp_mask);
+std::unordered_set<TracingUI*, MyHash, MyEqual> tracing_uis_;
+std::mutex mtx;
 
-    return p;
+void TracingControllerImpl::UnregisterTracingUI(TracingUI* tracing_ui) {
+    std::lock_guard<std::mutex> lock(mtx);
+    auto it = tracing_uis_.find(tracing_ui);
+    if (it != tracing_uis_.end()) {
+        tracing_uis_.erase(it);
+    }
 }

@@ -1,21 +1,58 @@
-static void correctstack(lua_State *L, TValue *oldstack) {
-  CallInfo *ci;
-  GCObject *up;
-  size_t stack_size = L->stack - L->top;
-  L->top = (L->top - oldstack) + L->stack;
-  for (up = L->openupval; up!= NULL; up = up->gch.next) {
-    gco2uv(up)->v = (gco2uv(up)->v - oldstack) + L->stack;
-    if (gco2uv(up)->v > L->stack) {
-      // Handle buffer overflow error
-    }
+version of the code:
+
+  cff_parse_integer( FT_Byte*  start,
+                     FT_Byte*  limit )
+{
+  FT_Byte*  p   = start;
+  FT_Int    v   = *p++;
+  FT_Long   val = 0;
+  FT_Long   max = LONG_MAX - (limit - p); // Added to prevent integer overflow
+
+  if ( v == 28 )
+  {
+    if ( p + 2 > limit )
+      goto Bad;
+
+    val = (FT_Short)( ( (FT_UShort)p[0] << 8 ) | p[1] );
   }
-  for (ci = L->base_ci; ci <= L->ci; ci++) {
-    ci->top = (ci->top - oldstack) + L->stack;
-    ci->base = (ci->base - oldstack) + L->stack;
-    ci->func = (ci->func - oldstack) + L->stack;
-    if (ci->top > L->stack) {
-      // Handle buffer overflow error
-    }
+  else if ( v == 29 )
+  {
+    if ( p + 4 > limit )
+      goto Bad;
+
+    val = (FT_Long)( ( (FT_ULong)p[0] << 24 ) |
+                     ( (FT_ULong)p[1] << 16 ) |
+                     ( (FT_ULong)p[2] <<  8 ) |
+                       (FT_ULong)p[3]         );
   }
-  L->base = (L->base - oldstack) + L->stack;
+  else if ( v < 247 )
+  {
+    val = v - 139;
+  }
+  else if ( v < 251 )
+  {
+    if ( p + 1 > limit )
+      goto Bad;
+
+    val = ( v - 247 ) * 256 + p[0] + 108;
+    if (val > max) // Added to check for integer overflow
+      goto Bad;
+  }
+  else
+  {
+    if ( p + 1 > limit )
+      goto Bad;
+
+    val = -( v - 251 ) * 256 - p[0] - 108;
+    if (val < min) // Added to check for integer underflow
+      goto Bad;
+  }
+
+Exit:
+  return val;
+
+Bad:
+  val = 0;
+  FT_TRACE4(( "!!!END OF DATA:!!!" ));
+  goto Exit;
 }

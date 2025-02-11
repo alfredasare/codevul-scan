@@ -1,18 +1,11 @@
-static int ext4_mark_dquot_dirty(struct dquot *dquot)
+static struct mempolicy *shmem_get_sbmpol(struct shmem_sb_info *sbinfo)
 {
-    int ret;
-
-    /* Are we journaling quotas? */
-    if (EXT4_SB(dquot->dq_sb)->s_qf_names[USRQUOTA] ||
-        EXT4_SB(dquot->dq_sb)->s_qf_names[GRPQUOTA]) {
-        dquot_mark_dquot_dirty(dquot);
-        ret = ext4_write_dquot(dquot);
-        if (ret < 0) {
-            return ret;
-        }
-    } else {
-        return dquot_mark_dquot_dirty(dquot);
-    }
-
-    return 0;
+	struct mempolicy *mpol = NULL;
+	if (sbinfo && sbinfo->mpol) {
+		spin_lock(&sbinfo->stat_lock);	/* prevent replace/use races */
+		mpol = sbinfo->mpol;
+		get_mempolicy(mpol);
+		spin_unlock(&sbinfo->stat_lock);
+	}
+	return mpol;
 }

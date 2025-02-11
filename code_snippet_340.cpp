@@ -1,28 +1,32 @@
-static void tg3_probe_ncsi(struct tg3 *tp)
+void DocumentLoader::mainReceivedError(const ResourceError& error)
 {
-    u32 apedata;
-    int ape_size;
+    ASSERT(!error.isNull());
+    if (error.errorCode() == ResourceError::ErrorNetwork || 
+        error.errorCode() == ResourceError::ErrorTimeout ||
+        error.errorCode() == ResourceError::ErrorAbort ||
+        error.errorCode() == ResourceError::ErrorUnknown) {
+        if (m_applicationCacheHost->maybeLoadFallbackForMainError(request(), error))
+            return;
+    } else {
+        // Handle unexpected error codes here if necessary
+        // For example, logging or displaying an error message
+        LOG("Unexpected error code: " << error.errorCode());
+    }
 
-    ape_size = tg3_ape_get_size(tp, TG3_APE_SEG_SIG);
-    if (ape_size <= 0)
+    if (m_identifierForLoadWithoutResourceLoader) {
+        ASSERT(!mainResourceLoader());
+        frameLoader()->client()->dispatchDidFailLoading(this, m_identifierForLoadWithoutResourceLoader, error);
+    }
+
+#if !USE(CF)
+    ASSERT(!mainResourceLoader() || !mainResourceLoader()->defersLoading());
+#endif
+
+    m_applicationCacheHost->failedLoadingMainResource();
+
+    if (!frameLoader())
         return;
-
-    apedata = tg3_ape_read32(tp, TG3_APE_SEG_SIG, sizeof(u32));
-    if (apedata!= APE_SEG_SIG_MAGIC)
-        return;
-
-    ape_size = tg3_ape_get_size(tp, TG3_APE_FW_STATUS);
-    if (ape_size <= 0)
-        return;
-
-    apedata = tg3_ape_read32(tp, TG3_APE_FW_STATUS, sizeof(u32));
-    if (!(apedata & APE_FW_STATUS_READY))
-        return;
-
-    ape_size = tg3_ape_get_size(tp, TG3_APE_FW_FEATURES);
-    if (ape_size <= 0)
-        return;
-
-    if ((apedata = tg3_ape_read32(tp, TG3_APE_FW_FEATURES, sizeof(u32)) & TG3_APE_FW_FEATURE_NCSI))
-        tg3_flag_set(tp, APE_HAS_NCSI);
+    setMainDocumentError(error);
+    clearMainResourceLoader();
+    frameLoader()->receivedMainResourceError(error);
 }

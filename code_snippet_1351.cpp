@@ -1,22 +1,30 @@
-#include <openssl/rand.h>
-#include <openssl/err.h>
-
-int i2d_DSA_PUBKEY_fp(FILE *fp, DSA *dsa)
+static int abort_sasl(aClient *cptr)
 {
-    // Seed the random number generator
-    unsigned char seed[32];
-    if (!RAND_bytes(seed, sizeof(seed)) || ERR_peek_error()!= 0) {
-        ERR_error_fp(stderr);
-        return 0;
+    // Add null check for cptr
+    if (cptr == NULL)
+    {
+        return -1;
     }
 
-    // Generate the private key using the secure random number generator
-    EVP_PKEY *pkey = EVP_PKEY_new();
-    if (!DSA_generate_key(pkey, dsa)) {
-        EVP_PKEY_free(pkey);
-        return 0;
-    }
-    //...
+    if (cptr->local && (cptr->local->sasl_out == 0 || cptr->local->sasl_complete))
+    {
+        cptr->local->sasl_out = cptr->local->sasl_complete = 0;
+        sendto_one(cptr, err_str(ERR_SASLABORTED), me.name, BadPtr(cptr->name) ? "*" : cptr->name);
 
-    return ASN1_i2d_fp_of(pkey, fp, dsa);
+        if (*cptr->local->sasl_agent)
+        {
+            aClient *agent_p = find_client(cptr->local->sasl_agent, NULL);
+
+            if (agent_p != NULL)
+            {
+                sendto_server(NULL, 0, 0, ":%s SASL %s %s D A",
+                               me.name, AGENT_SID(agent_p), encode_puid(cptr));
+                return 0;
+            }
+        }
+
+        sendto_server(NULL, 0, 0, ":%s SASL * %s D A", me.name, encode_puid(cptr));
+    }
+
+    return 0;
 }

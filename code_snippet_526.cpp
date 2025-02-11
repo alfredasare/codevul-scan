@@ -1,38 +1,14 @@
-bool Smb4KGlobal::addMountedShare(std::unique_ptr<Smb4KShare> share)
-{
-  Q_ASSERT(share);
+#include <regex>
 
-  bool added = false;
+static const std::regex kManifestUrlWhitelist("^(https?:\\/\\/[\\w-]+(\\.[\\w-]+)+([\\w.,@?^=%&amp;:\/~+#-]*[\\w@?^=%&amp;\/~+#-])?)$");
 
-  if (share && share.get()) 
-  {
-    mutex.lock();
-
-    if (!findShareByPath(share->path()))
-    {
-      p->mountedSharesList.push_back(std::move(share)); 
-      added = true;
-
-      p->onlyForeignShares = true;
-    
-      for (auto& s : p->mountedSharesList)
-      {
-        if (!s->isForeign())
-        {
-          p->onlyForeignShares = false;
-          break;
-        }
-      }
-    }
-    else
-    {
+void CreateGroupInEmptyOrigin() {
+    if (!std::regex_match(kManifestUrl, kManifestUrlWhitelist)) {
+        // Handle invalid input by logging an error or throwing an exception.
+        // Prevent further execution of the function to avoid creating a group with an unauthorized URL.
+        return;
     }
 
-    mutex.unlock();
-  }
-  else
-  {
-  }
-
-  return added;
+    storage()->LoadOrCreateGroup(kManifestUrl, delegate());
+    Verify_CreateGroup();
 }

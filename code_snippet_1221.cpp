@@ -1,5 +1,5 @@
-static int64_t sector_lun2qemu(int64_t sector, IscsiLun *iscsilun)
+json_t *json_false(void)
 {
-    __uint128_t result = (uint64_t)sector * (uint64_t)iscsilun->block_size;
-    return (int64_t)(result / BDRV_SECTOR_SIZE);
+    json_t false_value = {JSON_FALSE, (size_t)-1};
+    return json_copy(&false_value);
 }

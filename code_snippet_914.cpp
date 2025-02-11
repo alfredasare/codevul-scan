@@ -1,10 +1,22 @@
-static bool is_good_origin(const char *origin, const char *require)
+png_data_freer(png_structp png_ptr, png_infop info_ptr,
+   int freer, png_uint_32 mask)
 {
-    size_t origin_len  = strnlen(origin, SIZE_MAX);
-    size_t require_len = strnlen(require, SIZE_MAX);
-    if (origin_len < require_len)
-        return false;
-    if (strncmp(origin + (origin_len - require_len), require, require_len)!= 0)
-        return false;
-    return true;
+   png_debug(1, "in png_data_freer");
+
+   if (png_ptr == NULL || info_ptr == NULL)
+      return;
+
+   // Add bounds checking for the freer parameter
+   if (freer < PNG_DESTROY_DATA || freer > PNG_USER_CHUNK_DATA) {
+      png_warning(png_ptr, "Invalid freer parameter value in png_data_freer.");
+      return;
+   }
+
+   if (freer == PNG_DESTROY_WILL_FREE_DATA)
+      info_ptr->free_me |= mask;
+   else if (freer == PNG_USER_WILL_FREE_DATA)
+      info_ptr->free_me &= ~mask;
+   else
+      png_warning(png_ptr,
+         "Unknown freer parameter in png_data_freer.");
 }

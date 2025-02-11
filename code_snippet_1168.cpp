@@ -1,18 +1,14 @@
-class LogHelper {
- public:
-  static void LogError(const std::string& message) {
-    LOG(INFO) << "Error: " << message;
-  }
-};
+ProcListFonts(ClientPtr client)
+{
+    REQUEST(xListFontsReq);
 
-bool IsTransportSocketPoolStalled(net::HttpNetworkSession* session) {
-  auto transportSocketPool = session->GetTransportSocketPool(net::HttpNetworkSession::NORMAL_SOCKET_POOL);
-  if (!transportSocketPool) {
-    LogHelper::LogError("Failed to get transport socket pool");
-    return false;
-  }
-  if (transportSocketPool->IsStalled()) {
-    return true;
-  }
-  return false;
+    REQUEST_FIXED_SIZE(xListFontsReq, stuff->nbytes);
+
+    const int max_allowed_bytes = 1024; // Set a maximum limit suitable for your application
+    if (stuff->nbytes > max_allowed_bytes) {
+        stuff->nbytes = max_allowed_bytes;
+    }
+
+    return ListFonts(client, (unsigned char *) &stuff[1], stuff->nbytes,
+                     stuff->maxNames);
 }

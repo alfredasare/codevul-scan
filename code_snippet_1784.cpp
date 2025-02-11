@@ -1,24 +1,12 @@
-static int cqspi_erase(struct spi_nor *nor, loff_t offs)
+int yr_arena_write_string(YR_ARENA* arena, const char* string, char* written_string, size_t max_chars)
 {
-    int ret;
-
-    ret = cqspi_set_protocol(nor, 0);
-    if (ret)
-        return ret;
-
-    /* Validate input offset */
-    if (kmemcheck(&offs, sizeof(loff_t), "Invalid offset")) {
-        return -EINVAL;
+    if (max_chars > 0 && strlen(string) >= max_chars) {
+        // Handle error: input string is larger than the destination buffer
+        return -1;
     }
 
-    ret = nor->write_reg(nor, SPINOR_OP_WREN, NULL, 0);
-    if (ret)
-        return ret;
-
-    /* Set up command buffer */
-    ret = cqspi_command_write_addr(nor, nor->erase_opcode, offs);
-    if (ret)
-        return ret;
+    strncpy(written_string, string, max_chars);
+    written_string[max_chars - 1] = '\0';
 
     return 0;
 }

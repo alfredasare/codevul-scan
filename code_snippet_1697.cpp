@@ -1,26 +1,10 @@
-void PDFCreated(
-    const content::DevToolsManagerDelegate::CommandCallback& callback,
-    int command_id,
-    HeadlessPrintManager::PrintResult print_result,
-    const std::string& data) {
-  std::unique_ptr<base::DictionaryValue> response;
-  if (print_result == HeadlessPrintManager::PRINT_SUCCESS) {
-    if (!IsValidPdfData(data)) {
-      response = CreateErrorResponse(command_id, kErrorInvalidInput, "Invalid PDF data");
-    } else {
-      data = SanitizePdfData(data);
-      response = CreateSuccessResponse(command_id, HeadlessPrintManager::PDFContentsToDictionaryValue(data));
-    }
-  } else {
-    response = CreateErrorResponse(command_id, kErrorServerError, HeadlessPrintManager::PrintResultToString(print_result));
-  }
-  callback.Run(std::move(response));
-}
+bool lockdep_genl_is_held(void)
+{
+	struct lock_class_key *lock_key = &genl_mutex.dep_map->key;
+	struct task_struct *current = current_task();
 
-bool IsValidPdfData(const std::string& data) {
-  return data.find("%PDF-1.4")!= std::string::npos &&!data.find("%!PS-Adobe")!= std::string::npos;
-}
+	if (lock_class_try_match(current->hold_lock_class, lock_key))
+		return true;
 
-std::string SanitizePdfData(const std::string& data) {
-  return data.replace(data.find("%!"), data.find("%!")+2, "");
+	return lockdep_is_held(&genl_mutex);
 }

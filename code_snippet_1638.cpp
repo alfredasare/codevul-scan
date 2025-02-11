@@ -1,14 +1,17 @@
-tt_cmap6_get_info( TT_CMap       cmap,
-                     TT_CMapInfo  *cmap_info )
+sync_force_parallel_store(struct mddev *mddev, const char *buf, size_t len)
 {
-    FT_Byte*  p = cmap->data + 4;
+	unsigned long n;
 
-    if (p < cmap->data || p >= cmap->data + cmap->size) {
-        return FT_Err_Invalid_Argument;
-    }
+	if (kstrtoul_from_user(buf, len, 10, &n))
+		return -EINVAL;
 
-    cmap_info->format   = 6;
-    cmap_info->language = (FT_ULong)TT_PEEK_USHORT( p );
+	if (n > 1)
+		return -ERANGE;
 
-    return FT_Err_Ok;
+	mddev->parallel_resync = n;
+
+	if (mddev->sync_thread)
+		wake_up(&resync_wait);
+
+	return len;
 }

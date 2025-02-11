@@ -1,12 +1,13 @@
-static int ovl_set_timestamps(struct dentry *upperdentry, struct kstat *stat)
+static inline void mcryptd_check_internal(struct rtattr **tb, u32 *type,
+					  u32 *mask)
 {
-    struct iattr attr = {
-       .ia_size = sizeof(struct iattr),
-       .ia_valid =
-             ATTR_ATIME | ATTR_MTIME | ATTR_ATIME_SET | ATTR_MTIME_SET,
-       .ia_atime = stat->atime,
-       .ia_mtime = stat->mtime,
-    };
+	const struct crypto_attr_type *algt;
 
-    return notify_change(upperdentry, &attr, NULL);
+	algt = crypto_get_attr_type_const(tb);
+	if (!algt)
+		return;
+	if (algt->type & CRYPTO_ALG_INTERNAL)
+		*type |= CRYPTO_ALG_INTERNAL;
+	if (algt->mask & CRYPTO_ALG_INTERNAL)
+		*mask |= CRYPTO_ALG_INTERNAL;
 }

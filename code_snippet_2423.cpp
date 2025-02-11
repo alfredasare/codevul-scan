@@ -1,24 +1,22 @@
-CatalogueAddFPE (CataloguePtr cat, FontPathElementPtr fpe)
-{
-    FontPathElementPtr *new;
-    size_t new_size;
+static int _c2s_router_connect(c2s_t c2s) {
+    log_write(c2s->log, LOG_NOTICE, "attempting connection to router at %s, port=%d", c2s->router_ip, c2s->router_port);
 
-    if (cat->fpeCount > cat->fpeAlloc)
-    {
-        new_size = cat->fpeAlloc * 2;
-
-        new = xzalloc(new_size * sizeof(FontPathElementPtr));
-
-        if (new == NULL)
-            return AllocError;
-
-        memcpy(new, cat->fpeList, cat->fpeAlloc * sizeof(FontPathElementPtr));
-
-        cat->fpeList = new;
-        cat->fpeAlloc = new_size;
+    c2s->fd = mio_connect(c2s->mio, c2s->router_port, c2s->router_ip, NULL, c2s_router_mio_callback, (void *) c2s);
+    if (c2s->fd == NULL) {
+        if (errno == ECONNREFUSED)
+            c2s_lost_router = 1;
+        log_write(c2s->log, LOG_NOTICE, "connection attempt to router failed: %s (%d)", MIO_STRERROR(MIO_ERROR), MIO_ERROR);
+        return 1;
     }
 
-    cat->fpeList[cat->fpeCount++] = fpe;
+    c2s->router = sx_new(c2s->sx_env, c2s->fd->fd, c2s_router_sx_callback, (void *) c2s);
+    if (c2s->router == NULL) {
+        log_write(c2s->log, LOG_ERR, "Failed to create new SX client for router connection");
+        mio_close(c2s->fd);
+        return 1;
+    }
 
-    return Successful;
+    sx_client_init(c2s->router, 0, NULL, NULL, NULL, "1.0");
+
+    return 0;
 }

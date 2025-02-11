@@ -1,14 +1,34 @@
-static u64 kvm_dr6_fixed(struct kvm_vcpu *vcpu)
-{
-    char buffer[256]; // Fixed-size buffer
-    u64 fixed = DR6_FIXED_1;
+c++
+bool RenderFrameHostManager::ReinitializeRenderFrame(
+    RenderFrameHostImpl* render_frame_host) {
+  if (!render_frame_host) {
+    // Handle NULL input parameter
+    return false;
+  }
 
-    if (!guest_cpuid_has_rtm(vcpu)) {
-        fixed |= DR6_RTM;
-        snprintf(buffer, sizeof(buffer), "Fixed value: 0x%" PRIx64, fixed);
-    } else {
-        snprintf(buffer, sizeof(buffer), "RTM enabled");
+  DCHECK(render_frame_host);
+
+  DCHECK(!render_frame_host->IsRenderFrameLive());
+
+  CreateOpenerProxies(render_frame_host->GetSiteInstance(), frame_tree_node_);
+
+  if (!frame_tree_node_->parent()) {
+    DCHECK(!GetRenderFrameProxyHost(render_frame_host->GetSiteInstance()));
+    if (!InitRenderView(render_frame_host->render_view_host(), nullptr))
+      return false;
+  } else {
+    if (!InitRenderFrame(render_frame_host))
+      return false;
+
+    RenderFrameProxyHost* proxy_to_parent = GetProxyToParent();
+    if (proxy_to_parent) {
+      const gfx::Size* size = render_frame_host->frame_size()
+                                  ? &*render_frame_host->frame_size()
+                                  : nullptr;
+      GetProxyToParent()->SetChildRWHView(render_frame_host->GetView(), size);
     }
+  }
 
-    return fixed;
+  DCHECK(render_frame_host->IsRenderFrameLive());
+  return true;
 }

@@ -1,9 +1,8 @@
-int get_camera_metadata_ro_entry(const camera_metadata_t *src, size_t index, camera_metadata_ro_entry_t *entry) {
-    if (!src || index >= src->size ||!entry) {
-        return -EINVAL;
-    }
-    if ((uintptr_t)entry % sizeof(camera_metadata_ro_entry_t)!= 0) {
-        return -EFAULT;
-    }
-    return get_camera_metadata_entry((camera_metadata_t*)src, index, (camera_metadata_entry_t*)entry);
-}
+void RunTransactionTestWithResponse(net::HttpCache* cache,
+const MockTransaction& trans\_info,
+std::string\* response\_headers) {
+net::HttpResponseInfo response;
+RunTransactionTestWithResponseInfo(cache, trans\_info, &response);
+response.headers->GetNormalizedHeaders(response\_headers);
+
+// Fix for CWE-399 and CVE-2011-310

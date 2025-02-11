@@ -1,20 +1,37 @@
-AP_CORE_DECLARE(conn_rec *) ap_create_slave_connection(conn_rec *c)
-{
-    apr_pool_t *pool;
-    conn_slave_rec *new;
-    conn_rec *sc = apr_palloc(c->pool, sizeof(conn_rec));
-    conn_rec *sc_copy = apr_palloc(c->pool, sizeof(conn_rec));
+explicit CreateSessionDescriptionRequest(
+    const scoped_refptr<base::SingleThreadTaskRunner>& main_thread,
+    const blink::WebRTCSessionDescriptionRequest& request,
+    const base::WeakPtr<RTCPeerConnectionHandler>& handler,
+    const base::WeakPtr<PeerConnectionTracker>& tracker,
+    PeerConnectionTracker::Action action)
+    : main_thread_(main_thread),
+      webkit_request_(request) {
+  if (!handler || !handler.get()) {
+    LOG(ERROR) << "Invalid handler weak pointer";
+    return;
+  }
+  handler_ = handler;
 
-    apr_pool_create(&pool, c->pool);
-    apr_pool_tag(pool, "slave_conn");
-    memcpy(sc_copy, c, sizeof(conn_rec));
-    sc_copy->slaves = NULL;
-    sc_copy->master = c;
-    sc_copy->input_filters = NULL;
-    sc_copy->output_filters = NULL;
-    sc_copy->pool = pool;
+  if (!tracker || !tracker.get()) {
+    LOG(ERROR) << "Invalid tracker weak pointer";
+    return;
+  }
+  tracker_ = tracker;
+  action_ = action;
+}
 
-    new = apr_array_push(c->slaves);
-    new->c = sc_copy;
-    return sc_copy;
+void DoSomethingWithHandler() {
+  if (!handler_ || !handler_.get()) {
+    LOG(ERROR) << "Invalid handler weak pointer";
+    return;
+  }
+  // Use handler_
+}
+
+void DoSomethingWithTracker() {
+  if (!tracker_ || !tracker_.get()) {
+    LOG(ERROR) << "Invalid tracker weak pointer";
+    return;
+  }
+  // Use tracker_
 }

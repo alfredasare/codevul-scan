@@ -1,25 +1,13 @@
-static int get_freq(RangeCoder *rc, unsigned total_freq, unsigned *freq)
-{
-    if (total_freq <= 0)
-        return AVERROR_INVALIDDATA;
-
-    total_freq = atoi(sanitized_str(total_freq));
-
-    if (total_freq == 0)
-        return AVERROR_INVALIDDATA;
-
-    rc->range = rc->range / total_freq;
-
-    if (rc->range == 0)
-        return AVERROR_INVALIDDATA;
-
-    *freq = rc->code / rc->range;
-
-    return 0;
-}
-
-static char *sanitized_str(unsigned val) {
-    char *str = malloc(32);
-    sprintf(str, "%u", val);
-    return str;
+c++
+RendererPermissionsPolicyDelegate::RendererPermissionsPolicyDelegate(
+    Dispatcher* dispatcher) : dispatcher_(dispatcher) {
+  if (!dispatcher_) {
+    // Throw an exception or return an error code here.
+    throw std::invalid_argument("Null dispatcher is not allowed");
+  }
+  PermissionsData::SetPolicyDelegate(this);
+  // Add documentation for constructor preconditions.
+  /**
+   * @param dispatcher The dispatcher must not be null.
+   */
 }

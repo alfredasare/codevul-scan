@@ -1,9 +1,5 @@
-static void vnc_write_pixels_copy(VncState *vs, void *pixels, int size)
+#include <limits>
+
+static void  Ins_ROUND( INS_ARG )
 {
-    try {
-        vnc_write(vs, pixels, size);
-    } catch (std::exception &e) {
-        vs->ReleaseResources();
-        throw;
-    }
-}
+  if (std::numeric_limits<decltype(args[0])>::max() - CUR.metrics.compensations[CUR.opcode - 0x6

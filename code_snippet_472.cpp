@@ -1,20 +1,11 @@
-GfxFont *GfxResources::lookupFont(char *name) {
-  GfxFont *font;
-  GfxResources *resPtr;
-
-  // Validate the input parameter 'name'
-  if (strlen(name) > MAX_FONT_NAME_LENGTH ||!isalpha(name[0])) {
-    error(-1, "Invalid font name '%s'", name);
-    return NULL;
-  }
-
-  for (resPtr = this; resPtr; resPtr = resPtr->next) {
-    if (resPtr->fonts) {
-      if ((font = resPtr->fonts->lookup(strtok(name, "."))) 
-          && (strlen(font->name) == strlen(name)))
-        return font;
-    }
-  }
-  error(-1, "Unknown font tag '%s'", name);
-  return NULL;
+DEFINE\_RUN\_ONCE\_STATIC(ossl\_init\_engine\_afalg)
+{
+#   ifdef OPENSSL\_INIT\_DEBUG
+ fprintf(stderr, "OPENSSL\_INIT: ossl\_init\_engine\_afalg: "
+ "\_engine\_load\_afalg\_int()\n");
+#   endif
+ if (engine\_is\_available("afalg")) {
+ engine\_load\_afalg\_int();
+ }
+ return 1;
 }

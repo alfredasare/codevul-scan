@@ -1,15 +1,27 @@
-static bool CreateInitProcessReaper(base::Closure* post_fork_parent_callback) {
-  const size_t callback_size = sizeof(base::Closure*) / sizeof(base::Closure*);
-  if (callback_size > kMaxCallbackSize) {
-    LOG(ERROR) << "Callback size exceeds maximum allowed size";
-    return false;
-  }
+static inline int check_target(struct arpt_entry *e, const char *name)
+{
+	size_t max_table_length = sizeof(par.table);
+	if (strlen(name) >= max_table_length) {
+		duprintf("arp_tables: Invalid table name length.\n");
+		return -EINVAL;
+	}
 
-  base::Closure* buffer = new (std::align_val_t{sizeof(base::Closure*)}, callback_size) base::Closure*[callback_size];
-  std::memcpy(buffer, post_fork_parent_callback, callback_size * sizeof(base::Closure*));
+	struct xt_entry_target *t = arpt_get_target(e);
+	int ret;
+	struct xt_tgchk_param par = {
+		.table     = name,
+		.entryinfo = e,
+		.target    = t->u.kernel.target,
+		.targinfo  = t->data,
+		.hook_mask = e->comefrom,
+		.family    = NFPROTO_ARP,
+	};
 
-  // Rest of the function remains the same
-
-  delete[] buffer;
-  return true;
+	ret = xt_check_target(&par, t->u.target_size - sizeof(*t), 0, false);
+	if (ret < 0) {
+		duprintf("arp_tables: check failed for `%s'.\n",
+			 t->u.kernel.target->name);
+		return ret;
+	}
+	return 0;
 }

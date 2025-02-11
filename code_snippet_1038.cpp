@@ -1,28 +1,22 @@
-static SRP_gN_cache *SRP_gN_new_init(const char *ch)
+static int parse_location(HTTPContext *s, const char *p)
 {
-    unsigned char tmp[MAX_LEN];
-    int len;
+    size_t len = strlen(s->location) + strlen(p) + MAX_URL_SIZE;
+    char *redirected_location = av_malloc(len);
+    if (!redirected_location)
+        return AVERROR(ENOMEM);
 
-    SRP_gN_cache *newgN =
-        (SRP_gN_cache *)OPENSSL_malloc(sizeof(SRP_gN_cache));
-    if (newgN == NULL)
-        return NULL;
+    ff_make_absolute_url(redirected_location, len, s->location, p);
+    if (strlen(redirected_location) >= len) {
+        av_free(redirected_location);
+        return AVERROR(EOVERFLOW);
+    }
 
-    if ((newgN->b64_bn = BUF_strdup(ch)) == NULL)
-        goto err;
+    char *new_loc = av_strdup(redirected_location);
+    av_free(redirected_location);
+    if (!new_loc)
+        return AVERROR(ENOMEM);
 
-    // Properly seed the random number generator
-    RAND_bytes(RAND_pool, sizeof(RAND_pool));
-
-    if (!RAND_bytes(tmp, sizeof(tmp)))
-        goto err;
-
-    len = sizeof(tmp);
-    if ((newgN->bn = BN_bin2bn(tmp, len, NULL)))
-        return newgN;
-
-    OPENSSL_free(newgN->b64_bn);
- err:
-    OPENSSL_free(newgN);
-    return NULL;
+    av_free(s->location);
+    s->location = new_loc;
+    return 0;
 }

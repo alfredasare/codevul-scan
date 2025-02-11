@@ -1,13 +1,8 @@
-int pt_removexattr(FsContext *ctx, const char *path, const char *name)
-{
-    struct stat statbuf;
-    if (stat(path, &statbuf) == -1) {
-        return -ENOENT;
+Time XRRConfigTimes(XRRScreenConfiguration* config, Time* config_timestamp) {
+    if (config && config_timestamp) {
+        *config_timestamp = config->config_timestamp;
+        return config->timestamp;
+    } else {
+        return 0; // or some other default value
     }
-
-    if ((statbuf.st_mode & S_IWUSR) == 0) {
-        return -EPERM;
-    }
-
-    return local_removexattr_nofollow(ctx, path, name);
 }

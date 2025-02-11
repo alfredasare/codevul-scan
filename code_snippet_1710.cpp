@@ -1,14 +1,14 @@
-void ext4_msg(struct super_block *sb, const char *prefix, const char *fmt,...)
+xmlattr\_cleanup(struct xmlattr\_list \*list)
 {
-    struct va_format vaf;
-    va_list args;
+ struct xmlattr \*attr, \*next;
 
-    va_start(args, fmt);
-    vaf.fmt = fmt;
-    vaf.va = &args;
-
-    // Calculate the shift amount using a bitwise AND operation
-    int shift = (sizeof(size_t) * 8 - 1) & (sizeof(size_t) * 8 - 1);
-    printk("%sEXT4-fs (%s): %pV\n", prefix, sb->s_id, &vaf);
-    va_end(args);
+ attr = list->first;
+ while (attr != NULL) {
+ next = attr->next;
+ free(attr->name);
+ free(attr->value);
+ free(attr);
+ }
+ list->first = NULL;
+ list->last = NULL;
 }

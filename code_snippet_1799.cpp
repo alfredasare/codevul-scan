@@ -1,20 +1,8 @@
-static int rtnl_net_dumpid_one(int id, void *peer, void *data)
+AviaryScheddPlugin::processDirtyJobs()
 {
-    struct rtnl_net_dump_cb *net_cb = (struct rtnl_net_dump_cb *)data;
-    int ret;
+	BeginTransaction();
 
-    if (net_cb->idx < net_cb->s_idx)
-        goto cont;
-
-    net_cb->fillargs.nsid = id;
-    if (net_cb->fillargs.add_ref)
-        net_cb->fillargs.ref_nsid = __peernet2id(net_cb->ref_net, peer);
-
-    ret = rtnl_net_fill(net_cb->skb, &net_cb->fillargs);
-    if (ret < 0)
-        return -EIO;
-
-cont:
-    net_cb->idx++;
-    return 0;
-}
+	while (!dirtyJobs->empty()) {
+		DirtyJobEntry entry = dirtyJobs->front(); dirtyJobs->pop_front();
+		string key = entry.first;
+		string name = entry.second.first;

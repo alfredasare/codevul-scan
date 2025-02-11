@@ -1,25 +1,18 @@
-DOMWindow* HTMLFrameOwnerElement::contentWindow() const {
-  if (!content_frame_) {
-    return nullptr; // Return null if content_frame_ is null
-  }
+void TabSpecificContentSettings::OnCookieChanged(
+const GURL& url,
+const GURL& frame\_url,
+const std::string& cookie\_line,
+const net::CookieOptions& options,
+bool blocked\_by\_policy) {
+if (blocked\_by\_policy && GURL(cookie\_line).is\_valid()) {
+blocked\_local\_shared\_objects\_.cookies()->AddChangedCookie(
+frame\_url, url, cookie\_line, options);
+OnContentBlocked(CONTENT\_SETTINGS\_TYPE\_COOKIES, std::string());
+} else if (!blocked\_by\_policy && GURL(cookie\_line).is\_valid()) {
+allowed\_local\_shared\_objects\_.cookies()->AddChangedCookie(
+frame\_url, url, cookie\_line, options);
+OnContentAccessed(CONTENT\_SETTINGS\_TYPE\_COOKIES);
+}
 
-  std::string url = content_frame_->getURL();
-  if (url.empty()) {
-    return nullptr; // Return null if URL is empty
-  }
-
-  static const std::set<std::string> trustedDomains = {"example.com", "example.net"};
-  bool isTrusted = false;
-  for (const auto& domain : trustedDomains) {
-    if (url.find(domain)!= std::string::npos) {
-      isTrusted = true;
-      break;
-    }
-  }
-
-  if (!isTrusted) {
-    return nullptr;
-  }
-
-  return content_frame_->DomWindow();
+NotifySiteDataObservers();
 }

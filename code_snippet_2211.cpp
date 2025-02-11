@@ -1,22 +1,11 @@
-ScriptPromise ImageCapture::getPhotoCapabilities(ScriptState* script_state) {
-  ScriptPromiseResolver* resolver = ScriptPromiseResolver::Create(script_state);
-  ScriptPromise promise = resolver->Promise();
-
-  if (!service_) {
-    resolver->Reject(DOMException::Create(kNotFoundError, kNoServiceError));
-    return promise;
-  }
-
-  service_requests_.insert(resolver);
-
-  auto resolver_cb = WTF::Bind(&ImageCapture::ResolveWithPhotoCapabilities,
-                               WrapPersistent(this));
-
-  service_->GetPhotoState(
-      stream_track_->Component()->Source()->Id(),
-      ConvertToBaseCallback(WTF::Bind(
-          &ImageCapture::OnMojoGetPhotoState, WrapPersistent(this),
-          WrapPersistent(resolver), WTF::Passed(std::move(resolver_cb)),
-          false /* trigger_take_photo */)));
-  return promise;
+WebPageSerializerTest() : m\_supportedSchemes(static\_cast<size\_t>(3))
+{
+const std::string expectedSchemes[] = {"http", "https", "file"};
+for (size\_t i = 0; i < std::size(expectedSchemes); i++) {
+if (m\_supportedSchemes[i].compare(expectedSchemes[i]) == 0) {
+// Input is valid, continue with assignment
+} else {
+// Input is invalid, throw an exception or handle appropriately
+}
+}
 }

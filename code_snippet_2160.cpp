@@ -1,24 +1,32 @@
-c++
-void PopulateDataInBuilder(BlobDataBuilder* builder,
-                           size_t index,
-                           base::TaskRunner* file_runner) {
-  if (index % 2 != 0) {
-    builder->PopulateFutureData(0, "abcde", 0, 5);
-    if (index % 3 == 0) {
-      builder->PopulateFutureData(1, "z", 0, 1);
-    }
-  } else if (index % 3 == 0) {
-    const std::set<std::string> allowedPaths = {"path1", "path2",...}; // Whitelist of allowed paths
-    std::string filePath = base::FilePath::FromUTF8Safe(
-        base::StringPrintf("path/to/expected/directory/%zu", index + kTotalRawBlobs));
-    if (allowedPaths.find(filePath) == allowedPaths.end()) {
-      LOG(ERROR) << "Path traversal attempt detected: " << filePath;
-      return; // Abort the operation
-    }
-    scoped_refptr<ShareableFileReference> file_ref =
-        ShareableFileReference::GetOrCreate(
-            base::FilePath::FromUTF8Safe(filePath),
-            ShareableFileReference::DONT_DELETE_ON_FINAL_RELEASE, file_runner);
-    builder->PopulateFutureFile(0, file_ref, base::Time::Max());
+#include <stdlib.h> // for malloc() and free()
+
+size_t required_size(const char *id) {
+  size_t len = strlen(id);
+  return len + 1;
+}
+
+char *sanitize_string(const char *id, size_t size) {
+  char *result = malloc(size);
+  if (result != NULL) {
+    mutt_str_strfcpy(result, id, size);
+    mutt_file_sanitize_filename(result, true);
   }
+  return result;
+}
+
+void release_memory(char *str) {
+  free(str);
+}
+
+static const char *cache_id(const char *id) {
+  size_t len = required_size(id);
+  char *clean = sanitize_string(id, len);
+  if (clean == NULL) {
+    return NULL; // or handle error as needed
+  }
+  const char *const ret_val = clean;
+  // Perform file operation here
+  // ...
+  release_memory(clean);
+  return ret_val;
 }

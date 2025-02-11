@@ -1,25 +1,13 @@
-bool SharedMemory::Delete(const std::string& name) {
-  FilePath path;
-  if (!IsValidName(name)) {
-    return false;
-  }
-  name = SanitizeName(name);
-  if (!FilePathForMemoryName(name, &path)) {
-    return false;
-  }
-  if (file_util::PathExists(path)) {
-    return base::Delete(path, false);
-  }
-  return true;
-}
+static inline unsigned int llcp_accept_poll(struct sock *parent)
+{
+	struct nfc_llcp_sock *llcp_sock, *n, *parent_sock;
+	struct sock *sk;
+	int ret = 0;
 
-std::string SanitizeName(const std::string& name) {
-  static const std::set<char> valid_chars = {"a-zA-Z0-9-_."};
-  std::string sanitized_name;
-  for (char c : name) {
-    if (valid_chars.find(c)!= valid_chars.end()) {
-      sanitized_name += c;
-    }
-  }
-  return sanitized_name;
-}
+	parent_sock = nfc_llcp_sock(parent);
+	if (!parent_sock || list_empty(&parent_sock->accept_queue))
+		return 0;
+
+	list_for_each_entry_safe(llcp_sock, n, &parent_sock->accept_queue,
+				 accept_queue) {
+		sk = &llcp_sock->sk;

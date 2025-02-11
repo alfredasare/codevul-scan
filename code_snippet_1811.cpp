@@ -1,31 +1,23 @@
-aiff_read_chanmap (SF_PRIVATE * psf, unsigned dword)
+static void do_error_trap(struct pt_regs *regs, long error_code, char *str,
+			  unsigned long trapnr, int signr)
 {
-    const AIFF_CAF_CHANNEL_MAP * map_info ;
-    unsigned channel_bitmap, channel_decriptions, bytesread ;
-    int layout_tag ;
-    char sanitized_input[256]; // Sanitized buffer for psf_binheader_readf
+	siginfo_t info;
 
-    // Validate layout_tag
-    if (layout_tag < 0 || layout_tag > 255) {
-        psf_log_printf (psf, "Invalid layout tag: %x\n", layout_tag);
-        return 0;
-    }
+	RCU_LOCKDEP_WARN(!rcu_is_watching(), "entry code didn't wake RCPU");
 
-    // Restrict allowed values for layout_tag
-    static const int allowed_layout_tags[] = {0, 1, 2, 3}; // Define allowed values here
-    if (bsearch(&layout_tag, allowed_layout_tags, sizeof(allowed_layout_tags)/sizeof(allowed_layout_tags[0]), sizeof(int), compare_ints) == NULL) {
-        psf_log_printf (psf, "Invalid layout tag: %x\n", layout_tag);
-        return 0;
-    }
+	/* Perform the user mode check before calling notify_die */
+	if (user_mode(regs)) {
+		/* If it's in user mode, handle it differently */
+		...
+	} else {
+		if (fixup_bug(regs, trapnr))
+			return;
 
-    bytesread = psf_binheader_readf (psf, "444", &layout_tag, &channel_bitmap, &channel_decriptions) ;
-
-    //... rest of the function...
-
-    // Sanitize input for psf_binheader_readf
-    if (bytesread < dword) {
-        psf_binheader_readf (psf, "j", dword - bytesread, sanitized_input); // Pass sanitized input
-    }
-
-    //... rest of the function...
+		if (notify_die(DIE_TRAP, str, regs, error_code, trapnr, signr) !=
+				NOTIFY_STOP) {
+			cond_local_irq_enable(regs);
+			do_trap(trapnr, signr, str, regs, error_code,
+				fill_trap_info(regs, signr, trapnr, &info));
+		}
+	}
 }

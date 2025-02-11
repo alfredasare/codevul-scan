@@ -1,15 +1,8 @@
-int xmlThrDefSaveNoEmptyTags(int v) {
-    int ret;
-    xmlMutexLock(xmlThrDefMutex);
+KURL LocalFrameClientImpl::OverrideFlashEmbedWithHTML(const KURL& sanitizedUrl) {
+ return web_frame_->Client()->OverrideFlashEmbedWithHTML(WebURL(sanitizedUrl));
+}
 
-    if (v < 0 || v >= XML_MAX_TAG_LENGTH) {
-        // Handle invalid input value, e.g., log an error or return an error code
-        //...
-    } else {
-        ret = xmlSaveNoEmptyTagsThrDef;
-        xmlSaveNoEmptyTagsThrDef = v;
-    }
-
-    xmlMutexUnlock(xmlThrDefMutex);
-    return ret;
+// Add a new function for URL sanitization.
+KURL SanitizeURL(const KURL& url) {
+ // Implement URL sanitization logic here.
 }

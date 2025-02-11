@@ -1,16 +1,9 @@
-size_t SRP_get_default_gN(const char *id)
+void GraphicsContext::drawFocusRing(const Path& path, int width, int offset, const Color& color)
 {
-    size_t i;
-
-    if (id == NULL || strlen(id) >= KNOWN_GN_ID_MAX_LENGTH) {
-        return NULL; // invalid input
-    }
-
-    for(i = 0; i < KNOWN_GN_NUMBER; i++) {
-        if (strncasecmp(knowngN[i].id, id, KNOWN_GN_ID_MAX_LENGTH) == 0) {
-            return knowngN + i;
-        }
-    }
-
-    return NULL;
+if (width < 0 || offset < 0)
+{
+// Handle error
+return;
+}
+// Function logic
 }

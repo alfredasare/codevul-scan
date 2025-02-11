@@ -1,12 +1,25 @@
-NavigateToAboutBlank() {
-  GURL about_blank(GetConfiguredAboutBlankURL());
-  content::NavigationController::LoadURLParams params(about_blank);
-  params.frame_tree_node_id = frame_tree_node_id_;
-  params.source_site_instance = parent_site_instance_;
-  params.is_renderer_initiated = true;
-  web_contents()->GetController().LoadURLWithParams(params);
-}
+#include <linux/fs.h>
+#include <linux/namei.h>
+#include <linux/mount.h>
 
-GURL GetConfiguredAboutBlankURL() {
-  return GURL(std::string("about:blank"));
+int user_path_at(int dfd, const char __user *name, unsigned flags,
+                 struct path *path)
+{
+	struct path path_result;
+	int error;
+
+	if (IS_ERR(copy_from_user(&path_result, &path, sizeof(path_result))))
+		return PTR_ERR(path_result.dentry);
+
+	error = open_namei_ns((const char *)path_result.dentry->d_name.name,
+	                      flags, dfd, path, NULL, NFSD_VFSOP_OPEN);
+
+	if (!error) {
+		*path = path_result;
+		/* Make sure the dentry is still valid */
+		if (path_result.dentry && !path_result.dentry->d_inode)
+			error = -ENODATA;
+	}
+
+	return error;
 }

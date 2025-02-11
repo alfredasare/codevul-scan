@@ -1,22 +1,10 @@
-status_t NuPlayer::GenericSource::setDataSource(const sp<DataSource>& source) {
-    resetDataSource();
-    if (source == nullptr) {
-        return ERROR_INVALID_ARGS;
+otp_fini(krb5_context context, krb5_kdcpreauth_moddata moddata)
+{
+    if (moddata == NULL) {
+        fprintf(stderr, "Error: moddata is NULL\n");
+        return -1;
     }
 
-    size_t dataSize = source->getSize();
-    if (dataSize > kMaxBufferData) {
-        return ERROR_INVALID_ARGS;
-    }
-
-    uint8_t* buffer = new uint8_t[dataSize];
-    if (buffer == nullptr) {
-        return ERROR_OUT_OF_MEMORY;
-    }
-
-    source->getData(buffer, dataSize);
-    mDataSource = buffer;
-    mDataSourceSize = dataSize;
-
-    return OK;
+    otp_state_free((otp_state *)moddata);
+    return 0;
 }

@@ -1,22 +1,10 @@
-int virTypedParameterValidateSet(virConnectPtr conn,
-                                 virTypedParameterPtr params,
-                                 int nparams)
+static inline void update_t_max_wait(transaction_t *transaction,
+				unsigned long ts)
 {
-    int i;
-
-    for (i = 0; i < nparams; i++) {
-        virTypedParameterPtr param = &params[i];
-
-        if (param->type == VIR_TYPED_PARAM_STRING) {
-            const char *path = param->value.string;
-
-            // Check if the provided path is within the expected boundaries
-            if (path[0] == '/' || strcasecmp(path, "/.") == 0 || strcasecmp(path, "/..") == 0) {
-                virReportError(conn, VIR_ERROR, "%s", "Path traversal detected");
-                return -1;
-            }
-        }
-    }
-
-    return 0;
-}
+#ifdef CONFIG_JBD2_DEBUG
+	if (jbd2_journal_enable_debug) {
+		unsigned long start = atomic_read(&transaction->t_start);
+		if (time_after(start, ts)) {
+			ts = jbd2_time_diff(ts, start);
+			unsigned long max_wait = atomic_read(&transaction->t_max_wait);
+			if (ts > max_wait) {

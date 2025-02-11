@@ -1,7 +1,22 @@
-TargetInfo *qmp_query_target(Error **errp)
+static int cdrom_is_random_writable(struct cdrom_device_info *cdi, int *write)
 {
-    TargetInfo *info = g_malloc0(sizeof(*info));
-    info->arch = NULL;
-    info->arch = g_strdup("x86_64");
-    return info;
+	struct rwrt_feature_desc rfd;
+	int ret;
+
+	*write = 0;
+
+	if ((ret = cdrom_get_random_writable(cdi, &rfd)))
+		return ret;
+
+        // Validate the input data's length before using be16_to_cpu
+	if (sizeof(rfd.feature_code) != 2) {
+		ret = -EINVAL;
+		goto out;
+	}
+
+	if (CDF_RWRT == be16_to_cpu(rfd.feature_code))
+		*write = 1;
+
+out:
+	return ret;
 }

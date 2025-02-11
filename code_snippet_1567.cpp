@@ -1,17 +1,15 @@
-void big_key_destroy(struct key *key)
+copy_resource(fz_context *ctx, pdf_filter_processor *p, pdf_obj *key, const char *name)
 {
-    size_t datalen = (size_t)key->payload.data[big_key_len];
+	pdf_obj *res, *obj;
 
-    if (datalen > BIG_KEY_FILE_THRESHOLD) {
-        struct path *path = (struct path *)&key->payload.data[big_key_path];
+	if (!name || name[0] == 0)
+		return;
 
-        path_put(path);
-        path->mnt = NULL;
-        path->dentry = NULL;
-    }
-
-    if (key->payload.data[big_key_data]) {
-        kfree(key->payload.data[big_key_data]);
-    }
-    key->payload.data[big_key_data] = NULL;
-}
+	res = pdf_dict_get(ctx, p->old_rdb, key);
+	obj = pdf_dict_gets(ctx, res, name);
+	if (obj)
+	{
+		res = pdf_dict_get(ctx, p->new_rdb, key);
+		if (!res)
+		{
+			res = pdf_new_dict(ctx, pdf_get_bound_document(ctx, p->new_rdb),

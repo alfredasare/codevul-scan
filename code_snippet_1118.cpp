@@ -1,41 +1,18 @@
-static int pcrypt_aead_decrypt(struct aead_request *req)
-{
-    int err;
-    struct pcrypt_request *preq = aead_request_ctx(req);
-    struct aead_request *creq = pcrypt_request_ctx(preq);
-    struct padata_priv *padata = pcrypt_request_padata(preq);
-    struct crypto_aead *aead = crypto_aead_reqtfm(req);
-    struct pcrypt_aead_ctx *ctx = crypto_aead_ctx(aead);
-    u32 flags = aead_request_flags(req);
+#define MAX_IDENTIFIER_LENGTH 1024
 
-    try {
-        memset(padata, 0, sizeof(struct padata_priv));
+void TabSpecificContentSettings::AddBlockedResource(
+    ContentSettingsType content_type,
+    const std::string& resource_identifier) {
+  if (resource_identifier.length() > MAX_IDENTIFIER_LENGTH) {
+    return;
+  }
 
-        padata->parallel = pcrypt_aead_dec;
-        padata->serial = pcrypt_aead_serial;
+  resource_identifier.erase(std::remove_if(resource_identifier.begin(),
+                                           resource_identifier.end(),
+                                           [](unsigned char c) { return !isalnum(c); }),
+                            resource_identifier.end());
 
-        aead_request_set_tfm(creq, ctx->child);
-        aead_request_set_callback(creq, flags & ~CRYPTO_TFM_REQ_MAY_SLEEP,
-                                  pcrypt_aead_done, req);
-        aead_request_set_crypt(creq, req->src, req->dst,
-                               req->cryptlen, req->iv);
-        aead_request_set_ad(creq, req->assoclen);
-
-        err = pcrypt_do_parallel(padata, &ctx->cb_cpu, &pdecrypt);
-    } catch (const std::exception& e) {
-        // Restore package data to its initial state
-        padata->parallel = 0;
-        padata->serial = 0;
-    } finally {
-        // Ensure package data is properly restored
-        if (padata->parallel!= 0) {
-            padata->parallel = pcrypt_aead_dec;
-            padata->serial = pcrypt_aead_serial;
-        }
-    }
-
-    if (!err)
-        return -EINPROGRESS;
-
-    return err;
+  if (!blocked_resources_[content_type].get())
+    blocked_resources_[content_type].reset(new std::set<std::string>());
+  blocked_resources_[content_type]->insert(resource_identifier);
 }

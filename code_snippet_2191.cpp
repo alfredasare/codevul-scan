@@ -1,30 +1,46 @@
-xfs_da_grow_inode(
-	struct xfs_da_args	*args,
-	xfs_dablk_t		*new_blkno)
+xfs_da_get_buf(
+	struct xfs_trans	*trans,
+	struct xfs_inode	*dp,
+	xfs_dablk_t		bno,
+	xfs_daddr_t		mappedbno,
+	struct xfs_buf		**bpp,
+	int			whichfork)
 {
-	xfs_fileoff_t		bno;
-	int			count;
+	struct xfs_buf		*bp;
+	struct xfs_buf_map	map;
+	struct xfs_buf_map	*mapp;
+	int			nmap;
 	int			error;
-	uint32_t		max_bno = XFS_MAX_FILEOFF; // Define max limit for bno
-	uint32_t		max_count = INT_MAX; // Define max limit for count
 
-	trace_xfs_da_grow_inode(args);
-
-	if (args->whichfork == XFS_DATA_FORK) {
-		bno = args->dp->i_mount->m_dirleafblk;
-		count = args->dp->i_mount->m_dirblkfsbs;
-	} else {
-		bno = 0;
-		count = 1;
+	*bpp = NULL;
+	mapp = &map;
+	nmap = 1;
+	error = xfs_dabuf_map(trans, dp, bno, mappedbno, whichfork,
+				&mapp, &nmap);
+	if (error) {
+		/* mapping a hole is not an error, but we don't continue */
+		if (error == -1)
+			error = 0;
+		goto out_free;
 	}
 
-	// Verify bounds for bno and count
-	if (bno > max_bno || count > max_count) {
-		return -EOVERFLOW;
+	bp = xfs_trans_get_buf_map(trans, dp->i_mount->m_ddev_targp,
+				    mapp, nmap, 0);
+	if (!bp) {
+		error = XFS_ERROR(EIO);
+		goto out_free;
 	}
 
-	error = xfs_da_grow_inode_int(args, &bno, count);
-	if (!error)
-		*new_blkno = (xfs_dablk_t)bno;
+	*bpp = bp;
+
+out_free:
+	if (mapp != &map) {
+		int ret = kmem_free(mapp);
+		if (ret) {
+			xfs_trans_brelse(trans, bp);
+			return XFS_ERROR(ENOMEM);
+		}
+	}
+
 	return error;
 }

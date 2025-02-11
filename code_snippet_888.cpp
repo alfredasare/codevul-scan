@@ -1,26 +1,24 @@
-static struct sk_buff *netlink_alloc_large_skb(unsigned int size, int broadcast)
+void ResourceFetcher::didLoadResource(Resource* resource)
 {
-    struct sk_buff *skb;
-    void *data;
+    RefPtr<DocumentLoader> protectDocumentLoader(m_documentLoader);
+    RefPtrWillBeRawPtr<Document> protectDocument(m_document.get());
 
-    if (size <= NLMSG_GOODSIZE || broadcast)
-        return alloc_skb(size, GFP_KERNEL);
-
-    size = SKB_DATA_ALIGN(size) + SKB_DATA_ALIGN(sizeof(struct skb_shared_info));
-
-    data = vmalloc(size);
-    if (data == NULL)
-        return NULL;
-
-    skb = __build_skb(data, size);
-    if (skb == NULL) {
-        vfree(data);
-        return NULL;
+    if (resource && resource->response().isHTTP() && ((!resource->errorOccurred() && !resource->wasCanceled()) || resource->response().httpStatusCode() == 304) && protectDocument && protectDocument->isValid()) {
+        ResourceTimingInfoMap::iterator it = m_resourceTimingInfoMap.find(resource);
+        if (it != m_resourceTimingInfoMap.end()) {
+            RefPtr<ResourceTimingInfo> info = it->value;
+            m_resourceTimingInfoMap.remove(it);
+            populateResourceTiming(info.get(), resource, false);
+            reportResourceTiming(info.get(), protectDocument.get(), resource->type() == Resource::MainResource);
+        }
     }
 
-    skb->destructor = netlink_skb_destructor;
-    vfree(data); // Only free 'data' once
-    data = NULL;
+    if (frame())
+        frame()->loader().loadDone();
+    scheduleDocumentResourcesGC();
+}
 
-    return skb;
+bool Document::isValid() const {
+    // Implement the logic to check if the document is still valid
+    // Return true if the document is valid, otherwise false
 }

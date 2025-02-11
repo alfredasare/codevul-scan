@@ -1,13 +1,18 @@
-static void reset_interrupt(void)
+static void put\_reserved\_req(struct fuse\_conn *fc, struct fuse\_req *req)
 {
-    debugt(__func__, "");
-    result();		/* get the status ready for set_fdc */
-    if (FDCS->reset) {
-        pr_info("reset set in interrupt, calling %ps\n", cont->error);
-        cont->error();	/* a reset just after a reset. BAD! */
-    }
-    cont->redo();
-    if (FDCS->reset) {
-        FDCS->reset = NULL;
-    }
+ struct file *file = req->stolen\_file;
+ struct fuse\_file *ff = file->private\_data;
+ struct fuse\_req *old\_req;
+
+ spin\_lock(&fc->lock);
+ fuse\_request\_init(req);
+ old\_req = ff->reserved\_req;
+ if (old\_req) {
+ ff->reserved\_req = NULL;
+ wake\_up\_all(&fc->reserved\_req\_waitq);
+ }
+ BUG\_ON(ff->reserved\_req != NULL);
+ ff->reserved\_req = req;
+ spin\_unlock(&fc->lock);
+ fput(file);
 }

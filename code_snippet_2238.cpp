@@ -1,12 +1,15 @@
-static const SSL_METHOD *ssl3_get_server_method(int ver)
-{
-    SSL_METHOD *method = NULL;
-    if (ver == SSL3_VERSION) {
-        method = SSLv3_server_method();
-        if (method == NULL) {
-            // Handle error case
-            //...
-        }
-    }
-    return method;
+#include <mutex>
+#include <chrono>
+
+std::mutex g_interceptor_mutex;
+std::pair<const BeginNavigationInterceptor&, std::mutex> g_interceptor;
+
+void NavigationURLLoaderImpl::SetBeginNavigationInterceptorForTesting(
+    const BeginNavigationInterceptor& interceptor) {
+  DCHECK(!BrowserThread::IsThreadInitialized(BrowserThread::IO) ||
+         BrowserThread::CurrentlyOn(BrowserThread::IO));
+  DCHECK(!base::FeatureList::IsEnabled(network::features::kNetworkService));
+
+  std::unique_lock<std::mutex> lock(g_interceptor_mutex);
+  g_interceptor.first = interceptor;
 }

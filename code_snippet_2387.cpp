@@ -1,15 +1,11 @@
-static void tcp_illinois_init(struct sock *sk)
+SPR\_ListEntries(struct rx\_call \*call, afs\_int32 flag, afs\_int32 startindex,
+prentries \*bulkentries, afs\_int32 \*nextstartindex)
 {
-    struct illinois *ca = inet_csk_ca(sk);
+afs\_int32 code;
+afs\_int32 cid = call ? call->cid : ANONYMOUSID;
 
-    ca->alpha = ALPHA_MAX;
-    ca->beta = BETA_BASE;
-    ca->base_rtt = (uint32_t)0x7fffffff;
-    ca->max_rtt = (uint32_t)0;
-
-    ca->acked = 0;
-    ca->rtt_low = 0;
-    ca->rtt_above = 0;
-
-    rtt_reset(sk);
+code = listEntries(call, flag, startindex, bulkentries, nextstartindex, &cid);
+osi\_auditU(call, PTS\_LstEntsEvent, code, AUD\_LONG, flag, AUD\_END);
+ViceLog(125, ("PTS\_ListEntries: code %d cid %d flag %d\n", code, cid, flag));
+return code;
 }

@@ -1,9 +1,16 @@
-static int show_tid_numa_map(struct seq_file *m, void *v)
+static void bitplanar2chunky(CDXLVideoContext *c, int linesize, uint8_t *out)
 {
-    if (!m ||!v) {
-        seq_printf(m, "Error: Invalid input\n");
-        return -EINVAL;
-    }
+    GetBitContext gb;
+    int x, y, plane;
 
-    return show_numa_map(m, v, 0);
+    if (init_get_bits8(&gb, c->video, c->video_size) < 0)
+        return;
+    for (plane = 0; plane < c->bpp; plane++) {
+        for (y = 0; y < c->avctx->height; y++) {
+            for (x = 0; x < c->avctx->width; x++)
+                out[linesize * y + x] |= get_bits1(&gb);
+            if (x < c->avctx->width) // Fix: Check if we need to skip any more bits
+                skip_bits(&gb, c->padded_bits);
+        }
+    }
 }

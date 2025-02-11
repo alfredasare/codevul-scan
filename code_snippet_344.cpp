@@ -1,27 +1,19 @@
-AtomicString PerformanceNavigationTiming::GetNavigationType(
-    NavigationType type,
-    const Document* document) {
-  if (document && document->GetPageVisibilityState() == mojom::PageVisibilityState::kPrerender) {
-    return "unknown";
+writeRandomBytes_RtlGenRandom(void * target, size_t count) {
+  int success = 0;  /* full count bytes written? */
+  const HMODULE advapi32 = _Expat_LoadLibrary(TEXT("ADVAPI32.DLL"));
+
+  if (advapi32) {
+    const RTLGENRANDOM_FUNC RtlGenRandom
+        = (RTLGENRANDOM_FUNC)GetProcAddress(advapi32, "SystemFunction036");
+    if (RtlGenRandom) {
+      ULONG bytesGenerated = 0;
+      bytesGenerated = RtlGenRandom((PVOID)target, (ULONG)count);
+      if (bytesGenerated > 0 && bytesGenerated == count) {
+        success = 1;
+      }
+    }
+    FreeLibrary(advapi32);
   }
 
-  // Validate and sanitize user input
-  if (type < kNavigationTypeReload || type > kNavigationTypeOther) {
-    return "invalid";
-  }
-
-  switch (type) {
-    case kNavigationTypeReload:
-      return "reload";
-    case kNavigationTypeBackForward:
-      return "back_forward";
-    case kNavigationTypeLinkClicked:
-    case kNavigationTypeFormSubmitted:
-    case kNavigationTypeFormResubmitted:
-    case kNavigationTypeOther:
-      return "navigate";
-  }
-
-  // Implement a secure error handling mechanism
-  return "error";
+  return success;
 }

@@ -1,12 +1,5 @@
-void GDataDirectoryService::GetEntryInfoPairByPaths(
-    const FilePath& first_path,
-    const FilePath& second_path,
-    const GetEntryInfoPairCallback& callback) {
-  DCHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
-  DCHECK(!callback.is_null());
+++
+Guint JBIG2HuffmanDecoder::readBits(Guint n) {
+  Guint x, mask, nLeft;
 
-  base::WeakPtr<GDataDirectoryService> self(weak_ptr_factory_.GetWeakPtr());
-  if (!GetEntryInfoByPath(first_path, base::Bind(&GDataDirectoryService::GetEntryInfoPairByPathsAfterGetFirst, self, first_path, second_path, callback))) {
-    LOG(ERROR) << "Failed to get entry info pair";
-  }
-}
+  mask = (n == 32) ? 0xffffffff : ((1 << n) -

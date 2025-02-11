@@ -1,6 +1,7 @@
-ScopedMMap(void* mem, uint32_t len) : mem_(mem), len_(len) {
-    if (mem == nullptr || len == 0 || len > std::numeric_limits<uint32_t>::max()) {
-        throw std::runtime_error("Invalid input");
-    }
-    //... rest of the code...
+_warc_find_eol(const char *buf, size_t bsz)
+{
+	static const char _marker[] = "\r\n";
+	const char *hit = xmemmem(buf, bsz, _marker, sizeof(_marker) - 1U);
+
+	return (hit && (hit + sizeof(_marker) - 1U) < buf + bsz) ? hit : NULL;
 }

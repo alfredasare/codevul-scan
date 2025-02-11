@@ -1,26 +1,18 @@
-static void write_response(ESPState *s)
+static void kvmclock_reset(struct kvm_vcpu *vcpu)
 {
-    if (s->status < 0 || s->status > 255) {
-        return;
-    }
-    if (s->dma && s->dma_memory_write) {
-        if (s->ti_size < 2) {
-            return;
-        }
-    }
-    trace_esp_write_response(s->status);
-    s->ti_buf[0] = s->status;
-    s->ti_buf[1] = 0;
-    if (s->dma) {
-        s->dma_memory_write(s->dma_opaque, s->ti_buf, 2);
-        s->rregs[ESP_RSTAT] = STAT_TC | STAT_ST;
-        s->rregs[ESP_RINTR] = INTR_BS | INTR_FC;
-        s->rregs[ESP_RSEQ] = SEQ_CD;
-    } else {
-        s->ti_size = 2;
-        s->ti_rptr = 0;
-        s->ti_wptr = 0;
-        s->rregs[ESP_RFLAGS] = 2;
-    }
-    esp_raise_irq(s);
+	struct kvm_time_caches *tc = &vcpu->arch.time_caches;
+	unsigned long flags;
+
+	raw_spin_lock_irqsave(&vcpu->lock, flags);
+
+	if (vcpu->arch.time_page &&
+	    cmpxchg(&vcpu->arch.time_page, vcpu->arch.time_page,
+		    NULL, atomic_dec_and_test)) {
+		kvm_release_page_dirty(vcpu->arch.time_page);
+	}
+
+	tc->last_ck = ktime_get_real();
+	tc->last_wall = ktime_get();
+
+	raw_spin_unlock_irqrestore(&vcpu->lock, flags);
 }

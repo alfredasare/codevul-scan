@@ -1,14 +1,11 @@
-php
-PHP_FUNCTION(set_magic_quotes_runtime)
+nm_ip4_config_export (NMIP4Config *config, const char *base_path)
 {
-    zend_bool new_setting;
+	NMIP4ConfigPrivate *priv = NM_IP4_CONFIG_GET_PRIVATE (config);
+	static guint32 counter = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "b", &new_setting) == FAILURE) {
-        return;
-    }
-
-    if (new_setting) {
-        php_error_docref(NULL TSRMLS_CC, E_DEPRECATED, "set_magic_quotes_runtime is no longer supported");
-    }
-    return;
+	if (!priv->path) {
+		g_assert (base_path);
+		priv->path = g_strdup_printf ("%s/IP4Config/%d", base_path, counter++);
+		nm_dbus_manager_register_object (nm_dbus_manager_get (), priv->path, config);
+	}
 }

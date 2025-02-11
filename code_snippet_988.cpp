@@ -1,15 +1,12 @@
-#include <SHA256.h>
+void blkcg_drain_queue(struct request_queue *q)
+{
+	lockdep_assert_held(q->queue_lock);
 
-size_t hash_str(const char *key) {
-    unsigned char hash[32];
-    SHA256_CTX ctx;
-    SHA256_Init(&ctx);
-    SHA256_Update(&ctx, key, strlen(key));
-    SHA256_Final(hash, &ctx);
-    return *(size_t *)hash;
-}
+	/* Save the root_blkg before checking it, to avoid TOCTOU vulnerability */
+	struct blkg\_group *root\_blkg = q->root\_blkg;
 
-int hashtable_del(hashtable_t *hashtable, const char *key) {
-    size_t hash = hash_str(key);
-    return hashtable_do_del(hashtable, key, hash);
+	if (!root\_blkg)
+		return;
+
+	blk\_throtl\_drain(q);
 }

@@ -1,33 +1,20 @@
-static void mp_shutdown(struct sb_uart_state *state)
+int BN_GF2m_mod_solve_quad(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx)
 {
-    struct sb_uart_info *info = state->info;
-    struct sb_uart_port *port = state->port;
-
-    if (info->tty)
-        set_bit(TTY_IO_ERROR, &info->tty->flags);
-
-    if (info->flags & UIF_INITIALIZED) {
-        info->flags &= ~UIF_INITIALIZED;
-
-        if (!info->tty || (info->tty->termios.c_cflag & HUPCL))
-            uart_clear_mctrl(port, TIOCM_DTR | TIOCM_RTS);
-
-        wake_up_interruptible(&info->delta_msr_wait);
-
-        port->ops->shutdown(port);
-
-        synchronize_irq(port->irq);
+    int ret = 0;
+    const int max = BN_num_bits(p) + 1;
+    int *arr = NULL;
+    bn_check_top(a);
+    bn_check_top(p);
+    if ((arr = OPENSSL_malloc(sizeof(*arr) * max)) == NULL)
+        goto err;
+    ret = BN_GF2m_poly2arr(p, arr, max);
+    if (!ret || ret >= max) { // Fix: changed '>' to '>='
+        BNerr(BN_F_BN_GF2M_MOD_SOLVE_QUAD, BN_R_INVALID_LENGTH);
+        goto err;
     }
-
-    tasklet_kill(&info->tlet);
-
-    if (info->xmit.buf) {
-        free_page((unsigned long)info->xmit.buf);
-        info->xmit.buf = NULL;
-    }
-
-    // Secure error handling mechanism
-    if (info->tty && tty_is_connected(info->tty)) {
-        printk(KERN_INFO "UART: Device shutdown\n");
-    }
+    ret = BN_GF2m_mod_solve_quad_arr(r, a, arr, ctx);
+    bn_check_top(r);
+ err:
+    OPENSSL_free(arr);
+    return ret;
 }

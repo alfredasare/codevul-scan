@@ -1,22 +1,13 @@
-static void TIFFWarnings(const char *module, const char *format, va_list warning) {
-  char
-    message[MagickPathExtent];
+static int tcm_loop_get_endpoint_wwn(struct se_portal_group *se_tpg, char *wwn_buffer, int wwn_buffer_size)
+{
+	struct tcm_loop_tpg *tl_tpg =
+		(struct tcm_loop_tpg *)se_tpg->se_tpg_fabric_ptr;
+	int wwn_length = sizeof(tl_tpg->tl_hba->tl_wwn_address);
 
-  ExceptionInfo
-    *exception;
+	if (wwn_buffer_size >= wwn_length) {
+		memcpy(wwn_buffer, &tl_tpg->tl_hba->tl_wwn_address[0], wwn_length);
+		return wwn_length;
+	}
 
-  // Use snprintf instead of vsnprintf/vsprintf
-  (void) snprintf(message, sizeof(message) - 1, format, warning);
-  message[MaxTextExtent - 2] = '\0';
-
-  // Validate and sanitize the format string
-  if (strchr(format, '%')!= NULL) {
-    // Sanitize the format string by removing any potentially malicious characters
-    char sanitized_format[MagickPathExtent];
-    strcpy(sanitized_format, format);
-    sanitized_format[strcspn(sanitized_format, "%cspduoxX") - sanitized_format] = '\0';
-    format = sanitized_format;
-  }
-
-  //... (rest of the function remains the same)
+	return -EINVAL;
 }

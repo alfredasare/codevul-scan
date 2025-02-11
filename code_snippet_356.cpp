@@ -1,10 +1,11 @@
-void kvm_set_cr8(struct kvm_vcpu *vcpu, unsigned long cr8)
+static void anotherStringAttributeAttributeSetter(v8::Local<v8::Value> jsValue, const v8::PropertyCallbackInfo<void>& info)
 {
-    if (cr8 > KVM_CR8_MAX_VALUE) {
-        return;
+    TestObjectPython* imp = V8TestObjectPython::toNative(info.Holder());
+    if (imp->shouldLimitResources()) { // Limit resource allocation based on some condition
+        V8TRYCATCH_FOR_V8STRINGRESOURCE_VOID(V8StringResource<10>, cppValue, jsValue);
+    } else {
+        V8TRYCATCH_FOR_V8STRINGRESOURCE_VOID(V8StringResource<>, cppValue, jsValue);
     }
-
-    if (__kvm_set_cr8(vcpu, cr8)) {
-        kvm_inject_gp(vcpu, 0);
-    }
+    CustomElementCallbackDispatcher::CallbackDeliveryScope deliveryScope;
+    imp->setAttribute(HTMLNames::ReflectUrlAttributeAsAStringAttr, cppValue);
 }

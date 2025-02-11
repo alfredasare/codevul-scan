@@ -1,8 +1,9 @@
-DECL_PIOCTL(PGCPAGs)
+static int proc_sys_delete(const struct dentry *dentry)
 {
-    if (!afs_osi_suser(*acred)) {
-        return EACCES;
-    }
-    uint32_t afs_gcpags = (uint32_t)AFS_GCPAGS_USERDISABLED;
-    return 0;
+	struct super_block *sb = d_sb(dentry);
+	int ret;
+	mutex_lock(&sb->s_umount);
+	ret = !!PROC_I(d_inode(dentry))->sysctl->unregistering;
+	mutex_unlock(&sb->s_umount);
+	return ret;
 }

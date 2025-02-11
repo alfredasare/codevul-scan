@@ -1,6 +1,11 @@
-bool HevcParameterSets::findParam64(uint32_t key, uint64_t *param) {
-    if (key > UINT32_MAX) {
-        throw std::overflow_error("Key value exceeds maximum allowed value");
-    }
-    return findParam(static_cast<uint32_t>(key), param, mParams);
+static char *timelib_string_fixed(Scanner *s)
+{
+	if (s->cur - s->tok >= INT_MAX - 1) {
+		// Handle error
+	}
+
+	char *tmp = calloc(1, s->cur - s->tok + 1);
+	strncpy(tmp, s->tok, s->cur - s->tok);
+
+	return tmp;
 }

@@ -1,15 +1,19 @@
-void CursorImpl::Advance(
-    uint32_t count,
-    ::indexed_db::mojom::CallbacksAssociatedPtrInfo callbacks_info) {
-  scoped_refptr<IndexedDBCallbacks> callbacks(
-      new IndexedDBCallbacks(dispatcher_host_->AsWeakPtr(), GetOriginFromConfig(),
-                             std::move(callbacks_info), idb_runner_));
-  idb_runner_->PostTask(FROM_HERE, base::Bind(&IDBThreadHelper::Advance,
-                                              base::Unretained(helper_), count,
-                                              base::Passed(&callbacks)));
-}
+static long tun\_set\_vnet\_be(struct tun\_struct *tun, int __user \*argp)
+{
+ int be;
 
-std::string GetOriginFromConfig() {
-  // Load the configuration file or retrieve the value from an environment variable
-  // Return the origin value
+ if (!tun) {
+ pr\_err("tun\_set\_vnet\_be: tun pointer is NULL\n");
+ return -EINVAL;
+ }
+
+ if (get\_user(be, argp))
+ return -EFAULT;
+
+ if (be)
+ tun->flags |= TUN\_VNET\_BE;
+ else
+ tun->flags &= ~TUN\_VNET\_BE;
+
+ return 0;
 }

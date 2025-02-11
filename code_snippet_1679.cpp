@@ -1,27 +1,12 @@
-void Dispatcher::OnClearTabSpecificPermissions(
-    const std::vector<std::string>& extension_ids,
-    bool update_origin_whitelist,
-    int tab_id) {
-  for (size_t i = 0; i < extension_ids.size(); ++i) {
-    const std::string& id = extension_ids[i];
-    if (id.empty()) {
-      continue;
+const int kMaxTypeLength = 128; // Adjust this value as needed
+
+void ClipboardMessageFilter::OnReadCustomData(ui::ClipboardType clipboard_type,
+                                              const base::string16& type,
+                                              base::string16* result) {
+    if (type.length() > kMaxTypeLength) {
+        LOG(WARNING) << "Clipped data type exceeds maximum allowed length";
+        return;
     }
-    try {
-      const Extension* extension = RendererExtensionRegistry::Get()->GetByID(id);
-      if (extension) {
-        URLPatternSet old_effective =
-            extension->permissions_data()->GetEffectiveHostPermissions();
-        extension->permissions_data()->ClearTabSpecificPermissions(tab_id);
-        if (update_origin_whitelist) {
-          UpdateOriginPermissions(
-              extension->url(),
-              old_effective,
-              extension->permissions_data()->GetEffectiveHostPermissions());
-        }
-      }
-    } catch (const std::out_of_range& e) {
-      // Handle the exception or log it for further investigation
-    }
-  }
+
+    GetClipboard()->ReadCustomData(clipboard_type, base::string16(type.substr(0, kMaxTypeLength)), result);
 }

@@ -1,41 +1,26 @@
-void __skb_tstamp_tx(struct sk_buff *orig_skb,
-		     struct skb_shared_hwtstamps *hwtstamps,
- 		     struct sock *sk, int tstype)
- {
- 	struct sk_buff *skb;
-	bool tsonly;
- 
- 	if (!sk)
- 		return;
+static int ssl3_add_cert_to_buf(BUF_MEM *buf, unsigned long *l, X509 *x)
+{
+	int n;
+	unsigned char *p;
 
-	tsonly = sk->sk_tsflags & SOF_TIMESTAMPING_OPT_TSONLY;
-	if (!skb_may_tx_timestamp(sk, tsonly))
-		return;
-
-	if (tsonly) {
- #ifdef CONFIG_INET
- 		if ((sk->sk_tsflags & SOF_TIMESTAMPING_OPT_STATS) &&
- 		    sk->sk_protocol == IPPROTO_TCP &&
-		    sk->sk_type == SOCK_STREAM)
- 			skb = tcp_get_timestamping_opt_stats(sk);
-		else
- #endif
- 			skb = alloc_skb(0, GFP_ATOMIC);
- 	} else {
-		skb = skb_clone(orig_skb, GFP_ATOMIC);
+	n = i2d_X509(x, NULL);
+	if (!BUF_MEM_grow_clean(buf, (int)(n + (*l) + 3)))
+	{
+		SSLerr(SSL_F_SSL3_ADD_CERT_TO_BUF, ERR_R_BUF_LIB);
+		return(-1);
 	}
-	if (!skb)
-		return;
+	p = (unsigned char *)&(buf->data[*l]);
+	*p = (unsigned char)n;
+	*(p + 1) = (unsigned char)(n >> 8);
+	*(p + 2) = (unsigned char)(n >> 16);
+	p += 3;
+	memcpy(p, X509_get0_notBefore(x)->data, X509_not_before_length());
+	p += X509_not_before_length();
+	memcpy(p, X509_get0_notAfter(x)->data, X509_not_after_length());
+	p += X509_not_after_length();
+	memcpy(p, x->cert_info, i2d_X509_length(x));
 
-	if (tsonly && skb_shinfo(skb)) {
-		skb_shinfo(skb)->tx_flags = skb_shinfo(orig_skb)->tx_flags;
-		skb_shinfo(skb)->tskey = skb_shinfo(orig_skb)->tskey;
-	}
+	*l += n + 3 + X509_not_before_length() + X509_not_after_length() + i2d_X509_length(x);
 
-	if (hwtstamps)
-		*skb_hwtstamps(skb) = *hwtstamps;
- 	else
- 		skb->tstamp = ktime_get_real();
- 
-	__skb_complete_tx_timestamp(skb, sk, tstype);
- }
+	return(0);
+}

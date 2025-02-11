@@ -1,24 +1,19 @@
-bool ParamTraits<gfx::SizeF>::Read(const Message* m,
-                                   PickleIterator* iter,
-                                   gfx::SizeF* p) {
-  float w, h;
-  std::string width_str, height_str;
-  if (!ParamTraits<std::string>::Read(m, iter, &width_str) ||
-    !ParamTraits<std::string>::Read(m, iter, &height_str)) {
-    return false;
-  }
-  if (!IsValidFloat(width_str) ||!IsValidFloat(height_str)) {
-    return false;
-  }
-  float w_val = std::stof(width_str);
-  float h_val = std::stof(height_str);
-  p->set_width(w_val);
-  p->set_height(h_val);
-  return true;
-}
+static int cine_read_packet(AVFormatContext *avctx, AVPacket *pkt)
+{
+    CineDemuxContext *cine = avctx->priv_data;
+    AVStream *st = avctx->streams[0];
+    AVIOContext *pb = avctx->pb;
+    int n, size, ret;
 
-bool IsValidFloat(const std::string& str) {
-  // Implement your own validation logic here
-  // For example, you could check if the string contains only digits and a decimal point
-  return true; // Replace with your actual validation logic
-}
+    if (cine->pts >= st->duration)
+        return AVERROR_EOF;
+
+    avio_seek(pb, st->index_entries[cine->pts].pos, SEEK_SET);
+    n = avio_rl32(pb);
+    if (n < 8)
+        return AVERROR_INVALIDDATA;
+    if (n > INT_MAX - AV_INPUT_BUFFER_PADDING_SIZE) {
+        av_log(avctx, AV_LOG_ERROR, "Invalid 'n' value: %d\n", n);
+        return AVERROR_INVALIDDATA;
+    }
+    avio_skip(pb, n -

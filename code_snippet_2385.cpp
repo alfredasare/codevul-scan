@@ -1,21 +1,33 @@
-_pango_get_emoji_type (gunichar codepoint)
+ref_param_write_typed_array(gs_param_list * plist, gs_param_name pkey,
+void *pvalue, uint count, size_t element_size,
+int (*make)(ref *, const void *, uint,
+gs_ref_memory_t *))
 {
-  g_return_val_if_fail (g_unichar_is_valid (codepoint), PANGO_EMOJI_TYPE_TEXT);
+iparam_list *const iplist = (iparam_list *) plist;
+ref value;
+uint i;
+ref *pe;
+int code;
+size_t max_index = count - 1;
 
-  if (_pango_Is_Emoji_Keycap_Base (codepoint) ||
-      _pango_Is_Regional_Indicator (codepoint))
-    return PANGO_EMOJI_TYPE_TEXT;
+if ((code = ref_array_param_requested(iplist, pkey, &value, count,
+"ref_param_write_typed_array")) <= 0)
+return code;
 
-  if (codepoint == kCombiningEnclosingKeycapCharacter)
-    return PANGO_EMOJI_TYPE_EMOJI_EMOJI;
+// Validate pvalue and its size
+if (pvalue == NULL || count > (UINT_MAX / element_size)) {
+return -1;
+}
 
-  if (_pango_Is_Emoji_Emoji_Default (codepoint) ||
-      _pango_Is_Emoji_Modifier_Base (codepoint) ||
-      _pango_Is_Emoji_Modifier (codepoint))
-    return PANGO_EMOJI_TYPE_EMOJI_EMOJI;
+for (i = 0, pe = value.value.refs; i < count; ++i, ++pe) {
+// Implement bounds checking for the index
+if (i > max_index) {
+return -1;
+}
 
-  if (_pango_Is_Emoji_Text_Default (codepoint))
-    return PANGO_EMOJI_TYPE_EMOJI_TEXT;
-
-  return PANGO_EMOJI_TYPE_TEXT;
+if ((code = (*make) (pe, ((char *)pvalue + i * element_size), i, iplist->
+ref_memory)) < 0)
+return code;
+}
+return ref_param_write(iplist, pkey, &value);
 }

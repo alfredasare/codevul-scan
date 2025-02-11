@@ -1,18 +1,15 @@
-static long llc_ui_wait_for_conn(struct sock *sk, long timeout)
+static int __release_reference_state(struct bpf_func_state *state, int ptr_id)
 {
-    DEFINE_WAIT(wait);
+	int i;
 
-    while (1) {
-        prepare_to_wait(sk_sleep(sk), &wait, TASK_INTERRUPTIBLE);
-        if (sk_wait_event(sk, &timeout, sk->sk_state!= TCP_SYN_SENT))
-            break;
-        else {
-            // Mask sensitive information
-            sk->sk_state = TCP_STATE_MASKED;
-        }
-        if (signal_pending(current) ||!timeout)
-            break;
-    }
-    finish_wait(sk_sleep(sk), &wait);
-    return timeout;
+	if (!ptr_id || ptr_id >= state->acquired_refs || state->acquired_refs <= 0)
+		return -EFAULT;
+
+	memset(&state->refs[ptr_id], 0, sizeof(state->refs[ptr_id]));
+	state->acquired_refs--;
+
+	for (i = ptr_id; i < state->acquired_refs; i++)
+		state->refs[i] = state->refs[i + 1];
+
+	return 0;
 }

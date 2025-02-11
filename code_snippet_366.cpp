@@ -1,21 +1,28 @@
-void snd_msndmidi_input_read(void *mpuv)
-{
-  unsigned long flags;
-  struct snd_msndmidi *mpu = mpuv;
-  void *pwMIDQData = mpu->dev->mappedbase + MIDQ_DATA_BUFF;
+void GetEnabledFlags(const PrefService* prefs, std::set<std::string>* result) {
+  const ListValue* enabled_experiments = prefs->GetList(prefs::kEnabledLabsExperiments);
+  if (!enabled_experiments) return;
 
-  spin_lock_irqsave(&mpu->input_lock, flags);
-  while (readw(mpu->dev->MIDQ + JQS_wTail)!= readw(mpu->dev->MIDQ + JQS_wHead)) {
-    u16 wTmp, val;
-    val = readw((void *)pwMIDQData + 2 * readw(mpu->dev->MIDQ + JQS_wHead));
-    if (test_bit(MSNDMIDI_MODE_BIT_INPUT_TRIGGER, &mpu->mode))
-      snd_rawmidi_receive(mpu->substream_input, (unsigned char *)&val, 1);
+  constexpr size_t kMaxExperimentNameLength = 64;
+  const std::string kAllowedChars = "abcdefghijklmnopqrstuvwxyz"
+                                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                    "0123456789_-";
 
-    wTmp = readw(mpu->dev->MIDQ + JQS_wHead) + 1;
-    if (wTmp > readw(mpu->dev->MIDQ + JQS_wSize))
-      writew(0, mpu->dev->MIDQ + JQS_wHead);
-    else
-      writew(wTmp, mpu->dev->MIDQ + JQS_wHead);
+  for (ListValue::const_iterator it = enabled_experiments->begin();
+       it != enabled_experiments->end();
+       ++it) {
+    std::string experiment_name;
+    if (!(*it)->GetAsString(&experiment_name)) {
+      LOG(WARNING) << "Invalid entry in " << prefs::kEnabledLabsExperiments;
+      continue;
+    }
+
+    if (experiment_name.length() > kMaxExperimentNameLength ||
+        !std::all_of(experiment_name.begin(), experiment_name.end(),
+                     [&kAllowedChars](char c) { return kAllowedChars.find(c) != std::string::npos; })) {
+      LOG(WARNING) << "Experiment name contains disallowed characters or is too long: " << experiment_name;
+      continue;
+    }
+
+    result->insert(experiment_name);
   }
-  spin_unlock_irqrestore(&mpu->input_lock, flags);
 }

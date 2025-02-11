@@ -1,34 +1,18 @@
-static int unix_mknod(struct dentry *dentry, struct path *path, umode_t mode, struct path *res)
-{
-    int err;
-
-    char *normalized_path = path_normalize(path->dentry->name);
-    if (!normalized_path) {
-        return -EINVAL;
-    }
-
-    if (strcmp(normalized_path, "/allowed/directory")!= 0) {
-        kfree(normalized_path);
-        return -EPERM;
-    }
-
-    struct path abs_path;
-    err = path_get(&abs_path, path->mnt, normalized_path);
-    if (err) {
-        return err;
-    }
-
-    err = security_path_mknod(&abs_path, dentry, mode, 0);
-    if (!err) {
-        err = vfs_mknod(d_inode(abs_path.dentry), dentry, mode, 0);
-        if (!err) {
-            res->mnt = mntget(abs_path.mnt);
-            res->dentry = dget(dentry);
+cobuf = g_new0(guint8, phdr->caplen);
+        if (cobuf == NULL) {
+            *err = WTAP_ERR_NO_MEMORY;
+            return FALSE;
         }
-    }
 
-    kfree(normalized_path);
-    path_put(&abs_path);
+        pkt_len = parse_cosine_hex_dump(wth->random_fh, phdr, phdr->caplen,
+                                        cobuf, err, err_info);
+        if (pkt_len == -1) {
+            g_free(cobuf);
+            return FALSE;
+        }
 
-    return err;
-}
+        buf_set_used_bytes(buf, pkt_len);
+        memcpy(buf->data, cobuf, pkt_len);
+        g_free(cobuf);
+
+        return TRUE;

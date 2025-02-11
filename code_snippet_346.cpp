@@ -1,13 +1,22 @@
-void PPB_URLLoader_Impl::RunCallback(int32_t result) {
-  if (!pending_callback_.get()) {
-    CHECK(main_document_loader_);
-    if (!main_document_loader_->IsInitialized()) {
-      return;
-    }
-    std::string loader_path = main_document_loader_->GetDocumentPath();
-    if (!loader_path.empty() && loader_path[0]!= '/' && loader_path[1]!= ':') {
-      loader_path = main_document_loader_->GetDocumentPath().substr(1);
-    }
-    TrackedCallback::ClearAndRun(&pending_callback_, result);
-  }
+FrameTreeNode* RenderFrameHostImpl::AddChild(
+std::unique_ptr<FrameTreeNode> child,
+int process_id,
+int frame_routing_id) {
+if (process_id != GetProcess()->GetID()) {
+return nullptr;
+}
+
+if (frame_routing_id < 0 || frame_routing_id >= render_view_host()->GetRoutingIDLimit()) {
+return nullptr;
+}
+
+child->render_manager()->Init(GetSiteInstance(),
+render_view_host()->GetRoutingID(),
+frame_routing_id, MSG_ROUTING_NONE, false);
+
+frame_tree_node_->render_manager()->CreateProxiesForChildFrame(child.get());
+
+children_.push_back(std::move(child));
+
+return children_.back().get();
 }

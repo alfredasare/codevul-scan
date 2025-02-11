@@ -1,21 +1,22 @@
-void ChangeCurrentInputMethodFromId(const std::string& input_method_id) {
-  const size_t maxRecursionDepth = 10; // Adjust this value based on your specific use case
-  size_t recursionDepth = 0;
+MagickExport const IndexPacket *GetVirtualIndexQueue(const Image *image)
+{
+  CacheInfo
+    *restrict cache_info;
 
-  while (recursionDepth < maxRecursionDepth) {
-    const chromeos::InputMethodDescriptor* descriptor =
-        chromeos::input_method::GetInputMethodDescriptorFromId(input_method_id);
-    if (descriptor) {
-      ChangeCurrentInputMethod(*descriptor);
-      break; // Exit the loop once the current method is changed
-    } else {
-      LOG(ERROR) << "Descriptor is not found for: " << input_method_id;
-      break; // Exit the loop if no valid descriptor is found
-    }
-    recursionDepth++;
-  }
+  const int
+    id = GetOpenMPThreadId();
 
-  if (recursionDepth == maxRecursionDepth) {
-    LOG(WARNING) << "Maximum recursion depth reached for: " << input_method_id;
-  }
+  assert(image != (const Image *) NULL);
+  assert(image->signature == MagickSignature);
+  assert(image->cache != (Cache) NULL);
+  cache_info=(CacheInfo *) image->cache;
+  assert(cache_info->signature == MagickSignature);
+  if (cache_info->methods.get_virtual_indexes_from_handler !=
+       (GetVirtualIndexesFromHandler) NULL)
+    return(cache_info->methods.get_virtual_indexes_from_handler(image));
+
+  if (id >= 0 && id < (int) cache_info->number_threads)
+    return(GetVirtualIndexesFromNexus(cache_info,cache_info->nexus_info[id]));
+
+  return NULL;
 }

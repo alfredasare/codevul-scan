@@ -1,3 +1,1 @@
-bool IsNonCharacter(uint32_t character) {
-  return character >= kNonCharacter3U && character <= kNonCharacter1U;
-}
+// All calls to xmlParseEndTag should be updated to directly call xmlParseEndTag1

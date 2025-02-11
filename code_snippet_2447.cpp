@@ -1,27 +1,12 @@
-static size_t mem_seek(jas_stream_obj_t *obj, size_t offset, int origin)
+static int ovl_set_timestamps(struct dentry *upperdentry, struct kstat *stat)
 {
-    jas_stream_memobj_t *m = (jas_stream_memobj_t *)obj;
-    size_t newpos;
+	struct iattr attr = {
+		.ia_valid =
+		     ATTR_ATIME | ATTR_MTIME | ATTR_ATIME_SET | ATTR_MTIME_SET,
+	};
 
-    JAS_DBGLOG(100, ("mem_seek(%p, %zu, %d)\n", obj, offset, origin));
-    switch (origin) {
-        case SEEK_SET:
-            newpos = offset;
-            break;
-        case SEEK_END:
-            newpos = m->len_ - offset;
-            break;
-        case SEEK_CUR:
-            newpos = m->pos_ + offset;
-            break;
-        default:
-            abort();
-            break;
-    }
-    if (newpos < 0) {
-        return (size_t)-1;
-    }
-    m->pos_ = newpos;
+	get_ktime(&attr.ia_atime);
+	get_ktime(&attr.ia_mtime);
 
-    return m->pos_;
+	return notify_change(upperdentry, &attr, NULL);
 }

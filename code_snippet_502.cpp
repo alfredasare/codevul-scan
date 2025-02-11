@@ -1,16 +1,8 @@
-_archive_write_disk_filter_bytes(struct archive *_a, int n)
+mrb_io_s_for_fd(mrb_state *mrb, mrb_value klass)
 {
-    struct archive_write_disk *a = (struct archive_write_disk *)_a;
-    (void)n; /* UNUSED */
+  struct RClass *c = mrb_class_ptr(klass);
+  mrb_value obj;
 
-    // Encrypt the total_bytes_written field using a secure encryption algorithm
-    uint8_t encrypted_data[16];
-    uint8_t iv[16] = {0}; // Initialization vector
-    aes_encrypt(a->total_bytes_written, sizeof(a->total_bytes_written), iv, encrypted_data);
-
-    if (n == -1 || n == 0)
-    {
-        return encrypted_data;
-    }
-    return -1;
+  obj = mrb_obj_new(mrb, c, 0, NULL);
+  return mrb_io_initialize(mrb, obj);
 }

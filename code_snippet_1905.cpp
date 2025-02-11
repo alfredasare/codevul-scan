@@ -1,11 +1,16 @@
-int js_toint32(js_State *J, int idx)
+free_all_not_allocator(clump_t *cp, void *arg)
 {
-    int num;
-    js_value_t *val = jsV_tonumber(J, stackidx(J, idx));
-    if (val->type == JS_VALUE_NUMBER && val->u.number >= INT32_MIN && val->u.number <= INT32_MAX) {
-        num = (int)val->u.number;
+    struct free_data *fd = (struct free_data *)arg;
+    size_t min_size = cp->cbase + sizeof(obj_header_t);
+    
+    if (min_size > (size_t)fd->imem) {
+        alloc_free_clump(cp, fd->imem);
+    } else if (min_size == (size_t)fd->imem) {
+        fd->allocator = cp;
     } else {
-        num = 0;
+        // Handle error or unexpected cases
+        // ...
     }
-    return num;
+
+    return SPLAY_APP_CONTINUE;
 }

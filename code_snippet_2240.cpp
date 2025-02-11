@@ -1,24 +1,13 @@
-void val_del_sec_ctx_args(
-    OM_uint32 *minor_status,
-    gss_ctx_id_t *context_handle,
-    gss_buffer_t output_token)
+static bool ndisc_suppress_frag_ndisc(struct sk_buff *skb)
 {
-    /* Initialize outputs. */
+	struct inet6_dev *idev = __in6_dev_get(skb->dev);
 
-    if (minor_status!= NULL)
-	*minor_status = 0;
-
-    /* Validate arguments. */
-
-    if (minor_status == NULL)
-	return (GSS_S_CALL_INACCESSIBLE_WRITE);
-
-    if (context_handle == NULL || *context_handle == GSS_C_NO_CONTEXT)
-	return (GSS_S_CALL_INACCESSIBLE_WRITE | GSS_S_NO_CONTEXT);
-
-    if (output_token!= GSS_C_NO_BUFFER) {
-	output_token->length = 0;
-    }
-
-    return (GSS_S_COMPLETE);
+	if (!idev)
+		return true;
+	if (IP6CB(skb)->flags & IP6SKB_FRAGMENTED &&
+	    idev->cnf && idev->cnf.suppress_frag_ndisc) {
+		net_warn_ratelimited("Received fragmented ndisc packet. Carefully consider disabling suppress_frag_ndisc.\n");
+		return true;
+	}
+	return false;
 }

@@ -1,8 +1,8 @@
-void nfc_llcp_sock_unlink(struct llcp_sock_list *l, struct sock *sk)
-{
-    write_lock(&l->lock);
-    if (sk!= NULL) {
-        sk_del_node_init(sk);
-    }
-    write_unlock(&l->lock);
+void RenderFrameImpl::didDisplayInsecureContent(blink::WebLocalFrame* frame) {
+  if (!frame) {
+    return; // or handle the error appropriately
+  }
+  DCHECK(frame_ == nullptr || frame_ == frame);
+  render_view_->Send(new ViewHostMsg_DidDisplayInsecureContent(
+      render_view_->GetRoutingID()));
 }

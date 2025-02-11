@@ -1,6 +1,22 @@
-void kvm_release_pfn_clean(pfn_t pfn)
+static int __init xen_blkif_init(void)
 {
-    if (!is_error_noslot_pfn(pfn) && !kvm_is_mmio_pfn(pfn) && pfn >= KVM_MIN_PFN && pfn <= KVM_MAX_PFN) {
-        put_page(pfn_to_page(pfn));
-    }
+	int rc = 0;
+
+	if (!xen_domain())
+		return -ENODEV;
+
+	rc = xen_blkif_interface_init();
+	if (rc)
+		goto cleanup_interface;
+
+	rc = xen_blkif_xenbus_init();
+	if (rc)
+		goto cleanup_interface;
+
+	/* No errors, return successfully */
+	return 0;
+
+cleanup_interface:
+	xen_blkif_interface_cleanup(); /* Release resources allocated by xen_blkif_interface_init */
+	return rc;
 }

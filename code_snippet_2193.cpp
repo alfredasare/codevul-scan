@@ -1,18 +1,15 @@
-gray_start_cell( RAS_ARG_ uint32_t  ex,
-                 uint32_t  ey )
+static int posix_get_monotonic_coarse(clockid_t which_clock, struct timespec64 *tp)
 {
-  if ( ex > ras.max_ex )
-    ex = ras.max_ex;
+#ifdef CLOCK_MONOTONIC_COARSE
+    if (which_clock != CLOCK_MONOTONIC_COARSE) {
+        return -EINVAL;
+    }
+#else
+    if (which_clock != 0) {
+        return -EINVAL;
+    }
+#endif
 
-  if ( ex < ras.min_ex )
-    ex = ras.min_ex - 1;
-
-  ras.area    = 0;
-  ras.cover   = 0;
-  ras.ex      = (uint32_t)(ex - ras.min_ex);
-  ras.ey      = (uint32_t)(ey - ras.min_ey);
-  ras.last_ey = SUBPIXELS( ey );
-  ras.invalid = 0;
-
-  gray_set_cell( RAS_VAR_ ex, ey );
+    *tp = get_monotonic_coarse64();
+    return 0;
 }

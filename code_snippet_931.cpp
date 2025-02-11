@@ -1,37 +1,23 @@
-static int do_set_master(struct net_device *dev, int ifindex)
+SMBencrypt(unsigned char *passwd, const unsigned char *c8, unsigned char *p24, size_t passwd_len)
 {
-    struct net_device *upper_dev = netdev_master_upper_dev_get(dev);
-    const struct net_device_ops *ops;
-    int err;
+	int rc;
+	unsigned char p14[14], p16[16], p21[21];
 
-    if (!dev ||!upper_dev) {
-        return -EINVAL;
-    }
+	memset(p14, '\0', 14);
+	memset(p16, '\0', 16);
+	memset(p21, '\0', 21);
 
-    if (upper_dev->ifindex == ifindex)
-        return 0;
+	if (passwd_len > sizeof(p14)) {
+		return E_INVALID_PASSWD_LEN;
+	}
 
-    ops = upper_dev->netdev_ops;
-    if (ops->ndo_del_slave) {
-        err = ops->ndo_del_slave(upper_dev, dev);
-        if (err)
-            return err;
-    } else {
-        return -EOPNOTSUPP;
-    }
+	memcpy(p14, passwd, passwd_len);
+	rc = E_P16(p14, p16);
+	if (rc)
+		return rc;
 
-    if (ifindex) {
-        upper_dev = __dev_get_by_index(dev_net(dev), ifindex);
-        if (!upper_dev)
-            return -EINVAL;
-        ops = upper_dev->netdev_ops;
-        if (ops->ndo_add_slave) {
-            err = ops->ndo_add_slave(upper_dev, dev);
-            if (err)
-                return err;
-        } else {
-            return -EOPNOTSUPP;
-        }
-    }
-    return 0;
+	memcpy(p21, p16, sizeof(p21));
+	rc = E_P24(p21, c8, p24);
+
+	return rc;
 }

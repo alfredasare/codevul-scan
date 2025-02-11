@@ -1,16 +1,12 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+tree_mod_log_set_node_key(struct btrfs_fs_info *fs_info,
+			  struct extent_buffer *eb, int slot, int atomic)
+{
+	int ret;
 
-#define XML_PASSWORD_ENV "XML_PASSWORD"
-
-int main() {
-    const char *password = getenv(XML_PASSWORD_ENV);
-    if (password == NULL) {
-        fprintf(stderr, "Error: XML_PASSWORD_ENV not set\n");
-        exit(1);
-    }
-    xmlParseEntity(NULL, password);
-
-    return 0;
+	ret = tree_mod_log_insert_key(fs_info, eb, slot,
+					MOD_LOG_KEY_REPLACE,
+					atomic ? GFP_ATOMIC : GFP_NOFS);
+	if (ret < 0) {
+		return ret;
+	}
 }

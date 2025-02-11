@@ -1,21 +1,15 @@
-COMPAT_SYSCALL_DEFINE3(rt_sigqueueinfo,
-			compat_pid_t, pid,
-			int, sig,
-			struct compat_siginfo __user *, uinfo)
+static int rb_head_page_replace(struct buffer\_page \*old, struct buffer\_page \*new)
 {
-	siginfo_t info;
-	int ret = copy_siginfo_from_user32(&info, uinfo);
-	int num_signals = 0; // Initialize a counter for the number of signals
+ struct list\_head *old\_next;
+ unsigned long val;
+ unsigned long ret;
 
-	if (unlikely(ret))
-		return ret;
+ old\_next = old->list.prev;
 
-	do {
-		num_signals++;
-		if (!do_rt_sigqueueinfo(pid, sig, &info))
-			break;
-		sig++; // Increment the signal number for the next iteration
-	} while (num_signals < sig); // Continue until all signals have been sent
+ val = (unsigned long)old\_next & ~RB\_FLAG\_MASK;
+ val |= RB\_PAGE\_HEAD;
 
-	return 0;
+ ret = cmpxchg(&old\_next->next, (unsigned long)old, (unsigned long)new);
+
+ return ret == (unsigned long)old;
 }

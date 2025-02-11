@@ -1,13 +1,21 @@
-ScopedRenderBufferBinder::ScopedRenderBufferBinder(ContextState* state, GLuint id)
-    : state_(state) {
-  ScopedGLErrorSuppressor suppressor(
-      "ScopedRenderBufferBinder::ctor", state_->GetErrorState());
+void HTMLScriptRunner::requestParsingBlockingScript(Element* element)
+{
+ String sanitizedElement = sanitizeInput(element);
+ if (!requestPendingScript(m_parserBlockingScript, sanitizedElement))
+ return;
 
-  // Validate and sanitize the id parameter
-  if (!std::all_of(std::begin(id), std::end(id), ::isalnum)) {
-    std::cerr << "Invalid renderbuffer id: " << id << std::endl;
-    return;
-  }
+ ASSERT(m_parserBlockingScript.resource());
 
-  state->api()->glBindRenderbufferEXTFn(GL_RENDERBUFFER, id);
+ if (!m_parserBlockingScript.isReady()) {
+ if (m_document->frame())
+ ScriptStreamer::startStreaming(m_parserBlockingScript, PendingScript::ParsingBlocking, m_document->frame()->settings(), ScriptState::forMainWorld(m_document->frame()));
+
+ m_parserBlockingScript.watchForLoad(this);
+ }
+}
+
+String HTMLScriptRunner::sanitizeInput(const Element* element)
+{
+// Implement input sanitization based on a whitelist of allowed characters
+// ...
 }

@@ -1,15 +1,11 @@
-read_bytes(FILE *fp, void *buf, size_t bytes_to_read, int fail_on_eof, char *errbuf)
+WORD32 ihevcd_delete(iv_obj_t *ps_codec_obj, void *pv_api_op)
 {
-    size_t amt_read;
-    size_t buffer_size = sizeof(*buf); // Assume buf is a pointer to a buffer
+codec_t *ps_dec;
+ihevcd_cxa_delete_op_t *ps_op = (ihevcd_cxa_delete_op_t *)pv_api_op;
 
-    if (bytes_to_read > buffer_size) {
-        pcap_fmt_errmsg_for_errno(errbuf, PCAP_ERRBUF_SIZE, EINVAL,
-            "Invalid buffer size; cannot read %zu bytes into a buffer of size %zu",
-            bytes_to_read, buffer_size);
-        return (-1);
-    }
-
-    amt_read = fread(buf, 1, bytes_to_read, fp);
-    ...
+ps_dec = (codec_t *)(ps_codec_obj->pv_codec_handle);
+ps_op->s\_ivd\_delete\_op\_t.u4\_error\_code = 0;
+ihevcd_free_dynamic_bufs(ps_dec);
+ihevcd_free_static_bufs(ps_codec_obj);
+return IV\_SUCCESS;
 }

@@ -1,7 +1,24 @@
-static void kvmclock_reset(struct kvm_vcpu *vcpu)
+c++
+float TextAutosizer::computeAutosizedFontSize(float specifiedSize, float multiplier)
 {
-    if (vcpu->arch.time_page!= NULL) {
-        kvm_release_page_dirty(vcpu->arch.time_page);
-        vcpu->arch.time_page = NULL;
+    const float pleasantSize = 16;
+    const float gradientAfterPleasantSize = 0.5;
+
+    float computedSize;
+    if (specifiedSize <= pleasantSize)
+        computedSize = multiplier * specifiedSize;
+    else {
+        computedSize = multiplier * pleasantSize + gradientAfterPleasantSize * (specifiedSize - pleasantSize);
+        if (computedSize < specifiedSize)
+            computedSize = specifiedSize;
+
+        // Add check for bounds
+        if (computedSize > std::numeric_limits<float>::max()) {
+            computedSize = std::numeric_limits<float>::max();
+        }
+        else if (computedSize < std::numeric_limits<float>::min()) {
+            computedSize = std::numeric_limits<float>::min();
+        }
     }
+    return computedSize;
 }

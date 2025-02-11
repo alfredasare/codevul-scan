@@ -1,14 +1,8 @@
-XNewModifiermap(int keyspermodifier)
+check_options()
 {
-    XModifierKeymap *res = Xmalloc(sizeof(XModifierKeymap));
-    if (res) {
-        res->max_keypermod = keyspermodifier;
-        res->modifiermap = (keyspermodifier > 0? 
-            malloc(sizeof(KeyCode) * keyspermodifier) : NULL);
-        if (res->modifiermap == NULL) {
-            free(res);
-            return (XModifierKeymap *) NULL;
-        }
-    }
-    return (res);
+	int saved_logfile_fd = logfile_fd;
+	if (saved_logfile_fd >= 0 && saved_logfile_fd != log_to_fd) {
+		close(saved_logfile_fd);
+		logfile_fd = -1;
+	}
 }

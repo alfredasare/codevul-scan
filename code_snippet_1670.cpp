@@ -1,25 +1,18 @@
-void EC_GROUP_free(EC_GROUP *group)
+static int edge_calc_num_ports(struct usb_serial *serial,
+				struct usb_serial_endpoints *epds)
 {
-    if (!group)
-        return;
+	struct device *dev = &serial->interface->dev;
+	unsigned char num_ports = serial->type->num_ports;
 
-    if (group->meth && group->meth->group_finish!= 0)
-        group->meth->group_finish(group);
+	/* Make sure we have the required endpoints when in download mode. */
+	if (serial->interface->cur_altsetting->desc.bNumEndpoints > 1 && num_ports > 0) {
+		if (epds->num_bulk_in < num_ports ||
+				epds->num_bulk_out < num_ports ||
+				epds->num_interrupt_in < 1) {
+			dev_err(dev, "required endpoints missing\n");
+			return -ENODEV;
+		}
+	}
 
-    if (group->mont_data)
-        BN_MONT_CTX_free(group->mont_data);
-
-    if (group->generator)
-        EC_POINT_free(group->generator);
-
-    if (group->order)
-        BN_free(group->order);
-
-    if (group->cofactor)
-        BN_free(group->cofactor);
-
-    if (group->seed)
-        OPENSSL_free(group->seed);
-
-    OPENSSL_free(group);
+	return num_ports;
 }

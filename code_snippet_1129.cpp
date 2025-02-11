@@ -1,20 +1,27 @@
-xfs_vm_releasepage(
-	struct page		*page,
-	gfp_t			gfp_mask)
+void do_set_pte(struct vm_area_struct *vma, unsigned long address,
+                struct page *page, pte_t *pte, bool write, bool anon)
 {
-	int			delalloc, unwritten;
+    if (address >= vma->vm_start && address < vma->vm_end &&
+        page && pte) {
+        pte_t entry;
 
-	trace_xfs_releasepage(page->mapping->host, page, 0, 0);
+        flush_icache_page(vma, page);
+        entry = mk_pte(page, vma->vm_page_prot);
+        if (write)
+            entry = maybe_mkwrite(pte_mkdirty(entry), vma);
+        if (anon) {
+            inc_mm_counter_fast(vma->vm_mm, MM_ANONPAGES);
+            page_add_new_anon_rmap(page, vma, address);
+        } else {
+            inc_mm_counter_fast(vma->vm_mm, MM_FILEPAGES);
+            page_add_file_rmap(page);
+        }
+        set_pte_at(vma->vm_mm, address, pte, entry);
 
-	if (xfs_buffer_fstimeo(page->mapping->host, page)!= page->private)
-		return 0;
-
-	xfs_count_page_state(page, &delalloc, &unwritten);
-
-	if (WARN_ON_ONCE(delalloc))
-		return 0;
-	if (WARN_ON_ONCE(unwritten))
-		return 0;
-
-	return try_to_free_buffers(page);
+        /* no need to invalidate: a not-present page won't be cached */
+        update_mmu_cache(vma, address, pte);
+    } else {
+        printk(KERN_ERR "Invalid parameters for do_set_pte.\n");
+        BUG();
+    }
 }

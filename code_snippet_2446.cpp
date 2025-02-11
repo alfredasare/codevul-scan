@@ -1,8 +1,4 @@
-static int phar_dir_seek(php_stream *stream, off_t offset, int whence, off_t *newoffset TSRMLS_DC) /* {{{ */
-{
-	HashTable *data = (HashTable *)stream->abstract;
-	signed int32_t signed_offset = (signed int32_t)offset; // Cast offset to signed integer
-
-	// ... rest of the code ...
-}
-/* }}} */
+static int oidc_authorization_response_error(request_rec *r, oidc_cfg *c,
+		oidc_proto_state_t *proto_state, const char *error,
+		const char *error_description) {
+	const char *prompt = oidc_proto_state_get_prompt(proto_

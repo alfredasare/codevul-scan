@@ -1,35 +1,47 @@
-js_grisu2(double v, char *buffer, int *K)
+char\* indent\_string(u\_int indent)
 {
-    int32_t length, mk;
-    diy_fp_t w_m, w_p, c_mk, Wp, Wm, delta;
-    int32_t q = 64, alpha = -59, gamma = -56;
-    normalized_boundaries(v, &w_m, &w_p);
-    mk = k_comp_safe32(w_p.e + q, alpha, gamma);
-    c_mk = cached_power(mk);
-    Wp = multiply_safe32(w_p, c_mk);
-    Wm = multiply_safe32(w_m, c_mk);
-    Wm.f++; Wp.f--;
-    delta = minus_safe32(Wp, Wm);
-    *K = -mk;
-    digit_gen(Wp, delta, buffer, &length, K);
-    return length;
+u\_int idx;
+char \*final\_buf;
+
+// Calculate the length of the formatted string
+u\_int final\_buf\_size = (indent/8) + (indent %8) + 3;
+
+final\_buf = malloc(final\_buf\_size);
+if (!final\_buf) {
+return NULL; // Return NULL on failure
 }
 
-int32_t k_comp_safe32(int32_t x, int32_t alpha, int32_t gamma) {
-    if (x > INT_MAX - alpha - gamma) {
-        // Handle overflow
-    }
-    return x + alpha + gamma;
+idx = 0;
+final\_buf[idx] = '\\0';
+
+/*
+* Heading newline.
+*/
+final\_buf[idx] = '\\n';
+idx++;
+
+while (indent >= 8) {
+final\_buf[idx] = '\\t';
+idx++;
+indent -= 8;
 }
 
-int32_t multiply_safe32(int32_t a, int32_t b) {
-    int64_t product = (int64_t)a * b;
-    if (product > INT_MAX) {
-        // Handle overflow
-    }
-    return (int32_t)product;
+while (indent > 0) {
+final\_buf[idx] = ' ';
+idx++;
+indent--;
 }
 
-int32_t minus_safe32(int32_t a, int32_t b) {
-    return a - b;
+/*
+* Trailing zero.
+*/
+final\_buf[idx] = '\\0';
+
+return final\_buf;
+}
+
+// Don't forget to free the allocated memory
+void free\_mem(char \*str) {
+free(str);
+str = NULL;
 }

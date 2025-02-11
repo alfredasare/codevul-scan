@@ -1,23 +1,37 @@
-int dup_fd_cloexec(int oldfd, int lowfd)
+int cms_env_asn1_ctrl(CMS_RecipientInfo *ri, int cmd)
 {
-    if (oldfd < 0 || oldfd > FD_SETSIZE || lowfd < 0 || lowfd > FD_SETSIZE) {
-        return -1;
+    EVP_PKEY *pkey;
+    int i;
+
+    if (!ri) {
+        CMSerr(CMS_F_CMS_ENV_ASN1_CTRL, ERR_R_PASSED_NULL_PARAMETER);
+        return 0;
     }
-#ifdef F_DUPFD_CLOEXEC
-    return fcntl(oldfd, F_DUPFD_CLOEXEC, lowfd);
-#else
-    int fd = dup(oldfd);
-    if (fd < 0)
-        return fd;
-    int flags = fcntl(fd, F_GETFD);
-    if (flags < 0)
-        goto unwind;
-    if (fcntl(fd, F_SETFD, flags | FD_CLOEXEC) < 0)
-        goto unwind;
-    return fd;
-unwind:
-    errno = errno;
-    close(fd);
-    return -1;
-#endif
+
+    if (ri->type == CMS_RECIPINFO_TRANS)
+        pkey = ri->d.ktri ? ri->d.ktri->pkey : NULL;
+    else if (ri->type == CMS_RECIPINFO_AGREE) {
+        EVP_PKEY_CTX *pctx = ri->d.kari ? ri->d.kari->pctx : NULL;
+        if (!pctx)
+            return 0;
+        pkey = EVP_PKEY_CTX_get0_pkey(pctx);
+        if (!pkey)
+            return 0;
+    } else
+        return 0;
+
+    if (!pkey || !pkey->ameth || !pkey->ameth->pkey_ctrl)
+        return 1;
+
+    i = pkey->ameth->pkey_ctrl(pkey, ASN1_PKEY_CTRL_CMS_ENVELOPE, cmd, ri);
+    if (i == -2) {
+        CMSerr(CMS_F_CMS_ENV_ASN1_CTRL,
+               CMS_R_NOT_SUPPORTED_FOR_THIS_KEY_TYPE);
+        return 0;
+    }
+    if (i <= 0) {
+        CMSerr(CMS_F_CMS_ENV_ASN1_CTRL, CMS_R_CTRL_FAILURE);
+        return 0;
+    }
+    return 1;
 }

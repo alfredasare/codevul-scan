@@ -1,12 +1,30 @@
-static int handle_wbinvd(struct kvm_vcpu *vcpu)
-{
-    if (!vcpu) {
-        return -EINVAL; 
-    }
+class AppCacheGroup {
+ public:
+  // ...
 
-    int ret = kvm_emulate_wbinvd(vcpu);
-    if (ret < 0) {
-        // handle error return value
-    }
-    return ret;
+ private:
+  // ...
+  std::mutex update_job_mutex_;
+  // ...
+};
+
+void AppCacheGroup::SetUpdateAppCacheStatus(UpdateAppCacheStatus status) {
+  std::unique_lock<std::mutex> lock(update_job_mutex_);
+
+  if (status == update_status_)
+    return;
+
+  update_status_ = status;
+
+  if (status != IDLE) {
+    DCHECK(update_job_);
+  } else {
+    update_job_ = nullptr;
+
+    scoped_refptr<AppCacheGroup> protect(is_in_dtor_ ? nullptr : this);
+    for (auto& observer : observers_)
+      observer.OnUpdateComplete(this);
+    if (!queued_updates_.empty())
+      ScheduleUpdateRestart(kUpdateRestartDelayMs);
+  }
 }

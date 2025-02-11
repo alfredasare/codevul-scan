@@ -1,33 +1,9 @@
-void DateTimeChooserImpl::didClosePopup()
+static void hns_nic_rx_up_pro(struct hns_nic_ring_data *ring_data, struct sk_buff *skb)
 {
-    ASSERT(m_client);
-    m_popup = 0;
+	struct net_device *ndev = ring_data->napi.dev;
+	u16 protocol;
 
-    // Encrypt the data before transmitting
-    std::string encryptedData = encryptData(m_client->getDataToTransmit(), m_secretKey);
-
-    // Transmit the encrypted data
-    m_client->didEndChooser(encryptedData);
-
-    // Decrypt the received data
-    std::string decryptedData = decryptData(m_client->getReceivedData(), m_secretKey);
-    m_client->processDecryptedData(decryptedData);
-}
-
-std::string DateTimeChooserImpl::encryptData(const std::string& data, const std::string& key)
-{
-    // Use a secure encryption algorithm, such as AES
-    std::string encrypted;
-    AES::Encryption aes(key);
-    aes.encrypt(data, encrypted);
-    return encrypted;
-}
-
-std::string DateTimeChooserImpl::decryptData(const std::string& data, const std::string& key)
-{
-    // Use a secure decryption algorithm, such as AES
-    std::string decrypted;
-    AES::Decryption aes(key);
-    aes.decrypt(data, decrypted);
-    return decrypted;
+	protocol = eth_type_trans(skb, ndev);
+	skb_set_protocol(skb, protocol);
+	napi_gro_receive(&ring_data->napi, skb);
 }

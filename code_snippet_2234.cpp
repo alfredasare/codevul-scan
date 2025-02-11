@@ -1,28 +1,24 @@
-code:
-
-
-static inline void x86_assign_hw_event(struct perf_event *event,
-				      struct cpu_hw_events *cpuc, int i)
+ASN1_OBJECT *OBJ_nid2obj(int n)
 {
-    struct hw_perf_event *hwc = &event->hw;
+ADDED\_OBJ ad,\*adp;
+ASN1\_OBJECT ob;
 
-    // Validate the index i
-    if (i < 0 || i >= ARRAY_SIZE(cpuc->assign)) {
-        return;
-    }
-
-    hwc->idx = __array_index_nospec(cpuc->assign, i);
-    hwc->last_cpu = smp_processor_id();
-    hwc->last_tag = ++cpuc->tags[i];
-
-    if (hwc->idx == X86_PMC_IDX_FIXED_BTS) {
-        hwc->config_base = 0;
-        hwc->event_base = 0;
-    } else if (hwc->idx >= X86_PMC_IDX_FIXED) {
-        hwc->config_base = MSR_ARCH_PERFMON_FIXED_CTR_CTRL;
-        hwc->event_base = MSR_ARCH_PERFMON_FIXED_CTR0;
-    } else {
-        hwc->config_base = x86_pmu_config_addr(hwc->idx);
-        hwc->event_base = x86_pmu_event_addr(hwc->idx);
-    }
+if ((n >= 0) && (n < NUM\_NID) && (n != NID\_undef) && (nid\_objs[n].nid != NID\_undef))
+return(&(nid\_objs[n]));
+else if (added == NULL)
+return(NULL);
+else
+{
+ad.type=ADDED\_NID;
+ad.obj= &ob;
+ob.nid=n;
+adp=lh\_ADDED\_OBJ\_retrieve(added,&ad);
+if (adp != NULL)
+return(adp->obj);
+else
+{
+OBJerr(OBJ\_F\_OBJ\_NID2OBJ,OBJ\_R\_UNKNOWN\_NID);
+return(NULL);
+}
+}
 }

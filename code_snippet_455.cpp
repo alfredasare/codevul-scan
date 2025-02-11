@@ -1,14 +1,18 @@
-static ssize_t disk_ro_show(struct device *dev,
-			   struct device_attribute *attr, char *buf)
+void nfs4_destroy_session(struct nfs4_session *session)
 {
-    struct gendisk *disk = dev_to_disk(dev);
-    int ret;
+	struct rpc_xprt *xprt;
 
-    if (IS_ERR(disk)) {
-        ret = -ENODEV;
-        return ret;
-    }
+	nfs4_proc_destroy_session(session);
 
-    ret = sprintf(buf, "%d\n", get_disk_ro(disk)? 1 : 0);
-    return ret;
+	xprt = rcu_dereference_protected(session->clp->cl_rpcclient->cl_xprt,
+					  rcu_read_lock());
+	if (xprt) {
+		dprintk("%s Destroy backchannel for xprt %p\n",
+			__func__, xprt);
+		xprt_destroy_backchannel(xprt, NFS41_BC_MIN_CALLBACKS);
+	}
+
+	nfs4_destroy_slot_tables(session);
+	rcu_barrier();
+	kfree(session);
 }

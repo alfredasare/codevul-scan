@@ -1,13 +1,15 @@
-static int __swiotlb_map_sg_attrs(struct device *dev, struct scatterlist *sgl,
-				  int nelems, enum dma_data_direction dir,
-				  struct dma_attrs *attrs)
+static void reds_client_monitors_config_cleanup(void)
 {
-	struct scatterlist *sg;
-	int i, ret;
+    RedsClientMonitorsConfig *cmc = &reds->client_monitors_config;
 
-	ret = swiotlb_map_sg_attrs(dev, sgl, nelems, dir, attrs);
-	if (!is_device_dma_coherent(dev) && ret < 0)
-		return ret; // Return error code instead of calling __dma_map_area
+    cmc->buffer_size = cmc->buffer_pos = 0;
+    free(cmc->buffer);
+    cmc->buffer = NULL;
 
-	return ret;
+    if (cmc->mcc) {
+        // Perform necessary cleanup or operations on cmc->mcc
+        ...
+
+        cmc->mcc = NULL;
+    }
 }

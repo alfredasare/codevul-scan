@@ -1,19 +1,8 @@
-static int install_session_keyring(struct key *keyring)
-{
-    struct cred *new = NULL;
-    int ret;
-
-    new = prepare_creds();
-    if (!new) {
-        kfree(new);
-        return -ENOMEM;
-    }
-
-    ret = install_session_keyring_to_cred(new, keyring);
-    if (ret < 0) {
-        abort_creds(new);
-        return ret;
-    }
-
-    return commit_creds(new);
+c++
+void HTMLFormControlElement::DispatchChangeEvent() {
+  if (IsSecureContext()) {
+    DispatchScopedEvent(*Event::CreateBubble(event_type_names::kChange));
+  } else {
+    // Handle insecure context or throw an exception
+  }
 }

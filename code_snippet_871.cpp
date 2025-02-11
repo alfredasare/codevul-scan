@@ -1,14 +1,24 @@
-void mp_encode_lua_integer(lua_State *L, mp_buf *buf) {
-#if (LUA_VERSION_NUM < 503) && BITS_32
-    lua_Number i = lua_tonumber(L,-1);
-    int64_t i64 = (int64_t)i;
-#else
-    lua_Integer i = lua_tointeger(L,-1);
-    i64 = (int64_t)i;
-#endif
-    size_t size = sizeof(int64_t);
-    if (buf->size < size) {
-        // Handle buffer overflow
-    }
-    memcpy(buf->ptr, &i64, size);
+static void Sp_toLowerCase(js_State *J)
+{
+	const char *src = checkstring(J, 0);
+	size_t src_len = strlen(src);
+	size_t max_dst_len = UTFmax * src_len + 1;
+	char *dst = js_malloc(J, max_dst_len);
+
+	const char *s = src;
+	char *d = dst;
+	Rune rune;
+	while (*s && (d - dst) < max_dst_len) {
+		s += chartorune(&rune, s);
+		rune = tolowerrune(rune);
+		d += runetochar(d, &rune);
+	}
+	*d = 0;
+	if (js_try(J)) {
+		js_free(J, dst);
+		js_throw(J);
+	}
+	js_pushstring(J, dst);
+	js_endtry(J);
+	js_free(J, dst);
 }

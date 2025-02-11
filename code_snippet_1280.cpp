@@ -1,6 +1,18 @@
-static int platform_drv_probe(struct device *_dev)
+ModuleExport void UnregisterINLINEImage(void)
 {
-  ...
-    ret = dev_pm_domain_attach(_dev, true, S_IRUSR | S_IWUSR);
-  ...
+    static const char *valid_inputs[] = {"INLINE", "DATA", NULL};
+    int i;
+    const char *input = "INLINE"; // or "DATA"
+
+    for (i = 0; valid_inputs[i]; ++i) {
+        if (strcmp(input, valid_inputs[i]) == 0) {
+            break;
+        }
+    }
+
+    if (!valid_inputs[i]) {
+        return;
+    }
+
+    (void) UnregisterMagickInfo(input);
 }

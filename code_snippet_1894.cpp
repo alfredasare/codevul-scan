@@ -1,17 +1,24 @@
-void GpuDataManager::AddGpuInfoUpdateCallback(Callback0::Type* callback) {
-  DCHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
-  if (!IsValidCallback(callback)) {
-    LOG(ERROR) << "Invalid callback parameter";
-    return;
-  }
-  gpu_info_update_callbacks_.insert(std::make_pair(callback, GetCallbackHash(callback)));
-}
+static unsigned long get_unmapped_area_zero(struct file *file,
+				unsigned long addr, unsigned long len,
+				unsigned long pgoff, unsigned long flags)
+{
+#ifdef CONFIG_MMU
+	struct file *file_copy;
 
-bool GpuDataManager::IsValidCallback(Callback0::Type* callback) {
-  return callback && callback->GetCallbackId() >= 0 && IsCallbackWhitelisted(callback);
-}
+	if (flags & MAP_SHARED) {
+		file_copy = file;
+	} else {
+		file_copy = duplicate_file(file);
+		if (IS_ERR(file_copy))
+			return PTR_ERR(file_copy);
+	}
 
-std::string GpuDataManager::GetCallbackHash(Callback0::Type* callback) {
-  std::hash<Coefficient> hasher;
-  return std::to_string(hasher(*callback));
+	if (current->mm->get_unmapped_area)
+		return current->mm->get_unmapped_area(file_copy, addr, len,
+						      pgoff, flags);
+	else
+		return -ENOSYS;
+#else
+	return -ENOSYS;
+#endif
 }

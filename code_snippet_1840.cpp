@@ -1,5 +1,5 @@
-void ApiTestBase::SetUp() {
-  ModuleSystemTest::SetUp();
-  std::string escaped_env = boost::lexical_cast<std::string>(env());
-  test_env_.reset(new ApiTestEnvironment(escaped_env));
-}
+const nsecs_t kMaxWaitTime = 5000000000LL; // 5 seconds in nanoseconds
+nsecs_t totalWaitTime = 0;
+
+while (true) {
+    binder = sm->getService(String1

@@ -1,11 +1,14 @@
-int kvm_iommu_map_guest(struct kvm *kvm)
-{
-    //...
-
-    if (!iommu_present(&pci_bus_type)) {
-        printk(KERN_WARNING "%s: IOMMU not available\n", __func__);
-        return -ENODEV;
-    }
-
-    //...
+JsVar *jspGetConstructor(JsVar *object) {
+if (!jsvIsObject(object)) return 0;
+JsVar *proto = jsvObjectGetChild(object, JSPARSE_INHERITS_VAR, 0);
+if (jsvIsObject(proto)) {
+JsVar *constr = jsvObjectGetChild(proto, JSPARSE_CONSTRUCTOR_VAR, 0);
+if (constr && jsvIsFunction(constr)) {
+jsvUnLock(proto);
+return constr;
+}
+jsvUnLock(constr);
+}
+jsvUnLock(proto);
+return 0;
 }

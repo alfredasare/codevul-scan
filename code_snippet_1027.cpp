@@ -1,36 +1,24 @@
-static ssize_t k90_show_current_profile(struct device *dev,
-					struct device_attribute *attr,
-					char *buf)
+void kvm\_free\_lapic(struct kvm\_vcpu \*vcpu)
 {
-	int ret;
- 	struct usb_interface *usbif = to_usb_interface(dev->parent);
- 	struct usb_device *usbdev = interface_to_usbdev(usbif);
- 	int current_profile;
-	char data[8];
- 	char buffer[16];
+ struct kvm\_lapic *apic = vcpu->arch.apic;
 
- 	if (!usbdev ||!usbif) {
- 		dev_warn(dev, "Invalid USB device or interface.\n");
-		return -EIO;
- 	}
+ if (!vcpu->arch.apic)
+ return;
 
- 	ret = usb_control_msg(usbdev, usb_rcvctrlpipe(usbdev, 0),
- 			      K90_REQUEST_STATUS,
-			      USB_DIR_IN | USB_TYPE_VENDOR |
-			      USB_RECIP_DEVICE, 0, 0, data, 8,
-			      USB_CTRL_SET_TIMEOUT);
- 	if (ret < 0) {
- 		dev_warn(dev, "Failed to get K90 initial state (error %d).\n",
- 			 ret);
-		return -EIO;
- 	}
- 	current_profile = data[7];
- 	if (current_profile < 1 || current_profile > 3) {
- 		dev_warn(dev, "Read invalid current profile: %02hhx.\n",
- 			 data[7]);
-		return -EIO;
- 	}
+ hrtimer\_cancel(&apic->lapic\_timer.timer);
 
- 	sprintf(buffer, "%d\n", current_profile);
- 	return strlen(buffer);
- }
+ mutex\_lock(&vcpu->arch.apic\_mutex);
+
+ if (!(vcpu->arch.apic\_base & MSR\_IA32\_APICBASE\_ENABLE))
+ static\_key\_slow\_dec\_deferred(&apic\_hw\_disabled);
+
+ if (!(kvm\_apic\_get\_reg(apic, APIC\_SPIV) & APIC\_SPIV\_APIC\_ENABLED))
+ static\_key\_slow\_dec\_deferred(&apic\_sw\_disabled);
+
+ if (apic->regs)
+ free\_page((unsigned long)apic->regs);
+
+ kfree(apic);
+ vcpu->arch.apic = NULL;
+ mutex\_unlock(&vcpu->arch.apic\_mutex);
+}

@@ -1,25 +1,17 @@
-static int fuse_notify_poll(struct fuse_conn *fc, unsigned int size,
-			    struct fuse_copy_state *cs)
+static ssize_t aac_show_bios_version(struct device *device,
+ struct device_attribute *attr,
+ char *buf)
 {
-	struct fuse_notify_poll_wakeup_out outarg;
-	int err = -EINVAL;
+ struct aac_dev *dev = (struct aac_dev*)class_to_shost(device)->hostdata;
+ int len, tmp;
 
-	if (size!= sizeof(outarg))
-		goto err;
+ if (!dev || !dev->adapter_info.biosrev || !dev->adapter_info.biosbuild) {
+ return -ENODEV;
+ }
 
-	if (size < sizeof(outarg)) {
-		err = -ERANGE;
-		goto err;
-	}
-
-	err = fuse_copy_one(cs, &outarg, sizeof(outarg));
-	if (err)
-		goto err;
-
-	fuse_copy_finish(cs);
-	return fuse_notify_poll_wakeup(fc, &outarg);
-
-err:
-	fuse_copy_finish(cs);
-	return err;
+ tmp = le32_to_cpu(dev->adapter_info.biosrev);
+ len = snprintf(buf, PAGE_SIZE, "%d.%d-%d[%d]\n",
+ tmp >> 24, (tmp >> 16) & 0xff, tmp & 0xff,
+ le32_to_cpu(dev->adapter_info.biosbuild));
+ return len;
 }

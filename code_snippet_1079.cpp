@@ -1,13 +1,10 @@
-void ebt_unregister_table(struct net *net, struct ebt_table *table,
-			  const struct nf_hook_ops *ops)
-{
-    if (ops) {
-        size_t num_hooks = hweight32(table->valid_hooks);
-        if (num_hooks > NF_HOOK_MAX) {
-            /* Handle error case */
-            return;
-        }
-        nf_unregister_net_hooks(net, ops, num_hooks);
+status_t OMX::createPersistentInputSurface(
+        sp<IGraphicBufferProducer> *bufferProducer,
+        sp<IGraphicBufferConsumer> *bufferConsumer) {
+    if (bufferProducer == nullptr || bufferConsumer == nullptr) {
+        return BAD_VALUE;
     }
-    __ebt_unregister_table(net, table);
+
+    return OMXNodeInstance::createPersistentInputSurface(
+            bufferProducer, bufferConsumer);
 }

@@ -1,19 +1,20 @@
-long user_read(const struct key *key, char __user *buffer, size_t buflen)
+static ssize_t double_flag_show(struct kobject *kobj,
+struct kobj_attribute *attr, char *buf,
+enum transparent_hugepage_flag enabled,
+enum transparent_hugepage_flag req_madv)
 {
-    const struct user_key_payload *upayload;
-    long ret;
+unsigned long transparent_hugepage_flags = 0;
 
-    upayload = user_key_payload_locked(key);
-    ret = upayload->datalen;
-
-    if (buflen > upayload->datalen) {
-        buflen = upayload->datalen; // Ensure we don't overflow
-    }
-
-    if (buffer && buflen > 0) {
-        if (copy_from_user(buffer, upayload->data, buflen)!= 0)
-            ret = -EFAULT;
-    }
-
-    return ret;
+if (test_bit(enabled, &transparent_hugepage_flags) &&
+!test_bit(req_madv, &transparent_hugepage_flags)) {
+return sprintf(buf, "[always] madvise never\n");
+} else if (!test_bit(enabled, &transparent_hugepage_flags) &&
+test_bit(req_madv, &transparent_hugepage_flags)) {
+return sprintf(buf, "always [madvise] never\n");
+} else if (!test_bit(enabled, &transparent_hugepage_flags) &&
+!test_bit(req_madv, &transparent_hugepage_flags)) {
+return sprintf(buf, "always madvise [never]\n");
+} else {
+return -EINVAL;
+}
 }

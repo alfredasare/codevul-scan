@@ -1,19 +1,10 @@
-XmpPtr xmp_files_get_new_xmp(XmpFilePtr xf)
-{
-    CHECK_PTR(xf, NULL);
-    RESET_ERROR;
-    auto txf = reinterpret_cast<SXMPFiles *>(xf);
+gfx::Rect Label::GetAvailableRect() const {
+  gfx::Rect bounds(gfx::Point(), size());
+  gfx::Insets insets(GetInsets());
 
-    bool result = false;
-    try {
-        auto xmp = std::unique_ptr<SXMPMeta>(new SXMPMeta);
-        result = txf->GetXMP(xmp.get());
-        if (result) {
-            return reinterpret_cast<XmpPtr>(xmp.release());
-        }
-    }
-    catch (const XMP_Error &e) {
-        set_error(e);
-    }
-    return NULL;
+  // Clamp width and height to zero if negative.
+  bounds.set_width(std::max(0, bounds.width() - (insets.left() + insets.right())));
+  bounds.set_height(std::max(0, bounds.height() - (insets.top() + insets.bottom())));
+
+  return bounds;
 }

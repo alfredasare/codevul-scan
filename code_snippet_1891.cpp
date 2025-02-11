@@ -1,9 +1,26 @@
-static zend_object_value zend_default_exception_new(zend_class_entry *class_type TSRMLS_DC) /* {{{ */
-{
-    if (!class_type ||!class_type->name || strlen(class_type->name) > ZEND_MAX_CLASS_NAME_LENGTH) {
-        return zend_throw_exception("Exception", "Invalid class type", E_ERROR TSRMLS_CC);
+#define MAX_ITERATIONS 100
+
+R_API RBinFile *r_bin_file_find_by_object_id(RBin *bin, ut32 binobj_id) {
+    RListIter *iter;
+    RBinFile *binfile;
+
+    // Validate input
+    if (binobj_id < 1 || binobj_id > INT_MAX) {
+        return NULL;
     }
 
-    return zend_default_exception_new_ex(class_type, 0 TSRMLS_CC);
+    int iterations = 0;
+
+    r_list_foreach (bin->binfiles, iter, binfile) {
+        // Break after reaching the maximum iteration limit
+        if (++iterations >= MAX_ITERATIONS) {
+            break;
+        }
+
+        if (r_bin_file_object_find_by_id(binfile, binobj_id)) {
+            return binfile;
+        }
+    }
+
+    return NULL;
 }
-/* }}} */

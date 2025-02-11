@@ -1,19 +1,16 @@
-static int ssl23_no_ssl2_ciphers(SSL *s)
+static bool mnt_ns_loop(struct dentry *dentry)
 {
-    SSL_CIPHER *cipher;
-    STACK_OF(SSL_CIPHER) *ciphers;
-    int i;
-    ciphers = SSL_get_ciphers(s);
+	/* Could bind mounting the mount namespace inode cause a
+	 * mount namespace loop?
+	 */
+	struct mnt_namespace *mnt_ns;
+	u64 local_seq;
 
-    if (!ciphers ||!sk_SSL_CIPHER_num(ciphers)) {
-        return 0; // Invalid or empty SSL cipher suite
-    }
+	if (!is_mnt_ns_file(dentry))
+		return false;
 
-    for (i = 0; i < sk_SSL_CIPHER_num(ciphers); i++) {
-        cipher = sk_SSL_CIPHER_value(ciphers, i);
-        if (cipher->algorithm_ssl == SSL_SSLV2) {
-            return 0;
-        }
-    }
-    return 1;
+	mnt_ns = get_proc_ns(dentry->d_inode)->ns;
+	local_seq = mnt_ns->seq;
+
+	return current->nsproxy->mnt_ns->seq >= local_seq;
 }

@@ -1,12 +1,13 @@
-double BaseRenderingContext2D::lineDashOffset() const {
-    auto state = GetState();
-    if (!state) {
-        return 0.0;
+bool need_numeric_port_hack(const char *input) {
+    if (!tested_for_getaddrinfo_hacks)
+        test_for_getaddrinfo_hacks();
+
+    // Validate input before using it
+    if (!is_valid_input(input)) {
+        // Handle invalid input, e.g., return false or handle appropriately
+        return false;
     }
-    try {
-        return state->LineDashOffset();
-    } catch (const std::exception& e) {
-        logger->error("Error accessing LineDashOffset: {}", e.what());
-        return 0.0;
-    }
+
+    // Proceed with the original functionality
+    return need_numeric_port_hack_;
 }

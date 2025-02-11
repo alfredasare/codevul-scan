@@ -1,7 +1,4 @@
-static void lex_unget(lex_t *lex, int c)
+static int __mlock_posix_error_return(long retval)
 {
-    if (c < 0 || c >= STREAM_BUFFER_SIZE) {
-        return;
-    }
-    stream_unget(&lex->stream, c);
+    return (int)retval;
 }

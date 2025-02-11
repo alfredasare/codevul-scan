@@ -1,17 +1,1 @@
-static inline int put_compat_mq_attr(const struct mq_attr *attr,
-				     struct compat_mq_attr __user *uattr)
-{
-	struct compat_mq_attr v;
-	struct compat_mq_attr v_copy;
-
-	memset(&v, 0, sizeof(v));
-	v.mq_flags = attr->mq_flags;
-	v.mq_maxmsg = attr->mq_maxmsg;
-	v.mq_msgsize = attr->mq_msgsize;
-	v.mq_curmsgs = attr->mq_curmsgs;
-
-	memcpy(&v_copy, &v, sizeof(v));
-	if (copy_to_user(uattr, &v_copy, sizeof(*uattr)))
-		return -EFAULT;
-	return 0;
-}
+`static void DSA_get0_key(const DSA *d, BIGNUM *pub_key_copy, BIGNUM *priv_key_copy) { if (pub_key_copy != NULL) { BN_copy(pub_key_copy, d->pub_key); } if (priv_key_copy != NULL && d->priv_key != NULL) { BN_copy(priv_key_copy, d->priv_key); } }`

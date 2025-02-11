@@ -1,21 +1,25 @@
-void RenderThreadImpl::OnNetworkQualityChanged(
-    net::EffectiveConnectionType type,
-    base::TimeDelta http_rtt,
-    base::TimeDelta transport_rtt,
-    double downlink_throughput_kbps) {
-  UMA_HISTOGRAM_BOOLEAN("NQE.RenderThreadNotified", true);
-  WebEffectiveConnectionType webType = EffectiveConnectionTypeToWebEffectiveConnectionTypeSafe(type);
-  WebNetworkStateNotifier::SetNetworkQuality(webType, http_rtt, transport_rtt, downlink_throughput_kbps);
-}
-
-WebEffectiveConnectionType EffectiveConnectionTypeToWebEffectiveConnectionTypeSafe(net::EffectiveConnectionType type) {
-  switch (type) {
-    case net::EffectiveConnectionType::TYPE_2G:
-      return WebEffectiveConnectionType::WEB_EFFECTIVE_CONNECTION_TYPE_2G;
-    case net::EffectiveConnectionType::TYPE_3G:
-      return WebEffectiveConnectionType::WEB_EFFECTIVE_CONNECTION_TYPE_3G;
-    //...
-    default:
-      return WebEffectiveConnectionType::WEB_EFFECTIVE_CONNECTION_TYPE_UNKNOWN;
-  }
+c++
+status_t SoundTriggerHwService::attach(const sound_trigger_module_handle_t handle,
+                                       const sp<ISoundTriggerClient>& client,
+                                       sp<ISoundTrigger>& moduleInterface)
+{
+    ALOGV("attach module %d", handle);
+    AutoMutex lock(mServiceLock);
+    if (!captureHotwordAllowed()) {
+        return PERMISSION_DENIED;
+    }
+    moduleInterface.clear();
+    if (client == 0) {
+        return BAD_VALUE;
+    }
+    ssize_t index = mModules.indexOfKey(handle);
+    if (index < 0) {
+        return BAD_VALUE;
+    }
+    sp<Module> module = mModules.valueAt(index);
+    module->setClient(client);
+    IInterface::asBinder(client)->linkToDeath(module);
+    module->setCaptureState_l(mCaptureState);
+    moduleInterface = module;
+    return NO_ERROR;
 }

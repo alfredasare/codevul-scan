@@ -1,27 +1,21 @@
-std::string ExecuteManifestFetchTest(const std::string& url, const std::string& cross_origin) {
-    if (!IsValidUrl(url)) {
-        throw std::invalid_argument("Invalid URL");
-    }
-    if (!IsValidCrossOrigin(cross_origin)) {
-        throw std::invalid_argument("Invalid cross-origin value");
-    }
-    std::string js(base::StringPrintf("reportOnFetch = false;");
-    js += "var link = document.createElement('link');";
-    js += "link.rel ='manifest';";
-    js += "link.href = '%s';", url);
-    if (!cross_origin.empty()) {
-        js += "link.crossOrigin = '%s';", cross_origin);
-    }
-    js += "document.head.appendChild(link);";
-    ExecuteJavaScriptForTests(js);
-    return GetManifestAndIssuedRequests();
-}
+mrb_mutex_t gc_mutex;
+mrb_mutex_init(&gc_mutex, mrb);
 
-bool IsValidUrl(const std::string& url) {
-    return url.find("http://") == 0 || url.find("https://") == 0;
-}
+mrb_gc_arena_shrink(mrb_state *mrb, int idx)
+{
+  mrb_gc *gc = &mrb->gc;
+  int capa = gc->arena_capa;
 
-bool IsValidCrossOrigin(const std::string& cross_origin) {
-    static const std::set<std::string> allowed_cross_origins = {"*", "https://example.com"};
-    return allowed_cross_origins.find(cross_origin)!= allowed_cross_origins.end();
+  mrb_mutex_lock(&gc_mutex);
+  if (idx < capa / 4) {
+    capa >>= 2;
+    if (capa < MRB_GC_ARENA_SIZE) {
+      capa = MRB_GC_ARENA_SIZE;
+    }
+    if (capa != gc->arena_capa) {
+      gc->arena = (struct RBasic**)mrb_realloc(mrb, gc->arena, sizeof(struct RBasic*)*capa);
+      gc->arena_capa = capa;
+    }
+  }
+  mrb_mutex_unlock(&gc_mutex);
 }

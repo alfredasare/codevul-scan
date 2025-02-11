@@ -1,48 +1,32 @@
-static int macvtap_init(void)
+static void ssl_write_supported_point_formats_ext(mbedtls_ssl_context *ssl,
+                                                   unsigned char *buf,
+                                                   size_t *olen)
 {
-    int err;
+    unsigned char *p = buf;
+    ((void) ssl);
 
-    err = alloc_chrdev_region(&macvtap_major, 0,
-                             MACVTAP_NUM_DEVS, "macvtap");
-    if (err)
-        goto out1;
-
-    cdev_init(&macvtap_cdev, &macvtap_fops);
-    err = cdev_add(&macvtap_cdev, macvtap_major, MACVTAP_NUM_DEVS);
-    if (err)
-        goto out2;
-
-    // Validate the macvtap_major variable
-    if (macvtap_major > MAX_CHRDEV_MAJOR) {
-        err = -EINVAL;
-        goto out2;
+    if ((ssl->handshake->cli_exts & MBEDTLS_TLS_EXT_SUPPORTED_POINT_FORMATS_PRESENT) == 0)
+    {
+        *olen = 0;
+        return;
     }
 
-    kobject_set_name(&macvtap_cdev.kobj, "%s", "macvtap");
-    macvtap_class = class_create(THIS_MODULE, "macvtap");
-    if (IS_ERR(macvtap_class)) {
-        err = PTR_ERR(macvtap_class);
-        goto out3;
+    MBEDTLS_SSL_DEBUG_MSG(3, ("server hello, supported_point_formats extension"));
+
+    if (*olen < 6)
+    {
+        *olen = 0;
+        return;
     }
 
-    err = register_netdevice_notifier(&macvtap_notifier_block);
-    if (err)
-        goto out4;
+    *p++ = (unsigned char)((MBEDTLS_TLS_EXT_SUPPORTED_POINT_FORMATS >> 8) & 0xFF);
+    *p++ = (unsigned char)((MBEDTLS_TLS_EXT_SUPPORTED_POINT_FORMATS) & 0xFF);
 
-    err = macvlan_link_register(&macvtap_link_ops);
-    if (err)
-        goto out5;
+    *p++ = 0x00;
+    *p++ = 2;
 
-    return 0;
+    *p++ = 1;
+    *p++ = MBEDTLS_ECP_PF_UNCOMPRESSED;
 
-out5:
-    unregister_netdevice_notifier(&macvtap_notifier_block);
-out4:
-    class_unregister(macvtap_class);
-out3:
-    cdev_del(&macvtap_cdev);
-out2:
-    unregister_chrdev_region(macvtap_major, MACVTAP_NUM_DEVS);
-out1:
-    return err;
+    *olen = 6;
 }

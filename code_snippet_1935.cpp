@@ -1,22 +1,22 @@
-void Dispatcher::OnLoaded(
-    const std::vector<ExtensionMsg_Loaded_Params>& loaded_extensions) {
-  for (const auto& param : loaded_extensions) {
-    std::string error;
-    scoped_refptr<const Extension> extension = param.ConvertToExtension(&error);
-    if (!extension.get()) {
-      NOTREACHED() << error;
-      extension_load_errors_[param.id] = error;
-      continue;
-    }
+vips\_foreign\_load\_generate(VipsRegion \*or, void \*seq, void \*a, void \*b, gboolean \*stop)
+{
+VipsRegion \*ir = (VipsRegion \*) seq;
 
-    std::string extension_id = extension->id();
-    RendererExtensionRegistry* extension_registry =
-        RendererExtensionRegistry::Get();
-    if (!extension_registry->insert({extension_id, extension}).second) {
-      // Insert the extension only if it's not already present
-      extension_registry->Insert(extension);
-    }
-  }
+VipsRect \*r = &or->valid;
 
-  UpdateBindings("");
+/* Allocate enough memory for output region. */
+if (vips\_region\_alloc(or, r->width, r->height, or->im->band\_format))
+return -1;
+
+/* Ask for input we need. */
+if (vips\_region\_prepare(ir, r))
+return -1;
+
+/* Attach output region to that. */
+if (vips\_region\_copy(or, ir, r, r->left, r->top))
+return -1;
+
+return 0;
 }
+
+The vulnerability has been addressed by allocating enough memory for the output region before preparing and copying the input region to it. This prevents any potential buffer overflow caused by processing invalid image data.

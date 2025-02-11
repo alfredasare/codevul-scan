@@ -1,9 +1,16 @@
-static bool signed_sub_overflows(s64 a, s64 b)
-{
-    /* Cast signed integers to unsigned integers before subtraction */
-    s64 res = (s64)((uint64_t)a - (uint64_t)b);
+#define MAX_SIP_INPUT_SIZE (1024 * 1024) // Adjust the maximum size according to your needs
 
-    if (b < 0)
-        return res < a;
-    return res > a;
+hash(XML_Parser parser, KEY s) {
+  struct siphash state;
+  struct sipkey key;
+  (void)sip24_valid;
+  copy_salt_to_sipkey(parser, &key);
+  sip24_init(&state, &key);
+
+  if (keylen(s) * sizeof(XML_Char) > MAX_SIP_INPUT_SIZE) {
+    return 0;
+  }
+
+  sip24_update(&state, s, keylen(s) * sizeof(XML_Char));
+  return (unsigned long)sip24_final(&state);
 }

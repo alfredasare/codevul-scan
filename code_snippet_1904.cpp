@@ -1,7 +1,29 @@
-static ssize_t release_date_show(struct device_driver *dd, char *buf)
-{
-    if (buf == NULL) {
-        return -EINVAL;
-    }
-    return snprintf(buf, strlen(MEGASAS_RELDATE) + 2, "%s\n", MEGASAS_RELDATE);
+Browser* Restore() {
+  SessionService* session_service =
+      SessionServiceFactory::GetForProfile(profile_);
+  if (!session_service) {
+    LOG(ERROR) << "Failed to get SessionService object";
+    return nullptr;
+  }
+
+  session_service->GetLastSession(
+      &request_consumer_,
+      base::Bind(&SessionRestoreImpl::OnGotSession, base::Unretained(this)));
+
+  if (synchronous_) {
+    bool old_state = MessageLoop::current()->NestableTasksAllowed();
+    MessageLoop::current()->SetNestableTasksAllowed(true);
+    MessageLoop::current()->Run();
+    MessageLoop::current()->SetNestableTasksAllowed(old_state);
+    Browser* browser = ProcessSessionWindows(&windows_);
+    delete this;
+    return browser;
+  }
+
+  if (browser_) {
+    registrar_.Add(this, chrome::NOTIFICATION_BROWSER_CLOSED,
+                   content::Source<Browser>(browser_));
+  }
+
+  return browser_;
 }

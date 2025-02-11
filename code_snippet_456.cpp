@@ -1,15 +1,30 @@
-#include <linux/atomic.h>
+#include <cstring>
 
-static atomic_t bsg_class_device_count = ATOMIC_INIT(0);
+const int kMaxFeatureLength = 64; // Adjust this value based on your requirement
 
-static void bsg_kref_release_function(struct kref *kref)
-{
-    struct bsg_class_device *bcd = container_of(kref, struct bsg_class_device, ref);
-    struct device *parent = bcd->parent;
+GLboolean GLES2Implementation::EnableFeatureCHROMIUM(const char* feature) {
+  GPU_CLIENT_SINGLE_THREAD_CHECK();
+  GPU_CLIENT_LOG("[" << GetLogPrefix() << "] glEnableFeatureCHROMIUM("
+                     << feature << ")");
+  TRACE_EVENT0("gpu", "GLES2::EnableFeatureCHROMIUM");
 
-    if (bcd->release)
-        bcd->release(bcd->parent);
+  if (std::strlen(feature) > kMaxFeatureLength) {
+    GPU_CLIENT_LOG("Error: Feature name too long. Maximum length is "
+                   << kMaxFeatureLength);
+    return false;
+  }
 
-    atomic_dec(&bsg_class_device_count);
-    put_device(parent);
+  typedef cmds::EnableFeatureCHROMIUM::Result Result;
+  SetBucketAsCString(kResultBucketId, feature);
+  auto result = GetResultAs<Result>();
+  if (!result) {
+    return false;
+  }
+  *result = 0;
+  helper_->EnableFeatureCHROMIUM(kResultBucketId, GetResultShmId(),
+                                 result.offset());
+  WaitForCmd();
+  helper_->SetBucketSize(kResultBucketId, 0);
+  GPU_CLIENT_LOG("   returned " << GLES2Util::GetStringBool(*result));
+  return *result != 0;
 }

@@ -1,21 +1,19 @@
-static void assign_register(unsigned long *reg, u64 val, int bytes)
+find_expiring_intro_point(rend_service_t *service, origin_circuit_t *circ)
 {
-    if (bytes < 1 || bytes > 8) {
-        throw std::runtime_error("Invalid byte size: " + std::to_string(bytes));
-    }
+  tor_assert(service);
+  tor_assert(TO_CIRCUIT(circ)->purpose == CIRCUIT_PURPOSE_S_ESTABLISH_INTRO ||
+             TO_CIRCUIT(circ)->purpose == CIRCUIT_PURPOSE_S_INTRO);
 
-    switch (bytes) {
-        case 1:
-            *(u8 *)reg = (u8)val;
-            break;
-        case 2:
-            *(u16 *)reg = (u16)val;
-            break;
-        case 4:
-            *reg = (u32)val;
-            break;  // 64b: zero-extend
-        case 8:
-            *reg = val;
-            break;
+  int found = 0;
+  rend_intro_point_t *result = NULL;
+
+  SMARTLIST_FOREACH_BEGIN(service->expiring_nodes, rend_intro_point_t *,
+                    intro_point) {
+    found += crypto_pk_eq_keys(intro_point->intro_key, circ->intro_key);
+    if (found == 1) {
+      result = intro_point;
     }
+  } SMARTLIST_FOREACH_END(intro_point);
+
+  return result;
 }

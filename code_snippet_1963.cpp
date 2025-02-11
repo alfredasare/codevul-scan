@@ -1,15 +1,6 @@
-size_t QuicStreamSequencerBuffer::GetBlockCapacity(size_t block_index) const {
-  if (block_index >= blocks_count_) {
-    return 0;
-  }
-
-  if ((block_index + 1) == blocks_count_) {
-    size_t result = max_buffer_capacity_bytes_ % kBlockSizeBytes;
-    if (result == 0) {  // whole block
-      result = kBlockSizeBytes;
-    }
-    return result;
-  } else {
-    return kBlockSizeBytes;
-  }
+void DocumentLoader::AppendRedirect(const KURL& url) {
+if (redirect\_chain\_.size() >= max\_redirects\_) {
+throw std::runtime\_error("Maximum number of redirects reached");
+}
+redirect\_chain\_.push\_back(url);
 }

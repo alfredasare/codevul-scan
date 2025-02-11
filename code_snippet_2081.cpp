@@ -1,16 +1,17 @@
-map_data_enc (gpgme_data_t d)
-{
-  const char* encoding = gpgme_data_get_encoding (d);
-  if (encoding == NULL || strlen(encoding) > MAX_ENCODING_LENGTH) {
-    return NULL;
-  }
+pthread_mutex_t g_afs_gcpags_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-  char* output = NULL;
-  asprintf(&output, "--%s", encoding);
-  if (output != NULL) {
-    return output;
-  } else {
-    return NULL;
-  }
-  free(output);
+DECL_PIOCTL(PGCPAGs)
+{
+    int result;
+
+    pthread_mutex_lock(&g_afs_gcpags_mutex);
+    if (!afs_osi_suser(*acred)) {
+        result = EACCES;
+    } else {
+        afs_gcpags = AFS_GCPAGS_USERDISABLED;
+        result = 0;
+    }
+    pthread_mutex_unlock(&g_afs_gcpags_mutex);
+
+    return result;
 }

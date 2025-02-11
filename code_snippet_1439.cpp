@@ -1,6 +1,9 @@
-SSLUITest() : https_server_(HTTPSOptions(HTTPSOptions::CERT_OK), FilePath(kDocRoot)),
-                 https_server_expired_(HTTPSOptions(HTTPSOptions::CERT_EXPIRED), FilePath(kDocRoot)),
-                 https_server_mismatched_(HTTPSOptions(HTTPSOptions::CERT_MISMATCHED_NAME), FilePath(kDocRoot)) {
-  std::string message = "Certificate details: %s";
-  EnableDOMAutomation();
+void BnDrm::readVector(const Parcel &data, Vector<uint8_t> &vector) const {
+ uint32_t size = data.readInt32();
+ if (size > 0 && size < vector.max_size()) {
+ vector.insertAt((size_t)0, size);
+ data.read(vector.editArray(), size);
+ } else {
+ // Handle error condition
+ }
 }

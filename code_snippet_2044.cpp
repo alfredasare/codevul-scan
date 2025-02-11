@@ -1,41 +1,14 @@
-based on the provided vulnerable code and recommendation:
-
-static int virtio_net_handle_offloads(VirtIONet *n, uint8_t cmd,
-                                     struct iovec *iov, unsigned int iov_cnt)
+static int mov_metadata_int8_no_padding(MOVContext *c, AVIOContext *pb,
+                                        unsigned len, const char *key)
 {
-    VirtIODevice *vdev = VIRTIO_DEVICE(n);
-    uint64_t offloads;
-    size_t s;
-
-    if (!((1 << VIRTIO_NET_F_CTRL_GUEST_OFFLOADS) & vdev->guest_features)) {
-        return VIRTIO_NET_ERR;
+    const unsigned MAX_LENGTH = 128; // Set the maximum allowed length based on your requirements
+    if (len > MAX_LENGTH) {
+        av_log(c, AV_LOG_ERROR, "Input length exceeds the limit: %u\n", len);
+    return -1;
     }
 
-    s = iov_to_buf(iov, iov_cnt, 0, &offloads, sizeof(offloads));
-    if (s!= sizeof(offloads)) {
-        return VIRTIO_NET_ERR;
-    }
+    c->fc->event_flags |= AVFMT_EVENT_FLAG_METADATA_UPDATED;
+    av_dict_set_int(&c->fc->metadata, key, avio_r8(pb < len ? pb : NULL), 0);
 
-    if (cmd == VIRTIO_NET_CTRL_GUEST_OFFLOADS_SET) {
-        uint64_t supported_offloads = 0;
-
-        if (!n->has_vnet_hdr) {
-            return VIRTIO_NET_ERR;
-        }
-
-        memset(&supported_offloads, 0, sizeof(supported_offloads)); // Initialize supported_offloads securely
-        if (offloads > (1ULL << 63)) {
-            return VIRTIO_NET_ERR; // offloads value exceeds maximum allowed value
-        }
-        if (offloads & ~supported_offloads) {
-            return VIRTIO_NET_ERR; // offloads value contains unsupported bits
-        }
-
-        n->curr_guest_offloads = offloads;
-        virtio_net_apply_guest_offloads(n);
-
-        return VIRTIO_NET_OK;
-    } else {
-        return VIRTIO_NET_ERR;
-    }
+    return 0;
 }

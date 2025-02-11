@@ -1,26 +1,27 @@
-static void persistent_dtr(struct dm_exception_store *store)
-{
-    struct pstore *ps = get_info(store);
+LinkResource* HTMLLinkElement::LinkResourceToProcess() {
+  if (!ShouldLoadLink()) {
+    if (GetLinkStyle() && GetLinkStyle()->HasSheet())
+      return GetLinkStyle();
+    return nullptr;
+  }
 
-    destroy_workqueue(ps->metadata_wq);
-
-    /* Created in read_header */
-    if (ps->io_client) {
-        dm_io_client_destroy(ps->io_client);
-        ps->io_client = NULL;
+  if (!link_) {
+    std::unique_ptr<LinkResource> new_link;
+    if (rel_attribute_.IsImport() &&
+        RuntimeEnabledFeatures::HTMLImportsEnabled()) {
+      new_link.reset(LinkImport::Create(this));
+    } else if (rel_attribute_.IsManifest()) {
+      new_link.reset(LinkManifest::Create(this));
     } else {
-        /* Handle the case where ps->io_client is NULL */
+      LinkStyle* link = LinkStyle::Create(this);
+      if (FastHasAttribute(disabledAttr)) {
+        UseCounter::Count(GetDocument(), WebFeature::kHTMLLinkElementDisabled);
+        link->SetDisabledState(true);
+      }
+      new_link.reset(link);
     }
+    link_ = std::move(new_link);
+  }
 
-    free_area(ps);
-
-    /* Allocated in persistent_read_metadata */
-    if (ps->callbacks) {
-        vfree(ps->callbacks);
-        ps->callbacks = NULL;
-    } else {
-        /* Handle the case where ps->callbacks is NULL */
-    }
-
-    kfree(ps);
+  return link_.get();
 }

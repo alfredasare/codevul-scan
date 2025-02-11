@@ -1,6 +1,8 @@
-#include "config.h"
+static int ecryptfs_threadfn(void *ignored)
+{
+	set_freezable();
+	while (1)  {
+		struct ecryptfs_open_req *req;
 
-PageInfoUI::ChosenObjectInfo::ChosenObjectInfo() {
-    const char* apiKey = decryptConfigValue(API_KEY);
-    const char* secretKey = decryptConfigValue(SECRET_KEY);
-}
+		wait_event_freezable(
+			ecryptfs_kthread_ctl.wait,

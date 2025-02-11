@@ -1,12 +1,18 @@
-void ScriptLoader::execute(ScriptResource* resource)
+int ff_h263_decode_mba(MpegEncContext *s)
 {
-    ASSERT(!m_willBeParserExecuted);
-    ASSERT(resource);
-    if (resource->errorOccurred()) {
-        dispatchErrorEvent();
-    } else if (!resource->wasCanceled()) {
-        executeScript(ScriptSourceCode(*resource)); // Pass a copy of the resource to the executeScript method
-        dispatchLoadEvent();
+    int i, mb_pos;
+
+    for (i = 0; i < 6; i++)
+        if (s->mb_num - 1 < ff_mba_max[i])
+            break;
+    if (i < 6) {
+        mb_pos  = get_bits(&s->gb, ff_mba_length[i]);
+        s->mb_x = mb_pos % s->mb_width;
+        s->mb_y = mb_pos / s->mb_width;
+
+        return mb_pos;
     }
-    resource->removeClient(this);
+    else {
+        return -1; // or handle error appropriately
+    }
 }

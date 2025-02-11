@@ -1,39 +1,16 @@
-static void local_mapped_file_attr(int dirfd, const char *name,
-                                   struct stat *stbuf)
+is\_default\_salt\_p(const krb5\_salt \*default\_salt, const Key \*key)
 {
-    FILE *fp;
-    char buf[ATTR_MAX];
-    int map_dirfd;
-    size_t name_len;
+const krb5\_saltvalue \*default\_salttvalue = &default\_salt->saltvalue;
+const krb5\_saltvalue \*key\_saltsvalue = &key->salt->salt;
 
-    map_dirfd = openat_dir(dirfd, VIRTFS_META_DIR);
-    if (map_dirfd == -1) {
-        return;
-    }
+if (key->salt == NULL)
+return TRUE;
+if (default\_salt->salttype != key->salt->type)
+return FALSE;
 
-    // Validate the 'name' parameter
-    name_len = strlen(name);
-    if (name_len > MAX_ATTRIBUTE_NAME_LENGTH) {
-        return; // or handle the error as needed
-    }
+// Use safe function to compare data
+if (memcmp(default\_salttvalue->data, key\_saltsvalue->data, default\_salttvalue->length) != 0)
+return FALSE;
 
-    fp = local_fopenat(map_dirfd, name, "r");
-    close_preserve_errno(map_dirfd);
-    if (!fp) {
-        return;
-    }
-    memset(buf, 0, ATTR_MAX);
-    while (fgets(buf, ATTR_MAX, fp)) {
-        if (!strncmp(buf, "virtfs.uid", 10)) {
-            stbuf->st_uid = atoi(buf+11);
-        } else if (!strncmp(buf, "virtfs.gid", 10)) {
-            stbuf->st_gid = atoi(buf+11);
-        } else if (!strncmp(buf, "virtfs.mode", 11)) {
-            stbuf->st_mode = atoi(buf+12);
-        } else if (!strncmp(buf, "virtfs.rdev", 11)) {
-            stbuf->st_rdev = atoi(buf+12);
-        }
-        memset(buf, 0, ATTR_MAX);
-    }
-    fclose(fp);
+return TRUE;
 }

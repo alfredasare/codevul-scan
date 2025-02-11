@@ -1,14 +1,16 @@
-size_t TIFFVStripSize(TIFF* tif, uint32 nrows)
+static unsigned int bt_unused_tags(struct blk_mq_bitmap_tags *bt)
 {
-    static const char module[] = "TIFFVStripSize";
-    size_t m;
-    tmsize_t n;
+	unsigned int i, used;
 
-    m = TIFFVStripSize64(tif, nrows);
-    n = (size_t)m;
-    if (n!= m) {
-        TIFFErrorExt(tif->tif_clientdata, module, "Integer overflow");
-        n = 0;
-    }
-    return (size_t)n;
+	for (i = 0, used = 0; i < bt->map_nr && i < BT_MAX_TAGS; i++) {
+		struct blk_align_bitmap *bm = &bt->map[i];
+
+		if (i >= bt->map_nr) {
+			break;
+		}
+
+		used += bitmap_weight(&bm->word, bm->depth);
+	}
+
+	return bt->depth - used;
 }

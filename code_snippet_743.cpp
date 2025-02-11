@@ -1,14 +1,11 @@
-#include <memory>
+static ssize_t regulator_suspend_mem_mode_show(struct device *dev,
+                        struct device_attribute *attr, char *buf)
+{
+        struct regulator_dev *rdev = dev_get_drvdata(dev);
+        if (!rdev) {
+                return -ENODEV;
+        }
 
-class TaskManagerTableModel {
-public:
-  void OnItemsAdded(int start, int length) {
-    if (observer_) {
-      observer_->OnItemsAdded(start, length);
-      observer_.reset(); // Release the observer object
-    }
-  }
-
-private:
-  std::unique_ptr<Observer> observer_;
-};
+        return regulator_print_opmode(buf,
+                rdev->constraints->state_mem.mode);
+}

@@ -1,13 +1,11 @@
-static void svm_cpuid_update(struct kvm_vcpu *vcpu)
+static void sctp_generate_t4_rto_event(unsigned long data)
 {
-    struct vcpu_svm *svm = to_svm(vcpu);
+	struct sctp_association *asoc = (struct sctp_association *) data;
 
-    /* Validate input before using it */
-    if (!vcpu ||!vcpu->arch) {
-        pr_err("Invalid vcpu pointer\n");
-        return;
-    }
+	if (asoc == NULL) {
+		pr_err("Invalid argument: asoc is NULL\n");
+		return;
+	}
 
-    /* Update nrips enabled cache */
-    svm->nrips_enabled =!!guest_cpuid_has_nrips(vcpu->arch);
+	sctp_generate_timeout_event(asoc, SCTP_EVENT_TIMEOUT_T4_RTO);
 }

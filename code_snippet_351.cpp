@@ -1,29 +1,23 @@
-void FrameLoader::StopAllLoaders() {
-  if (!IsValidPageDismissalEvent(GetDocument()->PageDismissalEventBeingDispatched())) {
-    return;
-  }
-
-  in_stop_all_loaders_ = true;
-  base::AutoReset<bool> in_stop_all_loaders(&in_stop_all_loaders_, true);
-
-  for (Frame* child = frame_->Tree().FirstChild(); child;
-       child = child->Tree().NextSibling()) {
-    if (child->IsLocalFrame())
-      ToLocalFrame(child)->Loader().StopAllLoaders();
-  }
-
-  frame_->GetDocument()->CancelParsing();
-  if (document_loader_)
-    document_loader_->StopLoading();
-  if (!protect_provisional_loader_)
-    DetachDocumentLoader(provisional_document_loader_);
-  frame_->GetNavigationScheduler().Cancel();
-  DidFinishNavigation();
-
-  TakeObjectSnapshot();
-}
-
-bool IsValidPageDismissalEvent(int dismissalEvent) {
-  static const std::set<int> validDismissalEvents = {Document::kNoDismissal};
-  return validDismissalEvents.find(dismissalEvent)!= validDismissalEvents.end();
+R_API void U(copy_type_info_to_stack_frame_list_up_to_idx)(RList * type_list, RList * sf_list, ut64 idx) {
+	RListIter *iter, *iter_tmp;
+	RBinJavaVerificationObj *ver_obj, *new_ver_obj;
+	ut32 pos = 0;
+	if (type_list == NULL || sf_list == NULL || idx >= r_list_length(type_list)) {
+		return;
+	}
+	r_list_foreach_safe (type_list, iter, iter_tmp, ver_obj) {
+		new_ver_obj = (RBinJavaVerificationObj *) malloc (sizeof (RBinJavaVerificationObj));
+		if (new_ver_obj && ver_obj) {
+			memcpy (new_ver_obj, ver_obj, sizeof (RBinJavaVerificationObj));
+			if (!r_list_append (sf_list, (void *) new_ver_obj)) {
+				R_FREE (new_ver_obj);
+			}
+		} else {
+			R_FREE (new_ver_obj);
+		}
+		pos++;
+		if (pos == idx) {
+			break;
+		}
+	}
 }

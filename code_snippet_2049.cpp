@@ -1,5 +1,1 @@
-static void exit_handler(int signo)
-{
-    (void)signo;
-    return 0;
-}
+static int search\_old\_relocation(struct reloc\_struct\_t \*reloc\_table, ut3

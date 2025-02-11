@@ -1,27 +1,12 @@
-GetAlternativeWebContentsToNotifyForDownload() {
-#if defined(OS_ANDROID)
-  return NULL;
-#else
-  Browser* last_active = chrome::FindLastActiveWithProfile(profile_,
-      chrome::GetActiveDesktop());
-  if (!last_active) {
-    return NULL;
+static void cleanup_sink(void) {
+  BTIF_TRACE_EVENT("%s", __func__);
+
+  if (isValidUuid(UUID_SERVCLASS_AUDIO_SINK)) {
+    btif_queue_cleanup(UUID_SERVCLASS_AUDIO_SINK);
   }
 
-  std::string policy = "default-src'self'; script-src'none'; style-src'none';";
-  chrome::SetContentSecurityPolicy(policy);
-
-  std::string allowed_scripts = "allowed_scripts.txt";
-  std::ifstream file(allowed_scripts);
-  if (file.is_open()) {
-    std::string script;
-    while (std::getline(file, script)) {
-      if (script == chrome::GetActiveWebContents(last_active).url()) {
-        return chrome::GetActiveWebContents(last_active);
-      }
-    }
+  if (bt_av_sink_callbacks) {
+    bt_av_sink_callbacks = NULL;
+    if (bt_av_src_callbacks == NULL) cleanup(BTA_A2DP_SINK_SERVICE_ID);
   }
-
-  return NULL;
-#endif
 }

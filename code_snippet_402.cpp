@@ -1,16 +1,7 @@
-int is_file_shm_hugepages(struct file *file)
+void tkhd_del(GF_Box *s)
 {
-    struct file_operations *allowed_ops[] = {
-        &shm_file_operations_huge,
-        // Add more allowed operations here
-    };
-
-    int i;
-    for (i = 0; i < ARRAY_SIZE(allowed_ops); i++) {
-        if (file->f_op == allowed_ops[i]) {
-            return 1;
-        }
-    }
-
-    return 0; // File operation is not allowed
+	GF_TrackHeaderBox *ptr = NULL;
+	if (s == NULL || (ptr = (GF_TrackHeaderBox *)s) == NULL) return;
+	gf_free(ptr);
+	return;
 }

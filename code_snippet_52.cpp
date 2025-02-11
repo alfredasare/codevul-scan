@@ -1,15 +1,15 @@
 void DiceResponseHandler::DiceTokenFetcher::OnTimeout() {
-  RecordDiceFetchTokenResult(kFetchTimeout);
+RecordDiceFetchTokenResult(kFetchTimeout);
+gaia_auth_fetcher_.reset();
+timeout\_closure.\_Cancel();
+std::string input = ""; // add input validation here
+if (IsInputValid(input)) {
+dice\_response\_handler-\>OnTokenExchangeFailure(
+this, GoogleServiceAuthError(GoogleServiceAuthError::REQUEST\_CANCELED));
+}
+}
 
-  if (!gaia_auth_fetcher_.empty()) {
-    gaia_auth_fetcher_.reset();
-  }
-
-  if (timeout_closure_!= nullptr) {
-    timeout_closure_.Cancel();
-  }
-
-  if (dice_response_handler_!= nullptr) {
-    dice_response_handler_->OnTokenExchangeFailure(this, GoogleServiceAuthError(GoogleServiceAuthError::REQUEST_CANCELED));
-  }
+bool IsInputValid(const std::string& input) {
+// Add your input validation logic here
+return true or false;
 }

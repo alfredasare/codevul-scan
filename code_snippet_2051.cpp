@@ -1,21 +1,22 @@
-struct sock *ax25_find_listener(ax25_address *addr, int digi, struct net_device *dev, int type)
+int br_multicast_set_querier(struct net_bridge *br, unsigned long val)
 {
-    ax25_cb *s;
+	if (val != 0 && val != 1) {
+		pr_err("Invalid multicast querier value: %lu\n", val);
+		return -EINVAL;
+	}
 
-    spin_lock(&ax25_list_lock);
-    ax25_for_each(s, &ax25_list) {
-        if ((s->iamdigi && !digi) || (!s->iamdigi && digi))
-            continue;
-        if (s->sk && !ax25cmp(&s->source_addr, addr) &&
-            s->sk->sk_type == type && s->sk->sk_state == TCP_LISTEN) {
-            /* If device is null we match any device */
-            if (s->ax25_dev == NULL || s->ax25_dev->dev == dev) {
-                sock_hold(s->sk);
-                spin_unlock(&ax25_list_lock);
-                return NULL;
-            }
-        }
-    }
-    spin_unlock(&ax25_list_lock);
-    return NULL;
+	val = !!val;
+
+	spin_lock_bh(&br->multicast_lock);
+	if (br->multicast_querier == val)
+		goto unlock;
+
+	br->multicast_querier = val;
+	if (val)
+		br_multicast_start_querier(br);
+
+unlock:
+	spin_unlock_bh(&br->multicast_lock);
+
+	return 0;
 }

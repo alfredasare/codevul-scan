@@ -1,5 +1,5 @@
-SkColor AutofillPopupBaseView::GetSeparatorColor() {
-  ui::NativeTheme* theme = GetNativeTheme();
-  SkColor color = theme? theme->GetSystemColor(ui::NativeTheme::kColorId_MenuSeparatorColor) : kDefaultSeparatorColor;
-  return color;
+bool ImageInputType::canBeSuccessfulSubmitButton()
+{
+    // Perform an actual check to determine if the image input type can be successful for submission
+    return m_imageInputElement && m_imageInputElement->hasAttr("alt");
 }

@@ -1,17 +1,16 @@
-void mlx4_init_vlan_table(struct mlx4_dev *dev, struct mlx4_vlan_table *table)
+static const SSL_METHOD *ssl3_get_server_method(int ver)
 {
-    int i;
+    const SSL_METHOD *method = NULL;
 
-    mutex_init(&table->mutex);
-    for (i = 0; i < MLX4_MAX_VLAN_NUM; i++) {
-        table->entries[i] = 0;
-        table->refs[i]    = 0;
-    }
-    table->max   = MIN(MLX4_MAX_VLAN_NUM, 1 << dev->caps.log_num_vlans);
-    table->total = 0;
+    if (ver == SSL3_VERSION) {
+        method = SSLv23_server_method();
 
-    if (dev->caps.log_num_vlans > sizeof(int) * 8) {
-        dev_err(dev, "log_num_vlans value too large\n");
-        return;
+        /* Check if the method is available and suitable */
+        if (method != NULL && SSL_version_supported(method, ver)) {
+            return method;
+        }
     }
+
+    /* If no suitable method is found, return NULL */
+    return (NULL);
 }

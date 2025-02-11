@@ -1,19 +1,23 @@
-void flush_thread(void)
+void sgpd_del(GF_Box *a)
 {
-    discard_lazy_cpu_state();
+	GF_SampleGroupDescriptionBox *p = (GF_SampleGroupDescriptionBox *)a;
+	while (gf_list_count(p->group_descriptions)) {
+		void *ptr = gf_list_last(p->group_descriptions);
+		if (ptr != NULL && valid_ptr(p->grouping_type, ptr) == true) { // Add validation for grouping_type and ptr
+			sgpd_del_entry(p->grouping_type, ptr);
+			gf_list_rem_last(p->group_descriptions);
+		}
+	}
+	gf_list_del(p->group_descriptions);
+	gf_free(p);
+}
 
-    size_t breakpoint_size = sizeof(current->thread.debug_regs);
-    char* breakpoint_buffer = (char*)&current->thread.debug_regs;
+// Add this new function to validate the pointer based on the grouping_type
+bool valid_ptr(int grouping_type, void *ptr)
+{
+    // Perform validation based on the grouping_type and ptr
+    // For example, if grouping_type is related to memory allocation size,
+    // ensure that the ptr points to a memory block with a correct size.
 
-#ifdef CONFIG_HAVE_HW_BREAKPOINT
-    flush_ptrace_hw_breakpoint(current);
-#else /* CONFIG_HAVE_HW_BREAKPOINT */
-    set_debug_reg_defaults(&current->thread);
-#endif /* CONFIG_HAVE_HW_BREAKPOINT */
-
-    // Validate input parameters
-    if (sizeof(current->thread.debug_regs) > breakpoint_buffer_size) {
-        printk(KERN_ERR "Invalid breakpoint size: %zu\n");
-        return;
-    }
+    // Return true if the pointer is valid; false otherwise
 }

@@ -1,14 +1,18 @@
-void ERR_load_ASN1_strings(void)
+SPL_METHOD(SplObjectStorage, getInfo)
 {
-#ifndef OPENSSL_NO_ERR
+	spl_SplObjectStorageElement *element;
+	spl_SplObjectStorage *intern = Z_SPLOBJSTORAGE_P(getThis());
 
-    if (ASN1_str_functs[0].error != NULL) {
-        const char* err_string = ERR_func_error_string(ASN1_str_functs[0].error);
-        if (err_string == NULL) {
-            ERR_load_strings(0, ASN1_str_functs);
-            ERR_load_strings(0, ASN1_str_reasons);
-        }
-    }
+	if (zend_parse_parameters_none() == FAILURE) {
+		return;
+	}
 
-#endif
+	if (intern->pos < 0 || intern->pos >= intern->storage.nNumOfElements) {
+		return;
+	}
+
+	if ((element = zend_hash_get_current_data_ptr_ex(&intern->storage, &intern->pos)) == NULL) {
+		return;
+	}
+	ZVAL_COPY(return_value, &element->inf);
 }

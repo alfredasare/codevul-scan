@@ -1,29 +1,10 @@
-QuicPacket* ConstructHandshakePacket(QuicGuid guid, CryptoTag tag) {
-  if (!IsValidGuid(guid) ||!IsKnownTag(tag)) {
-    return NULL; // or throw an exception
-  }
-
-  CryptoHandshakeMessage message;
-  message.tag = tag;
-  CryptoFramer crypto_framer;
-  scoped_ptr<QuicData> data(crypto_framer.ConstructHandshakeMessage(message));
-
-  QuicFramer quic_framer(QuicDecrypter::Create(kNULL), QuicEncrypter::Create(kNULL));
-
-  QuicPacketHeader header;
-  header.guid = guid;
-  header.retransmission_count = 0;
-  header.packet_sequence_number = static_cast<uint32_t>(1); // use secure data type
-  header.transmission_time = "0"; // use secure encoding
-  header.flags = PACKET_FLAGS_NONE;
-  header.fec_group = 0;
-
-  QuicStreamFrame stream_frame(kCryptoStreamId, false, 0, data->AsStringPiece());
-
-  QuicFrame frame(&stream_frame);
-  QuicFrames frames;
-  frames.push_back(frame);
-  QuicPacket* packet;
-  quic_framer.ConstructFragmentDataPacket(header, frames, &packet);
-  return packet;
+static bool is\_good\_origin(const char \*origin, const char \*require)
+{
+size\_t origin\_len = strlen(origin);
+size\_t require\_len = strlen(require);
+if (origin\_len < require\_len)
+return false;
+if (origin\_len >= require\_len && memcmp(origin + (origin\_len - require\_len), require, require\_len) == 0)
+return true;
+return false;
 }

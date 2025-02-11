@@ -1,14 +1,9 @@
-int BN_is_bit_set(const BIGNUM *a, int n)
+size_t xfs_buf_vmap_len(
+	struct xfs_buf	*bp)
 {
-    if (n < 0) {
-        return 0;
-    }
-
-    bn_check_top(a);
-    int i = n / BN_BITS2;
-    int j = n % BN_BITS2;
-    if (a->top <= i) {
-        return 0;
-    }
-    return (int)(((a->d[i]) >> j) & ((BN_ULONG)1));
+	size_t max_len = SIZE_MAX - bp->b_offset;
+	if (bp->b_page_count > (max_len / PAGE_SIZE)) {
+		return 0;
+	}
+	return bp->b_page_count * PAGE_SIZE - bp->b_offset;
 }

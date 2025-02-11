@@ -1,11 +1,9 @@
-nvmet_fc_tgt_q_get(struct nvmet_fc_tgt_queue *queue)
-{
-    int ret;
-
-    ret = kref_get_unless_zero(&queue->ref);
-    if (ret <= 0) {
-        return -EINVAL;
-    }
-
-    return kref_get(&queue->ref);
+xsltAttrTemplateValueProcess(xsltTransformContextPtr ctxt, const xmlChar *str) {
+xmlBufPtr buf = xmlBufCreate();
+if (xmlStrlen(str) > 100 || xmlParseBalancedChunkMemory(buf, (const char *)str, xmlStrlen(str), NULL) <= 0) {
+xmlBufFree(buf);
+return NULL;
+}
+return xsltAttrTemplateValueProcessNode(ctxt, xmlBufContent(buf), NULL);
+xmlBufFree(buf);
 }

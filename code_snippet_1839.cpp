@@ -1,35 +1,22 @@
-static int oz_usb_set_interface_req(void *hpd, u8 req_id, u8 index, u8 alt)
-{
-    struct oz_usb_ctx *usb_ctx = hpd;
-    struct oz_pd *pd = usb_ctx->pd;
-    struct oz_elt *elt;
-    struct oz_elt_buf *eb = &pd->elt_buff;
-    struct oz_elt_info *ei = oz_elt_info_alloc(&pd->elt_buff);
-    struct oz_set_interface_req *body;
+int log_host_states(int type, time_t *timestamp) {
+    char temp_buffer[4096]; // Allocate a fixed size buffer
+    host *temp_host = NULL;
 
-    if (ei == NULL)
-        return -1;
+    if(type == INITIAL_STATES && log_initial_states == FALSE)
+        return OK;
 
-    // Validate input parameters
-    if (req_id < OZ_MIN_REQ_ID || req_id > OZ_MAX_REQ_ID ||
-        index < OZ_MIN_INDEX || index > OZ_MAX_INDEX ||
-        alt < OZ_MIN_ALT || alt > OZ_MAX_ALT) {
-        return -1; // invalid input
+    for(temp_host = host_list; temp_host != NULL; temp_host = temp_host->next) {
+
+        snprintf(temp_buffer, sizeof(temp_buffer), "%s HOST STATE: %s;%s;%s;%d;%s\n",
+                 (type == INITIAL_STATES) ? "INITIAL" : "CURRENT",
+                 temp_host->name,
+                 host_state_name(temp_host->current_state),
+                 state_type_name(temp_host->state_type),
+                 temp_host->current_attempt,
+                 (temp_host->plugin_output == NULL) ? "" : temp_host->plugin_output);
+
+        write_to_all_logs_with_timestamp(temp_buffer, NSLOG_INFO_MESSAGE, timestamp);
     }
 
-    elt = (struct oz_elt *)ei->data;
-    elt->length = sizeof(struct oz_set_interface_req);
-    body = (struct oz_set_interface_req *)(elt+1);
-    body->type = OZ_SET_INTERFACE_REQ;
-    body->req_id = req_id;
-    body->index = index;
-    body->alternative = alt;
-
-    // Securely store the sensitive information
-    memset(elt, 0, sizeof(struct oz_set_interface_req));
-    body->req_id = req_id;
-    body->index = index;
-    body->alternative = alt;
-
-    return oz_usb_submit_elt(eb, ei, usb_ctx, 0, 0);
+    return OK;
 }

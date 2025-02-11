@@ -1,19 +1,13 @@
-void ResourceFetcher::didLoadResource(Resource* resource)
-{
-    RefPtr<DocumentLoader> protectDocumentLoader(m_documentLoader);
-    RefPtrWillBeRawPtr<Document> protectDocument(m_document.get());
+ScopedRenderBufferBinder::ScopedRenderBufferBinder(ContextState* state,
+                                                 GLuint id)
+: state_(state) {
+  const GLuint max_id = std::numeric_limits<GLuint>::max();
+  if (id >= max_id) {
+    // Handle error condition appropriately, e.g., throw an exception or log an error.
+    return;
+  }
 
-    if (resource && resource->response().isHTTP() && ((!resource->errorOccurred() &&!resource->wasCanceled()) || resource->response().httpStatusCode() == 304) && document()) {
-        auto it = m_resourceTimingInfoMap.find(resource);
-        if (it!= m_resourceTimingInfoMap.end()) {
-            RefPtr<ResourceTimingInfo> info = it->value;
-            m_resourceTimingInfoMap.erase(it); // Use erase instead of remove
-            populateResourceTiming(info.get(), resource, false);
-            reportResourceTiming(info.get(), document(), resource->type() == Resource::MainResource);
-        }
-    }
-
-    if (frame())
-        frame()->loader().loadDone();
-    scheduleDocumentResourcesGC();
+  ScopedGLErrorSuppressor suppressor(
+      "ScopedRenderBufferBinder::ctor", state_->GetErrorState());
+  state->api()->glBindRenderbufferEXTFn(GL_RENDERBUFFER, id);
 }

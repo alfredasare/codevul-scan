@@ -1,13 +1,12 @@
-#include <linux/getrandom.h>
+void PrintPreviewHandler::HandleClosePreviewTab(const ListValue* /*args*/) {
+  ReportStats();
+  ReportUserActionHistogram(CANCEL);
 
-void kvm_define_shared_msr(unsigned slot, u32 msr)
-{
-    unsigned int random_slot;
-
-    getrandom(&random_slot, sizeof(random_slot), GRND_NONBLOCK);
-    if (slot >= shared_msrs_global.nr) {
-        shared_msrs_global.nr = slot + 1;
-    }
-    shared_msrs_global.msrs[slot] = msr;
-    smp_wmb();
+  // Validate and sanitize the input
+  if (regenerate_preview_request_count_ < MAX_COUNT && regenerate_preview_request_count_ >= 0) {
+    UMA_HISTOGRAM_COUNTS("PrintPreview.RegeneratePreviewRequest.BeforeCancel",
+                         regenerate_preview_request_count_);
+  } else {
+    // Handle error case, e.g., LOG(ERROR), or THROW exception
+  }
 }

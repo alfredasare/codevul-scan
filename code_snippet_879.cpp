@@ -1,21 +1,25 @@
-static int hci_sock_getname(struct socket *sock, struct sockaddr *addr,
-			    int *addr_len, int peer)
+int hns_rcb_set_coalesce_usecs(
+struct rcb_common_cb *rcb_common, u32 port_idx, u32 timeout)
 {
-    struct sockaddr_hci *haddr = (struct sockaddr_hci *) addr;
-    struct sock *sk = sock->sk;
-    struct hci_dev *hdev = hci_pi(sk)->hdev;
+u32 old_timeout = hns_rcb_get_coalesce_usecs(rcb_common, port_idx);
 
-    BT_DBG("sock %p", sock);
+if (timeout == old_timeout)
+return 0;
 
-    if (!hdev)
-        return -EBADFD;
+if (AE\_IS\_VER1(rcb\_common->dsaf\_dev->dsaf\_ver)) {
+if (!HNS\_DSAF\_IS\_DEBUG(rcb\_common->dsaf\_dev)) {
+dev\_err(rcb\_common->dsaf\_dev->dev,
+“error: not support coalesce\_usecs setting!\n”);
+return -EINVAL;
+}
+}
 
-    lock_sock(sk);
-
-    *addr_len = sizeof(*haddr);
-    haddr->hci_family = AF_BLUETOOTH;
-    haddr->hci_dev    = hdev->id;
-
-    release_sock(sk);
-    return 0;
+// ADD THIS VALIDATION TO CHECK IF timeout IS WITHIN THE RANGE
+if (timeout > HNS\_RCB\_MAX\_COALESCED\_USECS || timeout < 1) {
+dev\_err(rcb\_common->dsaf\_dev->dev,
+“error: coalesce\_usecs setting supports 1~%d us\n”, HNS\_RCB\_MAX\_COALESCED\_USECS);
+return -EINVAL;
+}
+hns\_rcb\_set\_port\_timeout(rcb\_common, port\_idx, timeout);
+return 0;
 }

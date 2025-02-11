@@ -1,17 +1,31 @@
-static jstring android_net_wifi_getInterfaceName(JNIEnv *env, jclass cls, jint i) {
-    char buf[EVENT_BUF_SIZE];
+aiff_read_chanmap (SF_PRIVATE * psf, unsigned dword)
+{	const AIFF_CAF_CHANNEL_MAP * map_info ;
+	unsigned channel_bitmap, channel_descriptions, bytesread ;
+	int layout_tag ;
 
-    JNIHelper helper(env);
+	bytesread = psf_binheader_readf (psf, "444", &layout_tag, &channel_bitmap, &channel_descriptions) ;
 
-    jlong value = helper.getStaticLongArrayField(cls, WifiIfaceHandleVarName, i);
-    wifi_interface_handle handle = (wifi_interface_handle) value;
+	if ((map_info = aiff_caf_of_channel_layout_tag (layout_tag)) == NULL)
+		return 0 ;
 
-    int result = hal_fn.wifi_get_iface_name(handle, buf, sizeof(buf));
-    if (result < 0) {
-        // Return a generic error message
-        return env->NewStringUTF("Error getting interface name");
-    } else {
-        JNIObject<jstring> name = helper.newStringUTF(buf);
-        return name.detach();
-    }
-}
+	psf_log_printf (psf, "  Tag    : %x\n", layout_tag) ;
+	if (map_info)
+		psf_log_printf (psf, "  Layout : %s\n", map_info->name) ;
+
+	if (bytesread < dword)
+ 		psf_binheader_readf (psf, "j", dword - bytesread) ;
+ 
+ 	if (map_info->channel_map != NULL)
+	{	size_t chanmap_size = psf->sf.channels * sizeof (psf->channel_map [0]) ;
+		size_t src_size = map_info->channel_map_size;
+
+		free (psf->channel_map) ;
+
+		if ((psf->channel_map = malloc (chanmap_size)) == NULL)
+			return SFE_MALLOC_FAILED ;
+
+		memcpy (psf->channel_map, map_info->channel_map, min(chanmap_size, src_size));
+	} ;
+
+	return 0 ;
+} /* aiff_read_chanmap */

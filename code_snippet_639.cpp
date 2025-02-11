@@ -1,30 +1,27 @@
-create_lwfn_name( char*   ps_name,
-                  Str255  lwfn_file_name )
+kex\_send\_kexinit(struct ssh *ssh)
 {
-    int max_len = strlen(ps_name) + 1; // +1 for the null-terminator
-    char* sanitized_name = malloc(max_len);
-    strcpy(sanitized_name, ps_name);
-    sanitized_name[max_len - 1] = '\0'; // Ensure null-termination
+ u\_char *cookie;
+ struct kex *kex = ssh->kex;
+ int r;
 
-    int count = 0;
-    FT_Byte* p = lwfn_file_name;
-    FT_Byte* q = (FT_Byte*)sanitized_name;
+ if (kex == NULL)
+ return SSH\_ERR\_INTERNAL\_ERROR;
+ if (kex->flags & KEX\_INIT\_SENT)
+ return 0;
+ kex->done = 0;
 
-    while (*q) {
-        if (ft_isupper(*q)) {
-            if (count) {
-                max_len = 3;
-            }
-            count = 0;
-        }
-        if (count < max_len && (ft_isalnum(*q) || *q == '_')) {
-            *++p = *q;
-            lwfn_file_name[0]++;
-            count++;
-        }
-        q++;
-    }
+ /* generate a random cookie using secure random function */
+ if (sshbuf\_len(kex->my) < KEX\_COOKIE\_LEN)
+ return SSH\_ERR\_INVALID\_FORMAT;
+ if ((cookie = sshbuf\_mutable\_ptr(kex->my)) == NULL)
+ return SSH\_ERR\_INTERNAL\_ERROR;
+ getrandom(cookie, KEX\_COOKIE\_LEN, 0);
 
-    free(sanitized_name);
-    lwfn_file_name[lwfn_file_name[0]] = '\0';
+ if ((r = sshpkt\_start(ssh, SSH2\_MSG\_KEXINIT)) != 0 ||
+ (r = sshpkt\_putb(ssh, kex->my)) != 0 ||
+ (r = sshpkt\_send(ssh)) != 0)
+ return r;
+ debug("SSH2\_MSG\_KEXINIT sent");
+ kex->flags |= KEX\_INIT\_SENT;
+ return 0;
 }

@@ -1,5 +1,13 @@
-AP_DECLARE(void) ap_clear_auth_internal(void)
+void msPostGISLayerFreeItemInfo(layerObj *layer)
 {
-    auth_internal_per_conf_hooks = NULL;
-    auth_internal_per_conf_providers = 0;
+#ifdef USE_POSTGIS
+  if (layer->debug && layer->iteminfo != NULL) {
+    msDebug("msPostGISLayerFreeItemInfo called.\n");
+  }
+
+  if (layer->iteminfo != NULL) {
+    free(layer->iteminfo);
+    layer->iteminfo = NULL;
+  }
+#endif
 }

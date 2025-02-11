@@ -1,20 +1,31 @@
-static int sp_input_mapping(struct hid_device *hdev, struct hid_input *hi,
-                         struct hid_field *field, struct hid_usage *usage,
-                         unsigned long **bit, int *max)
+c++
+static void ConvertLoopSlice(ModSample &src, ModSample &dest, SmpLength start, SmpLength len, bool loop)
 {
-    if ((usage->hid & HID_USAGE_PAGE)!= HID_UP_CONSUMER)
-        return 0;
+    if(!src.HasSampleData()) return;
 
-    // Validate and sanitize the usage parameter
-    if ((usage->hid & HID_USAGE) < 0x2003 || (usage->hid & HID_USAGE) > 0x2103) {
-        return -EINVAL;
+    dest.FreeSample();
+    dest = src;
+    SmpLength newLen = std::min(len, dest.nLength);
+    dest.nLength = newLen;
+    dest.pSample = nullptr;
+
+    if(!dest.AllocateSample())
+    {
+        return;
     }
 
-    switch (usage->hid & HID_USAGE) {
-        case 0x2003: sp_map_key_clear(KEY_ZOOMIN);	break;
-        case 0x2103: sp_map_key_clear(KEY_ZOOMOUT);	break;
-        default:
-            return 0;
+    if(len != src.nLength)
+        MemsetZero(dest.cues);
+
+    std::memcpy(dest.pSample8, src.pSample8 + start, newLen);
+    dest.uFlags.set(CHN_LOOP, loop);
+    if(loop)
+    {
+        dest.nLoopStart = 0;
+        dest.nLoopEnd = newLen;
+    } else
+    {
+        dest.nLoopStart = 0;
+        dest.nLoopEnd = 0;
     }
-    return 1;
 }

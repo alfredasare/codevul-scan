@@ -1,22 +1,19 @@
-StringPiece16::const_iterator findNonAlphaNumericAndNotInSet(const StringPiece16& str, const StringPiece16& allowedChars) {
-    const auto endIter = str.end();
-    for (auto iter = str.begin(); iter!= endIter; ++iter) {
-        char16_t c = *iter;
-        if (std::isalnum(c)) {
-            continue;
-        }
+static inline bool frameElementAndViewPermitScroll(HTMLFrameElementBase* frameElementBase, FrameView* frameView)
+{
+    if (!frameElementBase)
+        return false;
 
-        bool match = false;
-        for (char16_t i : allowedChars) {
-            if (c == i) {
-                match = true;
-                break;
-            }
-        }
+    if (frameElementBase->scrollingMode() != ScrollbarAlwaysOff)
+        return true;
 
-        if (!match) {
-            return iter;
-        }
-    }
-    return endIter;
+    if (!frameView)
+        return false;
+
+    if (frameView->wasScrolledByUser())
+        return false;
+
+    if (!frameView->frame().page())
+        return false;
+
+    return !frameView->frame().page()->autoscrollController().autoscrollInProgress();
 }

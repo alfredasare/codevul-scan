@@ -1,29 +1,25 @@
-MagickExport MagickBooleanType SyncImagesSettings(ImageInfo *image_info, 
-  Image *images,ExceptionInfo *exception)
+TIFFVStripSize(TIFF* tif, uint32 nrows)
 {
-  Image
-    *image;
+	static const char module[] = "TIFFVStripSize";
+	uint64_t m;
+	tmsize_t n;
+	m = TIFFVStripSize64(tif, nrows);
 
-  assert(image_info!= (const ImageInfo *) NULL);
-  assert(image_info->signature == MagickCoreSignature);
-  assert(images!= (Image *) NULL);
-  assert(images->signature == MagickCoreSignature);
-  if (images->debug!= MagickFalse)
-  {
-    const char *filename = images->filename;
-    filename = strndup(filename, strlen(filename));
-    if (strchr(filename, '/')!= NULL)
-    {
-      (void) LogMagickEvent(WarningEvent, GetMagickModule(), "Path traversal attempt detected: %s", filename);
-      filename = NULL;
-    }
-    if (filename!= NULL)
-      (void) LogMagickEvent(TraceEvent, GetMagickModule(), "%s", filename);
-    free(filename);
-  }
-  image=images;
-  for ( ; image!= (Image *) NULL; image=GetNextImageInList(image))
-    (void) SyncImageSettings(image_info,image,exception);
-  (void) DeleteImageOption(image_info,"page");
-  return(MagickTrue);
+	if (m > INT32_MAX || m < INT32_MIN)
+	{
+		TIFFErrorExt(tif->tif_clientdata, module, "Arithmetic overflow");
+		n = 0;
+	}
+	else
+	{
+		n = (tmsize_t)m;
+
+		if ((uint64_t)n != m)
+		{
+			TIFFErrorExt(tif->tif_clientdata, module, "Integer overflow");
+			n = 0;
+		}
+	}
+
+	return n;
 }

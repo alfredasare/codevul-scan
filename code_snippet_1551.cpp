@@ -1,21 +1,29 @@
-vcard_init_buffer_response(VCard *card, unsigned char *buf, int len)
+UINT8 BTM_SecClrUCDService (UINT8 service_id)
 {
-    VCardResponse *response;
-    VCardBufferResponse *buffer_response;
+#if (L2CAP_UCD_INCLUDED == TRUE)
+ tBTM_SEC_SERV_REC   *p_srec = &btm_cb.sec_serv_rec[0];
+ UINT8 num_cleared = 0;
+ int i;
 
-    buffer_response = vcard_get_buffer_response(card);
-    if (buffer_response) {
-        vcard_set_buffer_response(card, NULL);
-        vcard_buffer_response_delete(buffer_response);
-    }
-    buffer_response = vcard_buffer_response_new(buf, len);
-    if (buffer_response == NULL) {
-        return NULL;
-    }
-    response = vcard_response_new_status_bytes(VCARD7816_SW1_RESPONSE_BYTES, len <= sizeof(buffer_response->data)? len : sizeof(buffer_response->data));
-    if (response == NULL) {
-        return NULL;
-    }
-    vcard_set_buffer_response(card, buffer_response);
-    return response;
+ /* Validate input before using it in the loop */
+ if (service_id >= BTM_SEC_MAX_SERVICE_RECORDS)
+ {
+ return 0;
+ }
+
+ for (i = 0; i < BTM_SEC_MAX_SERVICE_RECORDS; i++, p_srec++)
+ {
+ if ((p_srec->security_flags & BTM_SEC_IN_USE) &&
+ (!service_id || (service_id == (UINT32)p_srec->service_id)))
+ {
+ p_srec->ucd_security_flags = 0;
+ num_cleared++;
+ }
+ }
+
+ return(num_cleared);
+#else
+ UNUSED(service_id);
+ return(0);
+#endif
 }

@@ -1,14 +1,46 @@
-void need_numeric_port_hack(void)
+smb_iconv_t get_conv_handle(struct smb_iconv_handle *ic,
+			    charset_t from, charset_t to)
 {
-    if (!tested_for_getaddrinfo_hacks)
-        test_for_getaddrinfo_hacks();
+	const char *n1, *n2;
 
-    int port = get_numeric_port(); // Assume this function gets the numeric port value
-    if (port < 0 || port > 65535) {
-        return;
-    }
+	if (ic->conv_handles[from][to]) {
+		return ic->conv_handles[from][to];
+	}
 
-    char buffer[6]; // Fixed-size buffer for the port number
-    sprintf(buffer, "%d", port);
-    need_numeric_port_hack_ = buffer;
+	n1 = charset_name(ic, from);
+	if (!n1) {
+		/* Handle error */
+		return (smb_iconv_t)-1;
+	}
+
+	n2 = charset_name(ic, to);
+	if (!n2) {
+		/* Handle error */
+		return (smb_iconv_t)-1;
+	}
+
+	ic->conv_handles[from][to] = smb_iconv_open_ex(ic, n2, n1,
+						       ic->use_builtin_handlers);
+
+	if (ic->conv_handles[from][to] == (smb_iconv_t)-1) {
+		if ((from == CH_DOS || to == CH_DOS) &&
+		    strcasecmp(charset_name(ic, CH_DOS), "ASCII") != 0) {
+			DEBUG(0,("dos charset '%s' unavailable - using ASCII\n",
+				 charset_name(ic, CH_DOS)));
+			ic->dos_charset = "ASCII";
+
+			n1 = charset_name(ic, from);
+			n2 = charset_name(ic, to);
+
+			if (!n1 || !n2) {
+				/* Handle error */
+				return (smb_iconv_t)-1;
+			}
+
+			ic->conv_handles[from][to] =
+				smb_iconv_open_ex(ic, n2, n1, ic->use_builtin_handlers);
+		}
+	}
+
+	return ic->conv_handles[from][to];
 }

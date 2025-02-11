@@ -1,13 +1,7 @@
-static int llc_exec_sap_trans_actions(struct llc_sap *sap, struct llc_sap_state_trans *trans, struct sk_buff *skb) {
-    int rc = 0;
-    const llc_sap_action_t *next_action = trans->ev_actions;
-
-    for (; next_action && *next_action; next_action++) {
-        if (next_action->action!= NULL) {
-            if ((*next_action->action)(sap, skb))
-                rc = 1;
-        }
-    }
-
-    return rc;
+void HeadlessPrintManager::OnPrintingFailed(int cookie) {
+ if (cookie >= 0 && cookie < MAX_COOKIE_VALUE) {
+ ReleaseJob(PRINTING_FAILED);
+ } else {
+ // Log invalid cookie value and handle error appropriately
+ }
 }

@@ -1,40 +1,18 @@
-print_l1_routes(netdissect_options *ndo,
-                const char *rp, u_int len)
+file\_fmtcheck(struct magic\_set \*ms, const struct magic \*m, const char \*def,
+const char \*file, size\_t line)
 {
-    int count;
-    int id;
-    int info;
-
-    while (len > (3 * sizeof(short))) {
-        ND_TCHECK2(*rp, 3 * sizeof(short));
-        count = EXTRACT_LE_16BITS(rp);
-        if (count > 1024)
-            return (1);  // seems to be bogus from here on
-        rp += sizeof(short);
-        len -= sizeof(short);
-
-        if (len < sizeof(short))
-            return (1);  // Out-of-bounds access
-
-        id = EXTRACT_LE_16BITS(rp);
-        rp += sizeof(short);
-        len -= sizeof(short);
-
-        if (len < sizeof(short))
-            return (1);  // Out-of-bounds access
-
-        info = EXTRACT_LE_16BITS(rp);
-        rp += sizeof(short);
-        len -= sizeof(short);
-
-        if (len < sizeof(short))
-            return (1);  // Out-of-bounds access
-
-        ND_PRINT((ndo, "{ids %d-%d cost %d hops %d} ", id, id + count,
-                RI_COST(info), RI_HOPS(info)));
-    }
-    return (1);
-
-trunc:
-    return (0);
+const char **endptr;
+if (validate\_format\_string(m->desc)) {
+const char \*ptr = fmtcheck(m->desc, def);
+if (ptr == def)
+file\_magerror(ms,
+":lf:%zu: format `%s' does not match with `%s'",
+file, line, m->desc, def);
+return ptr;
+} else {
+file\_magerror(ms,
+":lf:%zu: invalid format string `%s'.",
+file, line, m->desc);
+}
+exit(1);
 }

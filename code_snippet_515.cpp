@@ -1,13 +1,27 @@
-void CameraClient::handleGenericData(int32_t msgType, const sp<IMemory>& dataPtr, camera_frame_metadata_t *metadata) {
-    sp<ICameraClient> c = mRemoteCallback;
-    mLock.unlock();
-    if (c!= 0) {
-        size_t metadataSize = sizeof(camera_frame_metadata_t);
-        if (dataPtr->size() <= metadataSize) {
-            c->dataCallback(msgType, dataPtr, metadata);
-        } else {
-            // Handle the case where the data is too large for the metadata buffer
-            LOGE("Data exceeds metadata buffer size");
-        }
-    }
+raptor_rss_parser_register_factory(raptor_parser_factory *factory) 
+{
+  int rc = 0;
+
+  if (!factory) {
+    return -1;
+  }
+
+  factory->desc.names = rss_tag_soup_names;
+
+  factory->desc.mime_types = rss_tag_soup_types;
+
+  factory->desc.label = "RSS Tag Soup";
+  factory->desc.uri_strings = NULL;
+
+  factory->desc.flags = RAPTOR_SYNTAX_NEED_BASE_URI;
+  
+  factory->context_length     = sizeof(raptor_rss_parser);
+  
+  factory->init      = raptor_rss_parse_init;
+  factory->terminate = raptor_rss_parse_terminate;
+  factory->start     = raptor_rss_parse_start;
+  factory->chunk     = raptor_rss_parse_chunk;
+  factory->recognise_syntax = raptor_rss_parse_recognise_syntax;
+
+  return rc;
 }

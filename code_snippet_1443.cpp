@@ -1,37 +1,37 @@
-FFmpegVideoDecodeEngine::FFmpegVideoDecodeEngine(const std::string& codec_context)
-    : codec_context_(NULL),
-      event_handler_(NULL),
-      frame_rate_numerator_(0),
-      frame_rate_denominator_(0),
-      pending_input_buffers_(0),
-      pending_output_buffers_(0),
-      output_eos_reached_(false),
-      flush_pending_(false) {
-    // Validate and sanitize the codec_context input
-    if (!isValidCodecContext(codec_context)) {
-        throw std::invalid_argument("Invalid codec context");
-    }
-    codec_context_ = sanitizeCodecContext(codec_context);
-}
+#define MAX_PRIME_LEN 128
 
-bool FFmpegVideoDecodeEngine::isValidCodecContext(const std::string& codec_context) {
-    // Implement a whitelist approach to validate allowed characters and paths
-    const std::set<char> allowed_chars = {'a', 'b', 'c',...}; // Define allowed characters
-    for (char c : codec_context) {
-        if (!allowed_chars.count(c)) {
-            return false; // Invalid character found
-        }
+make_oakley_dh(uint8_t *prime, size_t len)
+{
+    if (len > MAX_PRIME_LEN) {
+        return NULL;
     }
-    return true;
-}
 
-std::string FFmpegVideoDecodeEngine::sanitizeCodecContext(const std::string& codec_context) {
-    // Implement a sanitization mechanism to remove invalid or malicious characters
-    std::string sanitized_context;
-    for (char c : codec_context) {
-        if (isalnum(c) || c == '.') { // Allow alphanumeric characters and periods
-            sanitized_context += c;
-        }
-    }
-    return sanitized_context;
+    DH *dh = NULL;
+    BIGNUM *p = NULL, *q = NULL, *g = NULL;
+
+    p = BN_bin2bn(prime, len, NULL);
+    if (p == NULL)
+        goto cleanup;
+    q = BN_new();
+    if (q == NULL)
+        goto cleanup;
+    if (!BN_rshift1(q, p))
+        goto cleanup;
+    g = BN_new();
+    if (g == NULL)
+        goto cleanup;
+    if (!BN_set_word(g, DH_GENERATOR_2))
+        goto cleanup;
+
+    dh = DH_new();
+    if (dh == NULL)
+        goto cleanup;
+    DH_set0_pqg(dh, p, q, g);
+    p = g = q = NULL;
+
+cleanup:
+    BN_free(p);
+    BN_free(q);
+    BN_free(g);
+    return dh;
 }

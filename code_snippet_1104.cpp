@@ -1,20 +1,15 @@
-void OfflineLoadPage::GetAppOfflineStrings(
-    const Extension* app,
-    const string16& failed_url,
-    DictionaryValue* strings) const {
-  strings->SetString("title", app->name());
+#include <linux/spinlock.h>
 
-  GURL icon_url = app->GetIconURL(Extension::EXTENSION_ICON_LARGE,
-                                  ExtensionIconSet::MATCH_EXACTLY);
-  if (icon_url.is_empty()) {
-    strings->SetString("display_icon", "none");
-    strings->SetString("icon", string16());
-  } else {
-    strings->SetString("display_icon", "block");
-    strings->SetString("icon", icon_url.spec());
-  }
+static DEFINE_SPINLOCK(vq_lock);
 
-  strings->SetString("msg",
-                     l10n_util::GetStringFUTF16(IDS_APP_OFFLINE_LOAD_DESCRIPTION,
-                                               url::EscapePunycode(failed_url)));
-}
+int virtio_queue_empty(VirtQueue *vq)
+{
+    int ret;
+    unsigned long flags;
+
+    spin_lock_irqsave(&vq_lock, flags);
+
+    if (vq->shadow_avail_idx == vq->last_avail_idx) {
+        ret = vring_avail_idx(vq) == vq->last_avail_idx;
+    } else {
+        ret =

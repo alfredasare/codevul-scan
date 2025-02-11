@@ -1,15 +1,17 @@
-#include <limits>
-
-status_t Parcel::write(const void* data, size_t len)
+static int wdm_find_device(struct usb_interface *intf, struct wdm_device **out_desc)
 {
-    if (len > std::numeric_limits<int>::max()) {
-        return BAD_VALUE;
-    }
+	struct wdm_device *desc;
+	int ret = -ENODEV;
 
-    void* const d = writeInplace(len);
-    if (d) {
-        memcpy(d, data, len);
-        return NO_ERROR;
-    }
-    return mError;
+	spin_lock(&wdm_device_list_lock);
+	list_for_each_entry(desc, &wdm_device_list, device_list)
+		if (desc->intf == intf) {
+			ret = 0;
+			*out_desc = desc;
+			break;
+		}
+found:
+	spin_unlock(&wdm_device_list_lock);
+
+	return ret;
 }

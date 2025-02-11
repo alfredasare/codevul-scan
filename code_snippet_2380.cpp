@@ -1,30 +1,16 @@
-int __init bnep_sock_init(void)
-{
-    int err;
+#include <cassert>
+#include <string>
 
-    err = proto_register(&bnep_proto, 0);
-    if (err < 0) {
-        if (err >= 0 && err <= INT_MAX) {
-            // Process the valid error code
-        } else {
-            BT_ERR("Invalid error code");
-            goto error;
+void SplitStringAlongWhitespace(const std::wstring& str,
+                                std::vector<std::wstring>* result) {
+    constexpr size_t MAX_INPUT_LENGTH = 1024;
+    assert(str.length() <= MAX_INPUT_LENGTH);
+
+    for (wchar_t c : str) {
+        if (!iswspace(c) && c != L'\0') {
+            throw std::runtime_error("Invalid character found in input string");
         }
     }
 
-    err = bt_sock_register(BTPROTO_BNEP, &bnep_sock_family_ops);
-    if (err < 0) {
-        if (err >= 0 && err <= INT_MAX) {
-            // Process the valid error code
-        } else {
-            BT_ERR("Invalid error code");
-            goto error;
-        }
-    }
-
-    return 0;
-
-error:
-    proto_unregister(&bnep_proto);
-    return err;
+    SplitStringAlongWhitespaceT(str, result);
 }

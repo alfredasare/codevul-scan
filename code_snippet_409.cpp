@@ -1,13 +1,9 @@
-static void free_event_gui_data_t(event_gui_data_t *evdata, void *unused)
+`HTMLCollection* HTMLElement::children()
 {
-    if (evdata && evdata->event_name)
-    {
-        free(evdata->event_name);
-        free(evdata);
+    if (auto children = ensureCachedHTMLCollection(NodeChildren)) {
+        return children;
+    } else {
+        // Create and return an empty HTMLCollection if the cached collection is unavailable.
+        return new HTMLCollection();
     }
-    else
-    {
-        // Handle error or exception
-        fprintf(stderr, "Error freeing event GUI data: %p\n", (void *)evdata);
-    }
-}
+}`

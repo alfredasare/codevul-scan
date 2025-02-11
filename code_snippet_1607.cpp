@@ -1,24 +1,30 @@
-static vpx_codec_err_t ctrl_get_bit_depth(vpx_codec_alg_priv_t *ctx,
-                                          va_list args) {
-    unsigned int *const bit_depth = va_arg(args, unsigned int *);
-    VPxWorker *const worker = &ctx->frame_workers[ctx->next_output_worker_id];
+#include <linux/kernel.h>
+#include <linux/safe_arithmetic.h>
 
-    // Validate and sanitize ctx->next_output_worker_id
-    if (ctx->next_output_worker_id < 0 || ctx->next_output_worker_id >= sizeof(ctx->frame_workers) / sizeof(ctx->frame_workers[0])) {
-        return VPX_CODEC_INVALID_PARAM;
-    }
+void xacct_add_tsk(struct taskstats *stats, struct task_struct *p)
+{
+	/* convert pages-jiffies to Mbyte-usecs */
+	u64 coremem_usecs = jiffies_to_usecs(p->acct_rss_mem1);
+	u64 virtmem_usecs = jiffies_to_usecs(p->acct_vm_mem1);
 
-    if (bit_depth) {
-        if (worker) {
-            FrameWorkerData *const frame_worker_data =
-                (FrameWorkerData *)worker->data1;
-            const VP9_COMMON *const cm = &frame_worker_data->pbi->common;
-            *bit_depth = cm->bit_depth;
-            return VPX_CODEC_OK;
-        } else {
-            return VPX_CODEC_ERROR;
-        }
-    }
+	if (!safe_div(coremem_usecs * PAGE_SIZE, MB, &stats->coremem)) {
+		/* Handle integer overflow or clamp value if needed */
+		stats->coremem = ULONG_MAX;
+	}
 
-    return VPX_CODEC_INVALID_PARAM;
+	if (!safe_div(virtmem_usecs * PAGE_SIZE, MB, &stats->virtmem)) {
+		/* Handle integer overflow or clamp value if needed */
+		stats->virtmem = ULONG_MAX;
+	}
+
+	if (p->mm) {
+		/* adjust to KB unit */
+		stats->hiwater_rss   = clamp_val(p->mm->hiwater_rss * PAGE_SIZE, ULONG_MAX);
+		stats->hiwater_vm    = clamp_val(p->mm->hiwater_vm * PAGE_SIZE, ULONG_MAX);
+	}
+
+	stats->read_char	= p->rchar;
+	stats->write_char	= p->wchar;
+	stats->read_syscalls	= p->syscr;
+	stats->write_syscalls	= p->syscw;
 }

@@ -1,4 +1,9 @@
-uint_least32_t SparseHistogram::name_hash() const {
-  uint_least32_t result = static_cast<uint_least32_t>(samples_->id());
-  return result;
+Stream* XMLHttpRequest::responseStream()
+{
+    ASSERT(m_responseTypeCode == ResponseTypeStream);
+
+    if (m_error) return nullptr;
+    if (m_state != LOADING && m_state != DONE) return nullptr;
+
+    return m_responseStream.get();
 }

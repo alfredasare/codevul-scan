@@ -1,14 +1,26 @@
-static inline int arch_check_elf(struct elfhdr *ehdr, bool has_interp, struct arch_elf_state *state)
-{
-    int ret = 0;
+#include <limits.h>  // for PATH_MAX
+#include <string.h>  // for strncmp()
 
-    if (!ehdr ||!ehdr->e_ident) {
-        memset(ehdr, 0, sizeof(*ehdr));
-        ret = -EINVAL;
-    } else if (has_interp && ehdr->e_interp) {
-        memset(ehdr->e_interp, 0, ehdr->e_interp->ei_entries);
-        ret = -ENOEXEC;
+#define INTENDED_DIRECTORY "/path/to/intended/directory"
+
+static inline int MagickReadDirectory(DIR *directory, struct dirent *entry,
+                                      struct dirent **result)
+{
+    char intended_directory[PATH_MAX];
+    strncpy(intended_directory, INTENDED_DIRECTORY, sizeof(intended_directory));
+
+    // Validate the directory parameter
+    if (strncmp(intended_directory, directory->dd_path, sizeof(intended_directory)) != 0)
+    {
+        return -1;  // Return an error code indicating invalid directory
     }
 
-    return ret;
+#if defined(MAGICKCORE_HAVE_READDIR_R)
+    return readdir_r(directory, entry, result);
+#else
+    (void) entry;
+    errno = 0;
+    *result = readdir(directory);
+    return errno;
+#endif
 }

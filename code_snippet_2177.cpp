@@ -1,11 +1,20 @@
-vlan_rx_filter_enabled(E1000State *s)
+_gcry\_mpi\_point\_init (mpi\_point\_t p)
 {
-    uint16_t rctl = s->mac_reg[RCTL];
-    uint16_t max_vfe = E1000_RCTL_VFE_MAX; 
+p->x = mpi\_new (0);
+if (p->x == NULL) {
+return -1;
+}
 
-    if (rctl >= max_vfe) {
-        return FALSE;
-    }
+p->y = mpi\_new (0);
+if (p->y == NULL) {
+mpi\_free (p->x);
+return -1;
+}
 
-    return (rctl & ((1 << E1000_RCTL_VFE_SHIFT) - 1)) == (1 << E1000_RCTL_VFE_SHIFT - 1);
+p->z = mpi\_new (0);
+if (p->z == NULL) {
+mpi\_free (p->y);
+mpi\_free (p->x);
+return -1;
+}
 }

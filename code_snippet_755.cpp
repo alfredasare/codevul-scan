@@ -1,19 +1,35 @@
-krb5_init_creds_set_keyblock(krb5_context context,
-			     krb5_init_creds_context ctx,
-			     krb5_keyblock *keyblock)
+static int __sys_getsockopt(int fd, int level, int optname,
+                            char __user *optval, int __user *optlen)
 {
-    if (!keyblock ||!is_trusted_keyblock(keyblock)) {
-        return -EINVAL; 
-    }
+        int err, fput_needed, max_optlen;
+        struct socket *sock;
 
-    size_t len = strlen(keyblock);
-    char *seed = malloc(len + 1);
-    memcpy(seed, keyblock, len);
-    seed[len] = '\0';
+        sock = sockfd_lookup_light(fd, &err, &fput_needed);
+        if (sock != NULL) {
+                err = security_socket_getsockopt(sock, level, optname);
+                if (err)
+                        goto out_put;
 
-    ctx->keyseed = seed;
+                if (level == SOL_SOCKET)
+                        max_optlen = min(*optlen, SOCK_MAX_OPT);
+                else
+                        max_optlen = min(*optlen, sock->ops->getsockopt_size(sock, level, optname));
 
-    ctx->keyproc = keyblock_key_proc;
+                if (*optlen < max_optlen) {
+                        err = -EINVAL;
+                        goto out_put;
+                }
 
-    return 0;
+                *optlen = max_optlen;
+                err = sock->ops->getsockopt(sock, level, optname, optval, optlen);
+                if (err && *optlen < max_optlen) {
+                        err = -EOVERFLOW;
+                        goto out_put;
+                }
+
+                err = (*optlen > 0) ? 0 : -ENODATA;
+out_put:
+                fput_light(sock->file, fput_needed);
+        }
+        return err;
 }

@@ -1,8 +1,30 @@
-unsigned long le4(const unsigned char *p) {
-    int64_t result = 0;
-    if (p[0] > 0xFF || p[1] > 0xFF || p[2] > 0xFF || p[3] > 0xFF) {
-        return 0; // or throw an exception, etc.
-    }
-    result = (p[0] << 16) + (p[1] << 8) + p[2] + (p[3] >> 8);
-    return (unsigned long)result;
+bool TabsCaptureVisibleTabFunction::IsValidWindowId(int window_id) {
+  const int min_window_id = 0;
+  const int max_window_id = 100; // Define a reasonable maximum value based on your application's logic
+  return window_id >= min_window_id && window_id < max_window_id;
+}
+
+WebContents* TabsCaptureVisibleTabFunction::GetWebContentsForID(
+    int window_id,
+    std::string* error) {
+  if (!IsValidWindowId(window_id)) {
+    *error = "Invalid window ID";
+    return nullptr;
+  }
+
+  Browser* browser = nullptr;
+  if (!GetBrowserFromWindowID(chrome_details_, window_id, &browser, error))
+    return nullptr;
+
+  if (browser->GetTabCount() == 0) {
+    *error = "No active web contents to capture";
+    return nullptr;
+  }
+
+  const int active_tab_id = browser->tab_strip_model()->GetActiveWebContents()->GetMainFrame()->GetIdentifier();
+  if (!extension()->permissions_data()->CanCaptureVisiblePage(active_tab_id, error)) {
+    return nullptr;
+  }
+
+  return browser->tab_strip_model()->GetActiveWebContents();
 }

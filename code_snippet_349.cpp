@@ -1,13 +1,17 @@
-void AutofillDialogViews::SectionContainer::OnMouseEntered(const ui::MouseEvent& event) {
-  if (!IsValidEvent(event)) {
-    return; // invalid input, do nothing
-  }
-
-  SetActive(true);
-  proxy_button_->OnMouseEntered(ProxyEvent(event));
-  SchedulePaint();
+void PPB_URLLoader_Impl::RunCallback(int32_t result) {
+if (!pending_callback_.get()) {
+CHECK(main_document_loader_);
+return;
 }
 
-bool IsValidEvent(const ui::MouseEvent& event) {
-  return event.type == ui::MouseEvent::Type::MOUSE_ENTER && event.x >= 0 && event.x <= GetWidth() && event.y >= 0 && event.y <= GetHeight();
+const int32_t min_result = 0;
+const int32_t max_result = 100; // Adjust this value according to your system's requirements
+
+// Adding the recommended check.
+if (result < min_result || result > max_result) {
+// Handle the case where the result is out of bounds.
+return;
+}
+
+TrackedCallback::ClearAndRun(&pending_callback_, result);
 }

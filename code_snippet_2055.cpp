@@ -1,15 +1,11 @@
-const char* PropStateToString(int prop_state) {
-  std::string state_str;
-  switch (static_cast<int>(IBusPropState::PROP_STATE_UNCHECKED)) {
-    case static_cast<int>(IBusPropState::PROP_STATE_UNCHECKED):
-      state_str = "UNCHECKED";
-      break;
-    case static_cast<int>(IBusPropState::PROP_STATE_CHECKED):
-      state_str = "CHECKED";
-      break;
-    case static_cast<int>(IBusPropState::PROP_STATE_INCONSISTENT):
-      state_str = "INCONSISTENT";
-      break;
+void ColorChooserWin::OnColorChooserDialogClosed() {
+  if (color_chooser_dialog_ && web_contents_)
+    web_contents_->DidEndColorChooser();
+  if (color_chooser_dialog_) {
+    color_chooser_dialog_->ListenerDestroyed();
+    color_chooser_dialog_ = nullptr;
   }
-  return state_str.c_str();
+  if (current_color_chooser_ == this) {
+    current_color_chooser_ = nullptr;
+  }
 }

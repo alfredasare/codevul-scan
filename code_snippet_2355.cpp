@@ -1,12 +1,18 @@
-void EVP_EncodeFinal(EVP_ENCODE_CTX *ctx, unsigned char *out, int *outl)
+int ff_h263_decode_mba(MpegEncContext *s)
 {
-    unsigned int ret = 0;
+    int i, mb_pos;
 
-    if (ctx->num != 0) {
-        ret = EVP_EncodeBlock(out, ctx->enc_data, ctx->num);
-        out[ret++] = '\n';
-        out[ret] = '\0';
-        ctx->num = 0;
+    for (i = 0; i < 6; i++)
+        if (s->mb_num - 1 < ff_mba_max[i])
+            break;
+    if (i < 6) {
+        mb_pos  = get_bits(&s->gb, ff_mba_length[i]);
+        s->mb_x = mb_pos % s->mb_width;
+        s->mb_y = mb_pos / s->mb_width;
+
+        return mb_pos;
     }
-    *outl = ret;
+    else {
+        return -1; // or handle error appropriately
+    }
 }

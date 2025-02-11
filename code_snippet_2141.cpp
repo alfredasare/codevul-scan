@@ -1,9 +1,8 @@
-void XMPChunk::changesAndSize( RIFF_MetaHandler* handler )
+static inline int get_free_page(struct xen_blkif_ring *ring, struct page **page)
 {
-    size_t newSize = 8 + handler->xmpPacket.size(); 
-    XMP_Enforce( &handler->xmpPacket!= 0 );
-    XMP_Enforce( handler->xmpPacket.size() > 0 );
-    XMP_Validate( newSize <= std::numeric_limits<size_t>::max(), "no single chunk may be above 4 GB", kXMPErr_InternalFailure );
-    this->newSize = newSize;
-    this->hasChange = true;
-}
+	unsigned long flags;
+	int ret;
+
+	spin_lock_irqsave(&ring->free_pages_lock, flags);
+	if (list_empty(&ring->free_pages)) {
+		BUG_ON(ring->free_pages_num !=

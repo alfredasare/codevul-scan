@@ -1,22 +1,13 @@
-static void remove_sits_in_journal(struct f2fs_sb_info *sbi)
+GF_Err moof\_dump(GF\_Box \*a, FILE \* trace)
 {
-    struct curseg_info *curseg = CURSEG_I(sbi, CURSEG_COLD_DATA);
-    struct f2fs_journal *journal = curseg->journal;
-    int i;
-
-    if (journal!= NULL) {
-        down_write(&curseg->journal_rwsem);
-        for (i = 0; i < sits_in_cursum(journal); i++) {
-            unsigned int segno;
-            bool dirtied;
-
-            segno = le32_to_cpu(segno_in_journal(journal, i));
-            dirtied = __mark_sit_entry_dirty(sbi, segno);
-
-            if (!dirtied)
-                add_sit_entry(segno, &SM_I(sbi)->sit_entry_set);
-        }
-        update_sits_in_cursum(journal, -i);
-        up_write(&curseg->journal_rwsem);
-    }
+ if (!a || !trace) return GF\_BAD\_PARAM;
+ GF\_MovieFragmentBox \*p;
+ p = (GF\_MovieFragmentBox \*)a;
+ gf\_isom\_box\_dump\_start(a, "MovieFragmentBox", trace);
+ fprintf(trace, "TrackFragments=\"%d\">\n", gf\_list\_count(p->TrackList));
+ if (p->mfhd && p->mfhd->size<=GF\_ISOM\_BOX\_SIZE\_LIMIT) //limit box size
+ gf\_isom\_box\_dump(p->mfhd, trace);
+ gf\_isom\_box\_array\_dump(p->TrackList, trace);
+ gf\_isom\_box\_dump\_done("MovieFragmentBox", a, trace);
+ return GF\_OK;
 }

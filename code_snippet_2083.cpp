@@ -1,46 +1,44 @@
-xfs_da_get_buf(
-	struct xfs_trans	*trans,
-	struct xfs_inode	*dp,
-	xfs_dablk_t		bno,
-	xfs_daddr_t		mappedbno,
-	struct xfs_buf		**bpp,
-	int			whichfork)
+fpDiff(TIFF* tif, uint8* cp0, tmsize_t cc)
 {
-	struct xfs_buf		*bp;
-	struct xfs_buf_map	map;
-	struct xfs_buf_map	*mapp;
-	int			nmap;
-	int			errcode;
+	tmsize_t stride = PredictorState(tif)->stride;
+	uint32 bps = tif->tif_dir.td_bitspersample / 8;
+	tmsize_t wc = cc / bps;
+	tmsize_t count;
+	uint8 *cp = (uint8 *) cp0;
+	uint8 *tmp = (uint8 *)_TIFFmalloc(cc);
 
-	*bpp = NULL;
-	mapp = &map;
-	nmap = 1;
-	try {
-		errcode = xfs_dabuf_map(trans, dp, bno, mappedbno, whichfork,
-						&mapp, &nmap);
-		if (errcode) {
-			/* mapping a hole is not an error, but we don't continue */
-			if (errcode == -1)
-				errcode = 0;
-			goto out;
+	assert((cc%(bps*stride))==0);
+	if (!tmp)
+		return;
+
+	_TIFFmemcpy(tmp, cp0, cc);
+	for (count = 0; count < wc; count++) {
+		uint32 byte;
+		for (byte = 0; byte < bps; byte++) {
+			#if WORDS_BIGENDIAN
+			cp[byte * wc + count] = tmp[bps * count + byte];
+			#else
+			cp[(bps - byte - 1) * wc + count] =
+				tmp[bps * count + byte];
+			#endif
 		}
-
-		bp = xfs_trans_get_buf_map(trans, dp->i_mount->m_ddev_targp,
-					mapp, nmap, 0);
-		errcode = bp? bp->b_error : XFS_ERROR(EIO);
-		if (errcode) {
-			xfs_trans_brelse(trans, bp);
-			goto out;
-		}
-
-		*bpp = bp;
-		return 0;
-	} catch (int err) {
-		errcode = err;
-		goto out;
 	}
-out:
-	if (mapp != &map)
-		kmem_free(mapp);
-	return errcode;
+	_TIFFfree(tmp);
+
+	cp = (uint8 *) cp0;
+	cp += cc - stride - 1;
+	for (count = cc; count > stride; count -= stride) {
+		int32_t diff = (int32_t)(cp[0]);
+		if (diff > 0) {
+			if (count - stride <= diff) {
+				continue;
+			}
+			diff = count - stride;
+		} else if (diff < 0) {
+			if (-diff >= count) {
+				continue;
+			}
+		}
+		REPEAT4(stride, cp[stride] = (unsigned char)((cp[stride] - cp[0])&0xff); cp--)
+	}
 }

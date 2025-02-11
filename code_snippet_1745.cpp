@@ -1,8 +1,14 @@
-int _dbus_socket_is_invalid(int fd)
+cdf_read_sector_chain(const cdf_info_t *info, const cdf_header_t *h,
+    const cdf_sat_t *sat, const cdf_sat_t *ssat, const cdf_stream_t *sst,
+    cdf_secid_t sid, size_t len, cdf_stream_t *scn)
 {
-    if (fd >= 0 && fd < sysconf(_SC_OPEN_MAX)) {
-        return fd == INVALID_SOCKET? TRUE : FALSE;
-    } else {
-        return FALSE; // or raise an exception
+    if (len < h->h_min_size_standard_stream) {
+        return CDF_ERR_LEN_TOO_SMALL; // Replace this with appropriate error handling or error code
     }
+
+    if (len < h->h_min_size_standard_stream && sst->sst_tab != NULL)
+        return cdf_read_short_sector_chain(h, ssat, sst, sid, len,
+            scn);
+    else
+        return cdf_read_long_sector_chain(info, h, sat, sid, len, scn);
 }

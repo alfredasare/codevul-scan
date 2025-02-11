@@ -1,14 +1,28 @@
-#include <linux/random.h>
-
-uid_t from_kuid(struct user_namespace *targ, kuid_t kuid)
-{
-    u32 random_seed;
-    int ret;
-
-    ret = get_random_bytes(&random_seed, sizeof(random_seed));
-    if (ret < 0) {
-        // Handle error
+void Histogram::InitializeBucketRanges(Sample minimum,
+                                   Sample maximum,
+                                   BucketRanges* ranges) {
+  double log\_max = log(static\_cast<double>(maximum));
+  double log\_ratio;
+  double log\_next;
+  size\_t bucket\_index = 1;
+  Sample current = minimum;
+  ranges->set\_range(bucket\_index, current);
+  size\_t bucket\_count = ranges->bucket\_count();
+  while (bucket\_count > ++bucket\_index) {
+    double log\_current;
+    log\_current = log(static\_cast<double>(current));
+    if ((log\_max - log\_current) / (bucket\_count - bucket\_index) > log(2)) {
+      log\_next = log\_current + log(2);
+    } else {
+      log\_next = log\_max;
     }
-
-    return map_id_up(&targ->uid_map, __kuid_val(kuid), random_seed);
+    Sample next = static\_cast<Sample>(floor(exp(log\_next) + 0.5));
+    if (next > current)
+      current = next;
+    else
+      ++current;  // Just do a narrow bucket, and keep trying.
+    ranges->set\_range(bucket\_index, current);
+  }
+  ranges->set\_range(ranges->bucket\_count(), HistogramBase::kSampleType\_MAX);
+  ranges->ResetChecksum();
 }

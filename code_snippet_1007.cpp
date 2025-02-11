@@ -1,16 +1,49 @@
-MagickExport Image *ReadInlineImage(const ImageInfo *image_info,
-  const char *content,ExceptionInfo *exception)
+static int may_open(const struct path *path, int acc_mode, int flag)
 {
-  //...
+	struct dentry *dentry = path->dentry;
+	struct inode *inode = dentry->d_inode;
+	int error;
 
-  size_t decoded_length = Base64DecodeMaxLength(content);
-  unsigned char *blob = (unsigned char *) RelinquishMagickMemory(Malloc(decoded_length + 1));
-  size_t length = Base64Decode(content, &decoded_length, blob);
+	if (!inode)
+		return -ENOENT;
 
-  if (length > decoded_length) {
-    ThrowReaderException(CorruptImageError, "CorruptImage");
-  }
+	switch (inode->i_mode & S_IFMT) {
+	case S_IFLNK:
+		return -ELOOP;
+	case S_IFDIR:
+		if (acc_mode & MAY_WRITE)
+			return -EISDIR;
+		break;
+	case S_IFBLK:
+	case S_IFCHR:
+		if (!may_open_dev(path))
+			return -EACCES;
+		/*FALLTHRU*/
+	case S_IFIFO:
+	case S_IFSOCK:
+		flag &= ~O_TRUNC;
+		break;
+	}
 
-  blob[decoded_length] = '\0'; // null-terminate the string
-  //...
+	/* O_NOATIME can only be set by the owner or superuser */
+	if (flag & O_NOATIME && !inode_owner_or_capable(inode))
+		return -EPERM;
+
+	error = inode_permission(inode, MAY_OPEN | acc_mode);
+	if (error)
+		return error;
+
+	/*
+	 * An append-only file must be opened in append mode for writing.
+	 */
+	if (IS_APPEND(inode)) {
+		if  ((flag & O_ACCMODE) != O_RDONLY && !(flag & O_APPEND))
+			return -EPERM;
+		if (flag & O_TRUNC)
+			return -EPERM;
+	}
+
+	error = -errno;
+	syscall_open(path->dentry, path->mnt, flag, acc_mode, &error);
+	return error;
 }

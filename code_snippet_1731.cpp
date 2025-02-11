@@ -1,14 +1,16 @@
-static int ne2000_buffer_full(NE2000State *s)
+void big_key_destroy(struct key *key)
 {
-    unsigned int avail, index, boundary;
+	size_t datalen = (size_t)key->payload.data[big_key_len];
+	const size_t max_index = sizeof(key->payload.data) / sizeof(key->payload.data[0]);
 
-    index = (unsigned int)(s->curpag << 8);
-    boundary = (unsigned int)(s->boundary << 8);
-    if (index < boundary)
-        avail = boundary - index;
-    else
-        avail = (s->stop - s->start) - (index - boundary);
-    if (avail < (UINT_MAX - (unsigned int)sizeof(struct ethernet_frame)))
-        return 1;
-    return 0;
+	if (datalen > BIG_KEY_FILE_THRESHOLD && datalen < max_index) {
+		struct path *path = (struct path *)&key->payload.data[big_key_path];
+
+		path_put(path);
+		path->mnt = NULL;
+		path->dentry = NULL;
+	}
+
+	kfree(key->payload.data[big_key_data]);
+	key->payload.data[big_key_data] = NULL;
 }

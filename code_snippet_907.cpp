@@ -1,12 +1,10 @@
-void AdjustComponent(int delta, url::Component* component) {
-  if (!component->is_valid())
-    return;
+static void __release_extent_node(struct f2fs_sb_info *sbi,
+                                   struct extent_tree *et, struct extent_node *en)
+{
+	spin_lock(&sbi->extent_lock);
+	f2fs_bug_on(sbi, list_empty(&en->list));
+	list_del_init(&en->list); /* Now we delete the entry while holding the lock */
+	spin_unlock(&sbi->extent_lock);
 
-  if (delta < 0) {
-    LOG(ERROR) << "Invalid delta value: " << delta;
-    return;
-  }
-
-  DCHECK(delta >= 0);
-  component->begin += delta;
+	__detach_extent_node(sbi, et, en);
 }

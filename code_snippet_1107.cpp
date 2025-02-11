@@ -1,36 +1,12 @@
-static void *pool_alloc(size_t len)
+#define MAX_FS_TYPES 16
+
+static int __init init_vfat_fs(void)
 {
-    struct mem_pool *p;
-    void *r;
+	struct file_system_type *fs_types[MAX_FS_TYPES];
+	int num_fs_types = 0;
+	int i;
 
-    #define MAX_ALLOC_SIZE 1024
-
-    if (len > MAX_ALLOC_SIZE) {
-        return NULL;
-    }
-
-    // round up to a 'uintmax_t' alignment
-    if (len & (sizeof(uintmax_t) - 1))
-        len += sizeof(uintmax_t) - (len & (sizeof(uintmax_t) - 1));
-
-    for (p = mem_pool; p; p = p->next_pool)
-        if ((p->end - p->next_free >= len))
-            break;
-
-    if (!p) {
-        if (len >= (mem_pool_alloc/2)) {
-            total_allocd += len;
-            return xmalloc(len);
-        }
-        total_allocd += sizeof(struct mem_pool) + mem_pool_alloc;
-        p = xmalloc(sizeof(struct mem_pool) + mem_pool_alloc);
-        p->next_pool = mem_pool;
-        p->next_free = (char *) p->space;
-        p->end = p->next_free + mem_pool_alloc;
-        mem_pool = p;
-    }
-
-    r = p->next_free;
-    p->next_free += len;
-    return r;
-}
+	for (i = 0; i < ARRAY_SIZE(fs_types); i++) {
+		struct file_system_type *fs_type = file_system_type_by_name["vfat"];
+		if (!fs_type)
+			break;

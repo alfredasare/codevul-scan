@@ -1,26 +1,18 @@
-enum media_device_error {
-    MEDIA_DEVICE_ERROR_GENERIC,
-    MEDIA_DEVICE_ERROR_INVALID_PARAMETER,
-    // Add more error codes as needed
-};
-
-static long media_device_enum_entities(struct media_device *mdev,
-				       struct media_entity_desc __user *uent)
+static void perf_free_event(struct perf_event *event,
+			    struct perf_event_context *ctx)
 {
-    //...
+	struct perf_event *parent = event->parent;
 
-    if (copy_from_user(&u_ent.id, &uent->id, sizeof(u_ent.id)))
-        return media_device_error(MEDIA_DEVICE_ERROR_GENERIC, "Copy from user failed");
+	if (!parent || !parent->per_cpu || !parent->per_cpu[smp_processor_id()])
+		return;
 
-    ent = find_entity(mdev, u_ent.id);
-    if (ent == NULL)
-        return media_device_error(MEDIA_DEVICE_ERROR_INVALID_PARAMETER, "Entity not found");
+	mutex_lock(&parent->child_mutex);
+	list_del_init(&event->child_list);
+	mutex_unlock(&parent->child_mutex);
 
-    //...
-}
+	put_event(parent);
 
-static enum media_device_error media_device_error(enum media_device_error code, char *message)
-{
-    printk(KERN_WARNING "media_device: %s\n");
-    return code;
+	perf_group_detach(event);
+	list_del_event(event, ctx);
+	free_event(event);
 }

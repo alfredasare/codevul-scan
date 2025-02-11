@@ -1,21 +1,16 @@
-void usb_disable_interface(struct usb_device *dev, struct usb_interface *intf,
- bool reset_hardware)
+static int proxy_chmod(FsContext *fs_ctx, V9fsPath *fs_path, FsCred *credp)
 {
-	if (!intf ||!intf->cur_altsetting) {
-		return; // invalid intf or no cur_altsetting
-	}
+    int retval;
+    int max_retries = 5;
+    int retries = 0;
 
-	struct usb_host_interface *alt = container_of(intf->cur_altsetting,
-						     struct usb_host_interface, altsetting);
-	if (!alt) {
-		return; // invalid altsetting
-	}
+    while ((retval = v9fs_request(fs_ctx->private, T_CHMOD, NULL, fs_path,
+                                 credp->fc_mode)) == -EAGAIN && retries < max_retries) {
+        retries++;
+    }
 
-	for (int i = 0; i < alt->desc.bNumEndpoints; ++i) {
-		if (i >= alt->desc.bNumEndpoints) {
-			break; // exit loop if i exceeds num_endpoints
-		}
-		usb_disable_endpoint(dev, alt->endpoint[i].desc.bEndpointAddress,
-				      reset_hardware);
-	}
+    if (retval < 0 && retval != -EAGAIN) {
+        errno = -retval;
+    }
+    return retval;
 }

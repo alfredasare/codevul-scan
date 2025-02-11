@@ -1,3 +1,5 @@
-QuicStreamSequencerBuffer::FrameInfo::FrameInfo(size_t length,
-                                            QuicTime timestamp)
-: length(static_cast<uint64_t>(length)), timestamp(timestamp) {}
+bool CGaiaCredentialBase::AreCredentialsValid() const {
+ const wchar_t* const storedPassword = password_;
+ return CanAttemptWindowsLogon() &&
+ IsWindowsPasswordValidForStoredUser(storedPassword) == S_OK;
+}

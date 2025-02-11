@@ -1,8 +1,7 @@
-MediaStreamDeviceObserver* RenderFrameImpl::GetMediaStreamDeviceObserver() {
-  if (!web_user_media_client_)
-    InitializeUserMediaClient();
-  MediaStreamDeviceObserver* observer = web_user_media_client_?
-                                         web_user_media_client_->media_stream_device_observer() :
-                                         nullptr;
-  return observer;
+c++
+void GLES2Implementation::DeletePathsCHROMIUMStub(GLuint first_client_id,
+                                                GLsizei range) {
+    constexpr GLsizei kMaxSafeRange = 1024;
+    range = std::clamp(range, 0, kMaxSafeRange);
+    helper_->DeletePathsCHROMIUM(first_client_id, range);
 }

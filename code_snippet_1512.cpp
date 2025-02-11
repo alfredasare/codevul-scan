@@ -1,40 +1,25 @@
-asmlinkage long compat_sys_getsockopt(int fd, int level, int optname,
-		char __user *optval, int __user *optlen)
+int ASN1_TYPE_set1(ASN1_TYPE *a, int type, const void *value)
 {
-    int err;
-    struct socket *sock = sockfd_lookup(fd, &err);
+    size_t len;
 
-    if (sock) {
-        // Validate level and optname
-        if (level < 0 || level > SOL_SOCKET) {
-            err = -EINVAL;
-            goto out;
-        }
-        if (optname < 0 || optname >= sizeof(sock->sk->sk_ops->optname_array)) {
-            err = -EINVAL;
-            goto out;
-        }
-
-        err = security_socket_getsockopt(sock, level, optname);
-        if (err) {
-            sockfd_put(sock);
-            return err;
-        }
-
-        if (level == SOL_SOCKET)
-            err = compat_sock_getsockopt(sock, level,
-                    optname, optval, optlen);
-        else if (sock->ops->compat_getsockopt)
-            err = sock->ops->compat_getsockopt(sock, level,
-                    optname, optval, optlen);
-        else
-            err = sock->ops->getsockopt(sock, level,
-                    optname, optval, optlen);
-        sockfd_put(sock);
+    if (!value || (type == V_ASN1_BOOLEAN)) {
+        void *p = (void *)value;
+        ASN1_TYPE_set(a, type, p);
+    } else if (type == V_ASN1_OBJECT) {
+        ASN1_OBJECT *odup;
+        odup = OBJ_dup(value);
+        if (!odup)
+            return 0;
+        ASN1_TYPE_set(a, type, odup);
+    } else {
+        len = ASN1_STRING_length(value);
+        if (len > sizeof(a->value.asn1_string->data))
+            return 0;
+        ASN1_STRING *sdup;
+        sdup = ASN1_STRING_dup(value);
+        if (!sdup)
+            return 0;
+        ASN1_TYPE_set(a, type, sdup);
     }
-    return err;
-
-out:
-    sockfd_put(sock);
-    return err;
+    return 1;
 }

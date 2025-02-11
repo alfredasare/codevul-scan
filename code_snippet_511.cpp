@@ -1,21 +1,19 @@
-#include <memory>
+#include <pthread.h>
 
-class HTMLScriptRunner {
-public:
-    void requestParsingBlockingScript(Element* element) {
-        if (!requestPendingScript(m_parserBlockingScript, element))
-            return;
+pthread_mutex_t client_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-        if (m_parserBlockingScript) {
-            if (!m_parserBlockingScript->isReady()) {
-                if (m_document->frame())
-                    ScriptStreamer::startStreaming(*m_parserBlockingScript, PendingScript::ParsingBlocking, m_document->frame()->settings(), ScriptState::forMainWorld(m_document->frame()));
-
-                m_parserBlockingScript->watchForLoad(this);
-            }
+mainloop_del_fd(mainloop_io_t *client)
+{
+    if(client != NULL) {
+        pthread_mutex_lock(&client_mutex); // Acquire the lock
+        crm_trace("Removing client %s[%p] %d", client->name, client, mainloop_gio_refcount(client));
+        if (client->source) {
+            /* Results in mainloop_gio_destroy() being called just
+             * before the source is removed from mainloop
+             */
+            g_source_remove(client->source);
+            client->source = NULL; // Reset the source to avoid use-after-free
         }
+        pthread_mutex_unlock(&client_mutex); // Release the lock
     }
-
-private:
-    std::unique_ptr<Script> m_parserBlockingScript;
-};
+}

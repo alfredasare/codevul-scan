@@ -1,26 +1,9 @@
-SYSCALL_DEFINE3(semget, key_t, key, int, nsems, int, semflg)
-{
-    struct ipc_namespace *ns;
-    struct ipc_ops sem_ops;
-    struct ipc_params sem_params;
+c++
+#include <mutex>
 
-    ns = current->nsproxy->ipc_ns;
+std::mutex mtx;
 
-    if (nsems < 0) {
-        return -EINVAL;
-    }
-
-    if (nsems > ns->sc_semmsl) {
-        return -ENOSPC;
-    }
-
-    sem_ops.getnew = newary;
-    sem_ops.associate = sem_security;
-    sem_ops.more_checks = sem_more_checks;
-
-    sem_params.key = key;
-    sem_params.flg = semflg;
-    sem_params.u.nsems = nsems;
-
-    return ipcget(ns, &sem_ids(ns), &sem_ops, &sem_params);
+virtual void Foo() {
+    std::unique_lock<std::mutex> lock(mtx);
+    // critical section of code here
 }

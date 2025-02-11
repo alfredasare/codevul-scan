@@ -1,9 +1,4 @@
-static int llc_ui_autobind(struct socket *sock, struct sockaddr_llc *addr)
+static inline bool is\_imm8(int32\_t value)
 {
-    //...
-    if (!llc->dev) {
-        rc = -ENODEV;
-        goto out;
-    }
-    //...
+return value <= INT8\_MAX && value >= INT8\_MIN;
 }

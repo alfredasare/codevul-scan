@@ -1,15 +1,8 @@
-static ssize_t sbi_ui_store(struct ext4_attr *a,
-			    struct ext4_sb_info *sbi,
-			    const char *buf, size_t count)
+static MagickBooleanType IsMPC(const unsigned char *magick, const size_t length)
 {
-	unsigned int *ui = (unsigned int *) (((char *) sbi) + a->offset);
-	unsigned long t;
-
-	if (parse_strtoul(buf, 0xffffffff, &t)) {
-		if (t > ULONG_MAX || t < 0) {
-			return -EINVAL;
-		}
-	}
-	*ui = t;
-	return count;
+  if (length < 14)
+    return(MagickFalse);
+  if (length >= 14 && LocaleNCompare((const char *) magick,"id=MagickCache",14) == 0)
+    return(MagickTrue);
+  return(MagickFalse);
 }

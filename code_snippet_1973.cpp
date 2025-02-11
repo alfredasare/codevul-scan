@@ -1,20 +1,14 @@
-BGD_DECLARE(void *) gdImageWebpPtr (gdImagePtr im, int *size)
+void ahci_uninit(AHCIState *s)
 {
-    void *rv;
-    gdIOCtx *out = gdNewDynamicCtx(2048, NULL);
-    if (out == NULL) {
-        return NULL;
+    if (s->mem.data) {
+        memory_region_destroy(&s->mem);
     }
-    
-    const char *allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._ ";
-    size_t len = strlen(allowed_chars);
-    char buffer[2048];
-    strncpy(buffer, allowed_chars, len);
-    buffer[len] = '\0';
-    
-    gdImageWebpCtx(im, out, -1);
-    rv = gdDPExtractData(out, size);
-    out->gd_free(out);
+    if (s->idp.data) {
+        memory_region_destroy(&s->idp);
+    }
+    g_free(s->dev);
 
-    return rv;
+    // Initialize pointers to NULL after destroying regions
+    s->mem.data = NULL;
+    s->idp.data = NULL;
 }

@@ -1,17 +1,21 @@
-WebContents* TabsCaptureVisibleTabFunction::GetWebContentsForID(
-    int window_id,
-    std::string* error) {
-  //... (rest of the function remains the same)
-
-  // Validate window_id
-  if (window_id < 0 || window_id >= chrome_details_.GetNumWindows()) {
-    *error = "Invalid window ID";
-    return nullptr;
+class WallpaperManager {
+ public:
+  // ...
+  WallpaperManager::PendingWallpaper* GetPendingWallpaper(
+      const AccountId& account_id,
+      bool delayed) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (!pending_inactive_) {
+      loading_.push_back(new WallpaperManager::PendingWallpaper(
+          (delayed ? GetWallpaperLoadDelay()
+                   : base::TimeDelta::FromMilliseconds(0)),
+          account_id));
+      pending_inactive_ = loading_.back().get();
+    }
+    return pending_inactive_;
   }
 
-  Browser* browser = NULL;
-  if (!GetBrowserFromWindowID(chrome_details_, window_id, &browser, error))
-    return nullptr;
-
-  //... (rest of the function remains the same)
-}
+ private:
+  std::mutex mutex_;
+  // ...
+};

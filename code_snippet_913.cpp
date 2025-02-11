@@ -1,27 +1,24 @@
-static ssize_t ucma_resolve_ip(struct ucma_file *file,
-			       const char __user *inbuf,
-			       int in_len, int out_len)
+SetClientPointer(ClientPtr client, DeviceIntPtr device)
 {
-	struct rdma_ucm_resolve_ip cmd;
-	struct ucma_context *ctx;
-	int ret;
-	size_t cmd_size = sizeof(cmd);
+    // Validate inputs
+    if (!client || !device) {
+        ErrorF("Invalid pointer passed to SetClientPointer\n");
+        return BadValue;
+    }
 
-	if (in_len > cmd_size) {
-		return -EINVAL;
-	}
+    int rc = XaceHook(XACE_DEVICE_ACCESS, client, device, DixUseAccess);
 
-	if (copy_from_user(&cmd, inbuf, cmd_size)) {
-		return -EFAULT;
-	}
+    if (rc != Success)
+        return rc;
 
-	ctx = ucma_get_ctx(file, cmd.id);
-	if (IS_ERR(ctx))
-		return PTR_ERR(ctx);
-
-	ret = rdma_resolve_addr(ctx->cm_id, (struct sockaddr *) &cmd.src_addr,
-				(struct sockaddr *) &cmd.dst_addr,
-				cmd.timeout_ms);
-	ucma_put_ctx(ctx);
-	return ret;
+    if (!IsMaster(device) || !device->spriteInfo || !device->spriteInfo->spriteOwner) {
+        if (!IsMaster(device))
+            ErrorF("[dix] Need master device for ClientPointer. This is a bug.\n");
+        if (!device->spriteInfo || !device->spriteInfo->spriteOwner)
+            ErrorF("[dix] Device %d does not have a sprite. "
+                   "Cannot be ClientPointer\n", device->id);
+        return BadDevice;
+    }
+    client->clientPtr = device;
+    return Success;
 }

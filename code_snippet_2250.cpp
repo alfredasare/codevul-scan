@@ -1,12 +1,18 @@
-bitset_or(BitSetRef dest, BitSetRef bs)
-{
-  if (!dest || !bs) {
-    printf("Error: Invalid input pointers\n");
-    return;
-  }
-
-  int i;
-  for (i = 0; i < BITSET_SIZE; i++) {
-    dest[i] |= bs[i];
+QuicAsyncStatus QuicClientPromisedInfo::FinalValidation() {
+  if (client_request_delegate_ &&
+      client_request_delegate_->CheckVary(*client_request_headers_, *request_headers_, *response_headers_)) {
+    QuicSpdyStream* stream = session_->GetPromisedStream(id_);
+    if (!stream) {
+      QUIC_BUG << "missing promised stream" << id_;
+    }
+    QuicClientPushPromiseIndex::Delegate* delegate = client_request_delegate_;
+    session_->DeletePromised(this);
+    if (delegate) {
+      delegate->OnRendezvousResult(stream);
+    }
+    return QUIC_SUCCESS;
+  } else {
+    Reset(QUIC_PROMISE_VARY_MISMATCH);
+    return QUIC_FAILURE;
   }
 }

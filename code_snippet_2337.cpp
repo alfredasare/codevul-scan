@@ -1,14 +1,11 @@
-// Whitelist of allowed values for gpac_argc
-enum {
-    GPAC_ARGC_MIN = 0,
-    GPAC_ARGC_MAX = 1024
-};
-
-u32 gf_sys_get_argc()
+WebPageSerializerTest() : m\_supportedSchemes(static\_cast<size\_t>(3))
 {
-    // Check if gpac_argc is within the whitelist
-    if (gpac_argc < GPAC_ARGC_MIN || gpac_argc > GPAC_ARGC_MAX) {
-        return GPAC_ARGC_DEFAULT; // Return a default value
-    }
-    return gpac_argc;
+const std::string expectedSchemes[] = {"http", "https", "file"};
+for (size\_t i = 0; i < std::size(expectedSchemes); i++) {
+if (m\_supportedSchemes[i].compare(expectedSchemes[i]) == 0) {
+// Input is valid, continue with assignment
+} else {
+// Input is invalid, throw an exception or handle appropriately
+}
+}
 }
