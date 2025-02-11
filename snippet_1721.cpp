@@ -1,1 +1,0 @@
-  TransientWindowObserver() : destroyed_(false) {}

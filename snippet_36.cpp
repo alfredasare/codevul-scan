@@ -1,2 +1,0 @@
-ChromeContentRendererClient::ChromeContentRendererClient() {
-}

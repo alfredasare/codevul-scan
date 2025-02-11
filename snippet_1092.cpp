@@ -1,1 +1,0 @@
-void WebMediaPlayerMS::OnWebLayerUpdated() {}

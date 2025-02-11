@@ -1,3 +1,0 @@
-NavigatorServiceWorker::~NavigatorServiceWorker()
-{
-}

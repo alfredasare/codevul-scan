@@ -1,2 +1,0 @@
- DOMHandler::~DOMHandler() {
- }

@@ -1,3 +1,0 @@
- ~BufferMeta() {
- delete[] mBackup;
- }

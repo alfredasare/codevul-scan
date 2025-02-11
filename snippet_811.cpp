@@ -1,2 +1,0 @@
-ExtensionFunctionDispatcher::~ExtensionFunctionDispatcher() {
-}
